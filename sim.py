@@ -1231,7 +1231,7 @@ class Sim:
         self.householdIndexes = np.random.choice([x.id for x in self.map.occupiedHouses], 20, replace=False)
         
         print 'Occupied houses index: ' + str(self.householdIndexes)
-        pdb.set_trace()
+        # pdb.set_trace()
         self.housesNotMoreOccupied = []
         
         for town in self.map.towns:
