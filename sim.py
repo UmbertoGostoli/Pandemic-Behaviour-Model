@@ -633,7 +633,32 @@ class Sim:
                     pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
                     pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
                     pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
-                    pickle.dump(self.totDeathsByClass , open(policyFolder + '/save.dc', 'wb'))
+                    pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
+                    
+                    
+                    pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
+                    pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
+                    pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
+                    pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
+                    pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
+                    
+                    pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
+                    pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
+                    pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
+                    pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
+                    pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
+                
+                    pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
+                    pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
+                    pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
+                    pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
+                    pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
+                    
+                    pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
+                    pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
+                    pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
+                    pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
+                    pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
                 
                 # Upload simulation
                 print 'Uploading the simulation....'
@@ -668,6 +693,30 @@ class Sim:
                 self.totalHospitalizedByClass = pickle.load(open(self.folder + '/Policy_0/save.hc', 'rb'))
                 self.totalIntubatedByClass = pickle.load(open(self.folder + '/Policy_0/save.vc', 'rb'))
                 self.totDeathsByClass = pickle.load(open(self.folder + '/Policy_0/save.dc', 'rb'))
+                
+                self.infected1To18 = pickle.load(open(self.folder + '/Policy_0/save.fa1', 'rb'))
+                self.infected19To39 = pickle.load(open(self.folder + '/Policy_0/save.fa2', 'rb'))
+                self.infected40To59 = pickle.load(open(self.folder + '/Policy_0/save.fa3', 'rb'))
+                self.infected60To79 = pickle.load(open(self.folder + '/Policy_0/save.fa4', 'rb'))
+                self.infected80Over = pickle.load(open(self.folder + '/Policy_0/save.fa5', 'rb'))
+                
+                self.hospitalized1To18 = pickle.load(open(self.folder + '/Policy_0/save.ha1', 'rb'))
+                self.hospitalized19To39 = pickle.load(open(self.folder + '/Policy_0/save.ha2', 'rb'))
+                self.hospitalized40To59 = pickle.load(open(self.folder + '/Policy_0/save.ha3', 'rb'))
+                self.hospitalized60To79 = pickle.load(open(self.folder + '/Policy_0/save.ha4', 'rb'))
+                self.hospitalized80Over = pickle.load(open(self.folder + '/Policy_0/save.ha5', 'rb'))
+            
+                self.icu1To18 = pickle.load(open(self.folder + '/Policy_0/save.ia1', 'rb'))
+                self.icu19To39 = pickle.load(open(self.folder + '/Policy_0/save.ia2', 'rb'))
+                self.icu40To59 = pickle.load(open(self.folder + '/Policy_0/save.ia3', 'rb'))
+                self.icu60To79 = pickle.load(open(self.folder + '/Policy_0/save.ia4', 'rb'))
+                self.icu80Over = pickle.load(open(self.folder + '/Policy_0/save.ia5', 'rb'))
+                
+                self.dead1To18 = pickle.load(open(self.folder + '/Policy_0/save.da1', 'rb'))
+                self.dead19To39 = pickle.load(open(self.folder + '/Policy_0/save.da2', 'rb'))
+                self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
+                self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
+                self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
                 
                 self.from_IDs_to_Agents()
                 
