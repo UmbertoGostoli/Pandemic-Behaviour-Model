@@ -745,7 +745,7 @@ class Sim:
             
         endSim = time.time()
         
-        self.showInfectionNetwork()
+        self.saveInfectionNetwork()
         
         simulationTime = endSim - startSim
         
@@ -1009,14 +1009,16 @@ class Sim:
         
         # print 'Doing stats....'
         
-    def showInfectionNetwork(self):
+    def saveInfectionNetwork(self):
         
-        nx.write_gexf(self.infectionsNetwork, "infectionsNetwork.gexf")
-        edges = self.infectionsNetwork.edges()
-        colors = [self.infectionsNetwork[u][v]['color'] for u,v in edges]
-        nx.draw(self.infectionsNetwork, edges=edges, edge_color=colors)
-        plt.savefig("infectionNetwork.pdf")
-        plt.show()
+        pickle.dump(self.infectionsNetwork, open('save.if_nw', 'wb'))
+        
+#        nx.write_gexf(self.infectionsNetwork, "infectionsNetwork.gexf")
+#        edges = self.infectionsNetwork.edges()
+#        colors = [self.infectionsNetwork[u][v]['color'] for u,v in edges]
+#        nx.draw(self.infectionsNetwork, edges=edges, edge_color=colors)
+#        plt.savefig("infectionNetwork.pdf")
+#        plt.show()
         
     def socialContactsData(self):
         
@@ -1822,6 +1824,16 @@ class Sim:
                         visitedClasses.append(intClass)
                     potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
                 distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
+                
+                meanDist = np.mean(distances)
+                newDist = []
+                for x in distances:
+                    if x == 0:
+                        newDist.append(meanDist)
+                    else:
+                        newDist.append(x)
+                distances = [x for x in newDist]
+                
                 weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
                 probs = [x/sum(weights) for x in weights]
 #                if sum(probs) < 1.0:
@@ -1874,8 +1886,20 @@ class Sim:
                 if len(potentialVisitors) > 0:
                     
                     distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
+                    
+                    meanDist = np.mean(distances)
+                    newDist = []
+                    for x in distances:
+                        if x == 0:
+                            newDist.append(meanDist)
+                        else:
+                            newDist.append(x)
+                    distances = [x for x in newDist]
+                    
                     weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
+                    
                     probs = [x/sum(weights) for x in weights]
+                    
                     agent = np.random.choice(potentialVisitors, p = probs)
                     lastRemCont = remainingContacts
                     remainingContacts -= 2*int(math.ceil(math.pow(venue.numVirtualOccupants, self.p['venueBetaExp'])))
