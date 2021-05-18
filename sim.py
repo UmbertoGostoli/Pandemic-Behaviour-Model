@@ -1826,6 +1826,8 @@ class Sim:
                 distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
                 
                 meanDist = np.mean(distances)
+                if meanDist <= 0:
+                    meanDist = 1.0
                 newDist = []
                 for x in distances:
                     if x == 0:
@@ -1888,6 +1890,8 @@ class Sim:
                     distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
                     
                     meanDist = np.mean(distances)
+                    if meanDist <= 0:
+                        meanDist = 1.0
                     newDist = []
                     for x in distances:
                         if x == 0:
@@ -2447,21 +2451,20 @@ class Sim:
                                     infected = True
                                     exposedAgents.append(person)
                                     self.infectionsNetwork.add_edge(contact, person, color = "r")
+                                    break
                 else:
                     break
             
             # Domestic infection
-            if person not in exposedAgents:
-                householdInfectionIndex = self.p['betaHousehold']*person.domesticRiskFactor
-                probDomesticInfection = (math.exp(householdInfectionIndex)-1.0)/math.exp(householdInfectionIndex)
-                infection = False
-                if np.random.random() < probDomesticInfection:
+            # if person not in exposedAgents:
+            householdInfectionIndex = self.p['betaHousehold']*person.domesticRiskFactor
+            probDomesticInfection = (math.exp(householdInfectionIndex)-1.0)/math.exp(householdInfectionIndex)
+            if np.random.random() < probDomesticInfection:
+                if person not in exposedAgents:
                     exposedAgents.append(person)
-                    infection = True
-                if infection == True:
-                    infectedHouseholds = [x for x in person.house.occupants if x.healthStatus == 'infectious']
-                    vector = np.random.choice(infectedHouseholds)
-                    self.infectionsNetwork.add_edge(vector, person, color = "g")
+                infectedHouseholds = [x for x in person.house.occupants if x.healthStatus == 'infectious' and x.hospitalized == False]
+                vector = np.random.choice(infectedHouseholds)
+                self.infectionsNetwork.add_edge(vector, person, color = "g")
         
         for person in exposedAgents:
         
