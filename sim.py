@@ -4,6 +4,7 @@ from person import CareContact
 from person import Population
 from person import PandemicEvent
 from person import HypotheticalVisit
+from person import Node
 from person import ClassContact
 from house import House
 from house import Venue
@@ -659,6 +660,8 @@ class Sim:
                     pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
                     pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
                     pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
+                    
+                    pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
                 
                 # Upload simulation
                 print 'Uploading the simulation....'
@@ -717,6 +720,8 @@ class Sim:
                 self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
                 self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
                 self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
+            
+                self.infectionsNetwork = pickle.load(open(self.folder + '/Policy_0/save.if_nw', 'rb'))
                 
                 self.from_IDs_to_Agents()
                 
@@ -745,7 +750,7 @@ class Sim:
             
         endSim = time.time()
         
-        self.saveInfectionNetwork()
+        self.saveInfectionNetwork(policyFolder)
         
         simulationTime = endSim - startSim
         
@@ -906,7 +911,7 @@ class Sim:
             house.infoNetwork.clear()
             house.occupantsID = [x.id for x in house.occupants]
             house.occupants = []
-        
+      
         for town in self.map.towns:
             town.peopleIDs = [x.id for x in town.people]
             town.people = []
@@ -1009,11 +1014,11 @@ class Sim:
         
         # print 'Doing stats....'
         
-    def saveInfectionNetwork(self):
+    def saveInfectionNetwork(self, policyFolder):
         
-        pickle.dump(self.infectionsNetwork, open('save.if_nw', 'wb'))
+        pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
         
-#        nx.write_gexf(self.infectionsNetwork, "infectionsNetwork.gexf")
+        nx.write_gexf(self.infectionsNetwork, policyFolder + '/infectionsNetwork.gexf')
 #        edges = self.infectionsNetwork.edges()
 #        colors = [self.infectionsNetwork[u][v]['color'] for u,v in edges]
 #        nx.draw(self.infectionsNetwork, edges=edges, edge_color=colors)
@@ -2408,7 +2413,8 @@ class Sim:
                 internationalExposed = list(np.random.choice(travellers, size=exogenouslyInfected, replace=False, p=probs))
                 
                 for agent in internationalExposed:
-                    self.infectionsNetwork.add_node(agent)
+                    newNode = Node(agent.id, agent.age, agent.quintile)
+                    self.infectionsNetwork.add_node(newNode)
                 
                 print 'Exogenous infections: ' + str(exogenouslyInfected)
             
@@ -2450,21 +2456,24 @@ class Sim:
                                 if np.random.random() < prob:
                                     infected = True
                                     exposedAgents.append(person)
-                                    self.infectionsNetwork.add_edge(contact, person, color = "r")
+                                    newNode = Node(person.id, person.age, person.quintile)
+                                    vectorNode = [x for x in self.infectionsNetwork.nodes() if x.agentID == contact.id][0]
+                                    self.infectionsNetwork.add_edge(vectorNode, newNode, color = "r")
                                     break
                 else:
                     break
             
             # Domestic infection
-            # if person not in exposedAgents:
-            householdInfectionIndex = self.p['betaHousehold']*person.domesticRiskFactor
-            probDomesticInfection = (math.exp(householdInfectionIndex)-1.0)/math.exp(householdInfectionIndex)
-            if np.random.random() < probDomesticInfection:
-                if person not in exposedAgents:
+            if person not in exposedAgents:
+                householdInfectionIndex = self.p['betaHousehold']*person.domesticRiskFactor
+                probDomesticInfection = (math.exp(householdInfectionIndex)-1.0)/math.exp(householdInfectionIndex)
+                if np.random.random() < probDomesticInfection:
                     exposedAgents.append(person)
-                infectedHouseholds = [x for x in person.house.occupants if x.healthStatus == 'infectious' and x.hospitalized == False]
-                vector = np.random.choice(infectedHouseholds)
-                self.infectionsNetwork.add_edge(vector, person, color = "g")
+                    infectedHouseholds = [x for x in person.house.occupants if x.healthStatus == 'infectious' and x.hospitalized == False]
+                    vector = np.random.choice(infectedHouseholds)
+                    newNode = Node(person.id, person.age, person.quintile)
+                    vectorNode = [x for x in self.infectionsNetwork.nodes() if x.agentID == vector.id][0]
+                    self.infectionsNetwork.add_edge(vectorNode, newNode, color = "g")
         
         for person in exposedAgents:
         
