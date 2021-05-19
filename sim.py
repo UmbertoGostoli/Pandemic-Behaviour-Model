@@ -2413,7 +2413,7 @@ class Sim:
                 internationalExposed = list(np.random.choice(travellers, size=exogenouslyInfected, replace=False, p=probs))
                 
                 for agent in internationalExposed:
-                    newNode = Node(agent.id, agent.age, agent.quintile)
+                    newNode = Node(agent.id, agent.age, agent.incomeQuintile)
                     self.infectionsNetwork.add_node(newNode)
                 
                 print 'Exogenous infections: ' + str(exogenouslyInfected)
@@ -2456,7 +2456,7 @@ class Sim:
                                 if np.random.random() < prob:
                                     infected = True
                                     exposedAgents.append(person)
-                                    newNode = Node(person.id, person.age, person.quintile)
+                                    newNode = Node(person.id, person.age, person.incomeQuintile)
                                     vectorNode = [x for x in self.infectionsNetwork.nodes() if x.agentID == contact.id][0]
                                     self.infectionsNetwork.add_edge(vectorNode, newNode, color = "r")
                                     break
@@ -2471,7 +2471,7 @@ class Sim:
                     exposedAgents.append(person)
                     infectedHouseholds = [x for x in person.house.occupants if x.healthStatus == 'infectious' and x.hospitalized == False]
                     vector = np.random.choice(infectedHouseholds)
-                    newNode = Node(person.id, person.age, person.quintile)
+                    newNode = Node(person.id, person.age, person.incomeQuintile)
                     vectorNode = [x for x in self.infectionsNetwork.nodes() if x.agentID == vector.id][0]
                     self.infectionsNetwork.add_edge(vectorNode, newNode, color = "g")
         
