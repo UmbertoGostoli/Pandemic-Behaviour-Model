@@ -38,7 +38,9 @@ def meta_params():
     m['favouriteSeed'] = int(time.time())
     m['loadFromFile'] = False
     m['saveSim'] = True
-    m['loadSim'] = True
+    m['loadSim'] = True  # False
+    m['loadNetwork'] = True # False
+    m['saveNetwork'] = True
     
     m['numberClasses'] = 5
     m['numCareLevels'] = 5
@@ -155,7 +157,7 @@ def meta_params():
     
     m['sensitivityMode'] = True
     m['sensitivityOutputs'] = ['cumulatedAbsences']
-    m['sensitivityParameters'] = ['betaIsolationRate', 'initialBeta', 'betaSurpriseExp', 'eventsBeta', 'conditionCostFactor', 'isolationWeight']
+    m['sensitivityParameters'] = ['betaIsolationRate', 'rateToProbExp',	'rateToProbCond', 'socialNormSensitivity',	'vulnerabilityIsolationExp',	'fearExtintionRate']
     # multiprocessing params
     m['multiprocessing'] = False
     m['numberProcessors'] = 10
@@ -303,7 +305,6 @@ def init_params():
     p['needLevelParam'] = 2.0
     p['unmetSocialCareParam'] = 2.0
     p['costHospitalizationPerDay'] = 500
-    
     # Priced growth  #####
     p['wageGrowthRate'] = 1.0 # 1.01338 # 
 
@@ -395,23 +396,28 @@ def init_params():
     p['agentsPerLocation'] = 10.0
     #### Pandemic parameters   ######
     
+    ##########################################################
+    #####       Pandemic parameters    ########################
+    
     ### Sensitivity parameters ###
-    p['beta'] = 0.5
+    # p['beta'] = 0.5
     # Two betas
-    p['betaCommunity'] = 0.02 # 0.02
-    p['betaRandom'] = 0.5
-    p['betaHousehold'] = 0.2 # 0.2
-    p['betaCare'] = 0.2 # 0.2
+    p['betaCommunity'] = 0.025 # 0.02
+    p['betaHousehold'] = 0.05 # 0.2 # 0.2
+    # p['betaCare'] = 0.2 # 0.2
     p['venueBetaExp'] = 0.5
-    p['venueClassBeta'] = 0.5
-    p['venueGeoBeta'] = 0.05
-    p['probNewVenue'] = 0.01
-    p['maxExcessContactRatio'] = 0.05
+    # p['venueClassBeta'] = 0.5
+    # p['venueGeoBeta'] = 0.05
+    # p['probNewVenue'] = 0.01
+    # p['maxExcessContactRatio'] = 0.05
     p['deltaContactsBeta'] = 0.01
     p['distanceBetaVenue'] = 2.0
+    
+    # To add in the default parameters csv file
+    p['venueDistanceExp'] = 1.0
     p['commutingProb'] = 0.05
     
-    p['contactDurationExp'] = 0.5
+    # p['contactDurationExp'] = 0.5
     # p['severityExp'] = 0.02
     # p['severityExpReduction'] = 1.0
     # p['stageDiscountFactor'] = 0.9
@@ -423,12 +429,12 @@ def init_params():
     # p['networkWeightBeta'] = 0.2
     
     # Not used in current version
-    p['distanceInfectionFactor'] = 1.0
+    # p['distanceInfectionFactor'] = 1.0
     
     p['mildExponentialPar'] = 0.1
     p['symptomSocialCareThreshold'] = 0.5
     p['symptomChildcareThreshold'] = 0.5
-    p['classContactBias'] = 1.05
+    p['classContactBias'] = 1.1
     # Parameters for new version of I determination
     # p['mildSymptomThreshold'] = 0.7
     p['householdIsolationFactor'] = 0.5
@@ -443,105 +449,147 @@ def init_params():
     p['ageBreaks'] = [10, 20, 30, 40, 50, 60, 70, 80]
     p['interactionAgeBreaks'] = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
     p['mortalityAgeBreaks'] = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
+    
     p['infectionFatalityByAge'] = [0.0, 0.01, 0.01, 0.02, 0.03, 0.04, 0.06, 0.10, 0.16, 0.24, 0.38, 0.60, 0.94, 1.47, 2.31, 3.61, 5.66, 8.86, 17.37]
-    p['numberOfContacts'] = [10, 15, 20, 20, 20, 18, 10, 7, 7]
-    p['infectionWeightsByAge'] = [1.0, 1.0, 2.0, 4.0, 4.0, 5.0, 6.0, 7.0, 7.0]
+    # p['numberOfContacts'] = [10, 15, 20, 20, 20, 18, 10, 7, 7]
+    # p['infectionWeightsByAge'] = [1.0, 1.0, 2.0, 4.0, 4.0, 5.0, 6.0, 7.0, 7.0]
     p['Over65ContactIncrement'] = 2.0
     p['contactCompoundFactor'] = 1.0 # 1.2
-    p['dailyContactsShare'] = 0.35
-    p['friendsContactsRatio'] = 1.5
+    # p['dailyContactsShare'] = 0.35
+    
+    p['maxSampleSize'] = 7
     # p['over50CompoundFactor'] = 1.0 # 1.2
     # p['below50CompoundFactor'] = 1.0 # 1.1
     
-    p['initialBeta'] = 0.01
-    p['contactsDistanceExp'] = 2.0
-    p['betaIsolationRate'] = 0.05
-    p['biasExtintionRate'] = 0.1
-    p['betaSurpriseExp'] = 0.1
-    p['betaExtintionExp'] = 0.1
-    p['infectionProbFactor'] = 4.0
+    # p['initialBeta'] = 50.0 # 0.01
+    # p['contactsDistanceExp'] = 2.0
+    
+    
+    #################################################
+    ###     Behavioural parameters    ###############
+    
+    p['betaIsolationRate'] = 200.0 # 100
+    p['rateToProbExp'] = 100.0
+    p['rateToProbCond'] = 60.0
+    p['socialNormSensitivity'] = 0.25
+    p['vulnerabilityIsolationExp'] = 0.02
+    p['fearExtintionRate'] = 0.05
+    
+    
+    p['infectionProbFactor'] = 1.0 # 4.0
     p['infectionProbExp'] = 2.0
-    p['conditionCostFactor'] = 10.0
+    p['hospProbFactor'] = 2.0 # 4.0
+    p['hospProbExp'] = 2.0
+    p['ventProbFactor'] = 2.0 # 4.0
+    p['ventProbExp'] = 2.0
+    p['deathProbFactor'] = 2.0 # 4.0
+    p['deathProbExp'] = 2.0
+    p['condProbFactor'] = 0.2 # 0.1
+    p['condProbExp'] = 2.0
+    p['testProbFactor'] = 100.0 # 10
+    p['conditionCostFactor'] = 100 # 100.0
+    p['conditionCostMultiplier'] = 10
+    p['timeDiscountingFactor'] = 0.75
+    p['symptomsTestExp'] = 1.0
+    p['riskDistSensitivity'] = 0.25 # 1.0
+    p['socialWeightExp'] = 1.0
+    p['vulnerabilityExp'] = 1.0
+    p['houseInfectionsTestBeta'] = 0.5 # 0.5
+    p['riskTestBeta'] = 10.0
+    p['deltaAgeExp'] = 0.2
+    p['deltaIRExp'] = 2.0
+    p['probAdjustRate'] = 0.2
+    p['houseConformRate'] = 0.5
+    
+    
+    ###########################################
+    ###########################################
+    p['initialBeta'] = 0.1
+    # p['biasExtintionRate'] = 0.1
+    # p['betaSurpriseExp'] = 0.1
+    # p['betaExtintionExp'] = 0.1
+    
+    
     p['isolationRatesNum'] = 26
-    p['venuesSizesList'] [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 50]
-    p['actualAttendantsWeight'] = 0.5
-    p['isolationWeight'] = 0.5
-    p['eventCostExp'] = 0.5
-    p['eventsBeta'] = 0.1
-    p['adaptationRate'] = 0.5
-    p['isolationReducingRate'] = 0.2
-    p['numConditions'] = 3
-    p['socialPreferenceFactor'] = 0.01 # 0.5
+    p['venuesSizesList'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 50]
+    # p['actualAttendantsWeight'] = 0.5
+    # p['isolationWeight'] = 0.5
+    # p['eventCostExp'] = 0.5
+    # p['eventsBeta'] = 0.1
+    # p['adaptationRate'] = 0.5
+    # p['isolationReducingRate'] = 0.2
+    # p['numConditions'] = 3
+    # p['socialPreferenceFactor'] = 0.01 # 0.5
     
-    
-    # p['infectionWeightsByAge'] = [1.0, 1.5, 4.0, 7.0, 8.0, 8.0, 6.0, 5.0, 5.0]
-    
-    # Behavioural parameters
-    
-    # p['scaleFactor'] = 280
-    
-    # Not used in current version
-    # p['ageRiskFactor'] = 0.05
-    
-    p['behaviouralResponseFactor'] = 50.0 # 100.0
-    p['timeDiscountingFactor'] = 0.7
-    p['workingFactorReduction'] = [0.2, 0.2, 0.25, 0.35, 0.5]
-    p['incomeBehaviourExp'] = 0.2 # 0.5
-    p['riskBehaviourFactor'] = 100.0 # 1.0
-    p['probTestExp'] = 2.0
-    
-    # Social interaction parameters
-    p['sameTownWeight'] = 200.0
-    p['randomContactsShare'] = 0.0 # 1.0
-    p['fractionSWcontacts'] = 0.05
-    p['friendsInteractionExp'] = 0.5 # 1.2
-    p['friendsInteractionBeta'] = 0.1 # 0.25
-    p['ageInteractionExp'] = 2.0
-    p['ageInteractionBeta'] = 0.1
-    p['classInteractionExp'] = 2.0 # 2.0
-    p['classInteractionBeta'] = 0.2 # 0.1
-    p['locationInteractionExp'] = 2.0 # 2.0
-    p['locationInteractionBeta'] = 0.002 # 0.001
-    p['townInteractionExp'] = 2.0 # 2.0
-    p['townInteractionBeta'] = 0.05 # 0.001
-    
-    # Not used in current version
-    # p['severityWeightsByAge'] = [1.0, 1.0, 1.0, 1.0, 3.0, 9.0, 25.0, 50.0, 70.0]
-    p['severityClassBias'] = 0.95 # 0.9
+    p['betaHosp'] = 0.0000005
+    p['alphaHosp'] = 6.5
+    p['betaICU'] = 0.04
+    p['alphaICU'] = 0.75
+    p['betaIFR'] = 0.000000006
+    p['alphaIFR'] = 7.8
+    p['shareDeathByCondition'] = 0.75
+    p['severityClassBias'] = 0.8 # 0.9
     p['severityGenderBias'] = 0.7
-    
     p['viralLoadWeight'] = 0.5
-    # p['maleSeverityWeight'] = 1.5
     p['incomeSeverityWeight'] = 0.2 # 2.0
     p['ageSeverityWeight'] = 0.5 # 2.0
     p['mildConditionBeta'] = 0.5
     
+    # p['workingFactorReduction'] = [0.2, 0.2, 0.25, 0.35, 0.5]
+    # p['incomeBehaviourExp'] = 0.2 # 0.5
+    # p['riskBehaviourFactor'] = 100.0 # 1.0
+    
+    # p['symptomsIndexThreshold'] = 0.1
+    # p['riskCasesUpSensitivity'] = 2.0
+    # p['riskCasesDownSensitivity'] = 1.0
+    # p['riskExpUpSensitivity'] = 0
+    # p['riskExpUpSensitivity'] = 0 
+    
+    
+    
+    # Social interaction parameters
+    # p['sameTownWeight'] = 200.0
+    # p['randomContactsShare'] = 0.0 # 1.0
+    # p['fractionSWcontacts'] = 0.05
+    p['friendsContactsRatio'] = 1.0 # 2.0
+    p['friendsInteractionExp'] = 0.5 # 1.2
+    p['friendsInteractionBeta'] = 0.1 # 0.25
+    
+    p['ageFriendsBeta'] = 0.2
+    p['ageInteractionExp'] = 2.0
+    p['ageInteractionBeta'] = 0.02
+    p['classInteractionExp'] = 2.0 # 2.0
+    p['classInteractionBeta'] = 0.2 # 0.1
+    p['locationInteractionExp'] = 2.0 # 2.0
+    p['locationInteractionBeta'] = 0.001 # 0.001
+    # p['townInteractionExp'] = 2.0 # 2.0
+    # p['townInteractionBeta'] = 0.05 # 0.001
+    
+    
+    
+    
     p['incomeClasses'] = 5
-    
-    # Not used in current version
-    # p['infectionWeightsByClass'] = [2.0, 1.5, 1.25, 1.0, 1.0]
-    
-    # p['factorsWeights'] = [0.5, 1.0, 1.0, 1.0]
-    # p['factorsExp'] = [0.1, 0.1, 0.5]
     
     p['meanIncubation'] = 1.6
     p['sdIncubation'] = 0.25 # 0.5
     p['minIncubation'] = 3
     p['meanRecovery'] = 2.4 # 2.5
     p['sdRecovery'] = 0.3 # 0.9
+    p['infectionMeanLength'] = 7
     p['exogenousInfectionRate'] = 0.0004
     p['preSymptomsContagiousPeriod'] = 2
     p['symptomsLevels'] = ['asymptomatic', 'mild', 'severe', 'critical', 'dead']
     p['symptomsProbabilities'] = [0.3, 0.5, 0.15, 0.04, 0.01]
-    p['probSymptomatic'] = [0.48, 0.57, 0.64, 0.69, 0.73, 0.77, 0.80, 0.83, 0.85]
+    p['probSymptomatic'] = [0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.78, 0.85]
     p['probsHospitalization'] = [0.005, 0.02, 0.06, 0.18, 0.28, 0.36, 0.42, 0.46, 0.49] # [0.005, 0.02, 0.06, 0.18, 0.26, 0.33, 0.39, 0.44, 0.48]
     p['probsIntensiveCare'] = [0.003, 0.01, 0.02, 0.04, 0.08, 0.16, 0.24, 0.36, 0.62] # [0.005, 0.01, 0.015, 0.025, 0.06, 0.09, 0.18, 0.34, 0.58]
     p['infectionFatalityRatio'] = [0.00006, 0.0012, 0.01, 0.075, 0.29, 0.87, 1.9, 4.0, 9.0] # [0.002, 0.006, 0.03, 0.08, 0.15, 0.6, 2.2, 5.1, 9.3]
     p['classWeightParam'] = 0.1
-    
+    p['testResultsDiffusion'] = 0.5
+    p['probFalseNegative'] = 0.15
+    p['probFalsePositive'] = 0.01
     
     # Policy variables
-    
     p['lockdownEvent'] = 'death' # 'hospitalization' # 'intubation'
     p['lockdownPeriod'] = 3
     p['daysFromEvent'] = 3  # Switch off the lockdown
@@ -791,7 +839,7 @@ if __name__ == "__main__":
         graphsDummy.to_csv("graphsParams.csv", index=False)
         
     
-    parametersFromFiles = True
+    parametersFromFiles = False
     
     scenariosParams = []
     policiesParams = [[[]]]

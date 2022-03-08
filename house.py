@@ -34,6 +34,8 @@ class House:
         self.sizeIndex = -1
         self.id = House.counter
         
+        self.strategyFactor = -1
+        
         # House care variables
         self.infoNetwork = nx.DiGraph()
         self.infoContacIDs = []
@@ -41,8 +43,10 @@ class House:
         self.expectedCost = 0
         self.contactReductionRates = [0]*26
         self.meanIsolationRate = 0
+        self.vulnerabilityIndex = 0
         self.baseIsolationPropensities = [0]*26
         self.periodEvents = []
+        self.inHouseEvents = []
         self.beta = 0
         self.lastProbs = [0]*3
         
@@ -50,6 +54,8 @@ class House:
         self.kindOfEvent = None
         self.infectionEvent = False
         self.contactReductionRate = 0
+        self.isolationRate = 0
+        self.testingRate = 0
         self.isolationFactor = 0
         self.individualIsolation = 0
         self.neighborIsolation = 0
@@ -123,6 +129,14 @@ class Town:
         self.people = []
         self.peopleIDs = []
         self.venues = []
+        self.meanAttendance = 0
+        self.casesByDay = []
+        self.newCases = 0
+        self.pastCases = 0
+        self.newCasesRatio = 0
+        self.relativeCasesIncrease = 0
+        self.newCasesRatios = []
+        self.discountedCasesRatio = 0
         self.name = str(tx) + "-" + str(ty)
         self.LHA = [lha1, lha2, lha3, lha4]
         self.id = Town.counter

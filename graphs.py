@@ -15,6 +15,7 @@ import os
 from collections import OrderedDict
 import pandas as pd
 import sys
+import pdb
 
 
 def doGraphs(graphsParams, metaParams):
@@ -1151,33 +1152,14 @@ def singlePolicyGraphs(output, policyFolder, p):
     pp.close()
     
     fig, ax = plt.subplots() # Argument: figsize=(5, 3)
-    p1, = ax.plot(output['day'], output['susceptibles'], label = 'Simulation', color="red", linewidth = 2)
-    p2, = ax.plot(output['day'], output['logisticCurve'], label = 'Logistic curve', color="green", linewidth = 2, linestyle = 'dashed')
+    p1, = ax.plot(output['day'], output['susceptibles'], color="red", linewidth = 2)
     ax.set_ylabel('Number')
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(loc = 'upper right')
     # ax.set_title('Cost of out-of-work social care')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endday']))
     # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endday'])+1, 20))
     fig.tight_layout()
     path = os.path.join(folder, 'susceptible.pdf')
-    pp = PdfPages(path)
-    pp.savefig(fig)
-    pp.close()
-    
-    fig, ax = plt.subplots() # Argument: figsize=(5, 3)
-    p1, = ax.plot(output['day'], output['deltaSusceptibles'], color="red", linewidth = 2)
-    plt.axhline(y=0.0, color = 'black', linewidth = 1)
-    ax.set_ylabel('Difference')
-#    handles, labels = ax.get_legend_handles_labels()
-#    ax.legend(loc = 'upper right')
-    # ax.set_title('Cost of out-of-work social care')
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endday']))
-    # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endday'])+1, 20))
-    fig.tight_layout()
-    path = os.path.join(folder, 'deltaSusceptible.pdf')
     pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
@@ -1264,7 +1246,7 @@ def singlePolicyGraphs(output, policyFolder, p):
     pp.close()
     
     fig, ax = plt.subplots() # Argument: figsize=(5, 3)
-    p1, = ax.plot(output['day'], output['hospitalized'], color="red", linewidth = 2)
+    p1, = ax.plot(output['day'], output['hospitalized'], color="red", linewidth = 2) 
     ax.set_ylabel('Number')
     # plt.ylim(0, 30)
     # ax.set_title('Cost of out-of-work social care')
@@ -1302,20 +1284,6 @@ def singlePolicyGraphs(output, policyFolder, p):
     # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endday'])+1, 20))
     fig.tight_layout()
     path = os.path.join(folder, 'newCases.pdf')
-    pp = PdfPages(path)
-    pp.savefig(fig)
-    pp.close()
-    
-    fig, ax = plt.subplots() # Argument: figsize=(5, 3)
-    p1, = ax.plot(output['day'], output['totalAttendances'], color="red", linewidth = 2)
-    ax.set_ylabel('Number')
-    # plt.ylim(0, 20)
-    # ax.set_title('Cost of out-of-work social care')
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endday']))
-    # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endday'])+1, 20))
-    fig.tight_layout()
-    path = os.path.join(folder, 'totalAttendances.pdf')
     pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
@@ -1612,7 +1580,6 @@ def multiplePoliciesGraphs(output, scenarioFolder, p, numPolicies):
     pp.savefig(fig)
     pp.close()
     
-  
     ########################### Share of Umnet Care Needs    #################################
     
     fig, ax = plt.subplots() # Argument: figsize=(5, 3)
@@ -2450,36 +2417,738 @@ def multipleScenariosGraphs(output, repFolder, p, numPolicies, numScenarios):
     
 
 def multipleRepeatsGraphs(output, simFolder, p, numPolicies, numScenarios, numRepeats):
-    
-    # print 'doing mrg...'
-    
-    folder = simFolder + '/Graphs'
+   
+    folder = simFolder + '/MultiRepeat_Graphs'
+   
     if not os.path.exists(folder):
         os.makedirs(folder)
     
     # Add graphs across runs (for the same scenario/policy combinations)
     # For each policy scenario, take the average of year 2010-2020 for each run, and do a bar chart with error bars for each outcome of interest
     
-    # Policy comparison: make charts by outcomes with bars representing the different policies.
+    # Policy comparison: make charts by outcomes with bars representing the different policies
     
     
-    
-    policies = ['Benchmark', 'Policy 1', 'Policy 2'] # , 'Policy 2', 'Policy 3', 'Policy 4']
     
     for i in range(numScenarios):
         
         scenarioFolder = folder + '/Scenario ' + str(i+1)
         if not os.path.exists(scenarioFolder):
             os.makedirs(scenarioFolder)
-            
-        folder = scenarioFolder + '/Graphs'
+        
+        # For each scenario, two folders are created:
+        # - sigle-policy graphs
+        # - multiple-policy graphs (for policy comparison)
+        
+        # In the folder 'SinglePolicyGraphs', there are three sub-folders, one for each policy.
+        folder = scenarioFolder + '/SinglePolicyGraphs'
         if not os.path.exists(folder):
             os.makedirs(folder)
         
+        for j in range(numPolicies):
+            
+            # Policy folder
+            policyFolder = folder + '/Policy_' + str(j)
+            if not os.path.exists(policyFolder):
+                os.makedirs(policyFolder)
+            
+            
+#            ### Share hospitalizations by Age
+#            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []; G6 = []; G7 = []; G8 = []; G9 = [];
+#            for z in range(numRepeats):
+#                G1.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[0]'].values[0])
+#                G2.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[1]'].values[0])
+#                G3.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[2]'].values[0])
+#                G4.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[3]'].values[0])
+#                G5.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[4]'].values[0])
+#                G6.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[5]'].values[0])
+#                G7.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[6]'].values[0])
+#                G8.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[7]'].values[0])
+#                G9.append(output[z][i][j].loc[output[z][i][j]['day'] == 180, 'sharesHospitalizedByAge[8]'].values[0])
+#            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5), np.mean(G6), np.mean(G7), np.mean(G8), np.mean(G9)]
+#            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5), np.std(G6), np.std(G7), np.std(G8), np.std(G9)]
+#            empiricalShares = [0.01, 0.02, 0.03, 0.05, 0.09, 0.13, 0.16, 0.22, 0.30]
+#            fig, ax = plt.subplots()
+#            objects = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'Q9']
+#            y_pos = np.arange(len(objects))
+#            rect1 = ax.bar(y_pos-0.15, meansOutput, yerr=sdOutput, width = 0.3, align='center', alpha=0.5, ecolor='black', capsize=10, label='Simulation Shares')
+#            rect2 = ax.bar(y_pos+0.15, empiricalShares, width = 0.3, label='Empirical Shares')
+#            plt.xticks(y_pos, objects)
+#            # plt.ylim(1200000, 1400000)
+#            ax.xaxis.set_ticks_position('none')
+#            ax.set_ylabel('Shares')
+#            ax.yaxis.grid(True)
+#            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+#            formatter.set_scientific(True) 
+#            formatter.set_powerlimits((-1,1)) 
+#            ax.yaxis.set_major_formatter(formatter)
+#            # ax.set_title('Formal Child Care (2020-2040)')
+#            fig.tight_layout()
+#            path = os.path.join(policyFolder, 'sharesHospitalizationByAge_Policy' + str(j) + '.pdf')
+#            pp = PdfPages(path)
+#            pp.savefig(fig)
+#            pp.close()
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'totalAttendances'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Number')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # plt.ylim(2500.0, 5000.0)
+            # ax.set_ylim([0.0, 6.0])
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'totalAttendences_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            
+            
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'newCases'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Number')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # plt.ylim(2500.0, 5000.0)
+            # ax.set_ylim([0.0, 6.0])
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'newCases_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            
+            ### Logistic curve ####
+            
+            S = 9160.0
+            H = 4225
+            I = 1
+            N = 9160.0
+            s = [S]
+            for k in range(180):
+                beta = 0.43*(S-H)/N
+                dS = beta*I*S/N
+                dI = beta*I*S/N-0.02*I
+                S -= dS
+                I += dI
+                s.append(S)
+           
+            #########################
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'susceptibles'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.plot(days, s, color="red", linewidth=1)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Number')
+            
+            
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # plt.ylim(2500.0, 5000.0)
+            # ax.set_ylim([0.0, 6.0])
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'susceptiblePop_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            ## Total Informal Social Care - Time series
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(s[dayOutput]-output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'susceptibles'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.plot(days, [0]*len(days), color="black", linewidth=1)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Difference')
+            
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # plt.ylim(2500.0, 5000.0)
+            # ax.set_ylim([0.0, 6.0])
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'deltaSusceptibles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            
+            
+            
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'totalInformalSocialCare'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Hours of care')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            plt.ylim(2500.0, 5000.0)
+            # ax.set_ylim([0.0, 6.0])
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'totalInformalSocialCare_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            # totalSocialCareNeed
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'totalSocialCareNeed'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Hours of care')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            plt.ylim(5000.0, 9000.0)
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'totalSocialCareNeed_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            
+            # totalUnmetSocialCareNeed
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'totalUnmetSocialCareNeed'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Hours of care')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            plt.ylim(2000.0, 3500.0)
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'totalUnmetSocialCareNeed_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            # totalInformalSocialCare_Q1
+            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []
+            for z in range(numRepeats):
+                G1.append(np.sum(output[z][i][j]['totalInformalSocialCare_Q1']))
+                G2.append(np.sum(output[z][i][j]['totalInformalSocialCare_Q2']))
+                G3.append(np.sum(output[z][i][j]['totalInformalSocialCare_Q3']))
+                G4.append(np.sum(output[z][i][j]['totalInformalSocialCare_Q4']))
+                G5.append(np.sum(output[z][i][j]['totalInformalSocialCare_Q5']))
+            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5)]
+            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5)]
+            
+            fig, ax = plt.subplots()
+            objects = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+            y_pos = np.arange(len(objects))
+            ax.bar(y_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+            plt.xticks(y_pos, objects)
+            # plt.ylim(1200000, 1400000)
+            ax.xaxis.set_ticks_position('none')
+            ax.set_ylabel('Total hours')
+            ax.yaxis.grid(True)
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            # ax.set_title('Formal Child Care (2020-2040)')
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'informalSocialCaredByQuintiles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            # totalSocialCareNeed_Q1
+            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []
+            for z in range(numRepeats):
+                G1.append(np.sum(output[z][i][j]['totalSocialCareNeed_Q1']))
+                G2.append(np.sum(output[z][i][j]['totalSocialCareNeed_Q2']))
+                G3.append(np.sum(output[z][i][j]['totalSocialCareNeed_Q3']))
+                G4.append(np.sum(output[z][i][j]['totalSocialCareNeed_Q4']))
+                G5.append(np.sum(output[z][i][j]['totalSocialCareNeed_Q5']))
+            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5)]
+            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5)]
+            
+            fig, ax = plt.subplots()
+            objects = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+            y_pos = np.arange(len(objects))
+            ax.bar(y_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+            plt.xticks(y_pos, objects)
+            # plt.ylim(1200000, 1400000)
+            ax.xaxis.set_ticks_position('none')
+            ax.set_ylabel('Total hours')
+            ax.yaxis.grid(True)
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            # ax.set_title('Formal Child Care (2020-2040)')
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'socialCareNeedByQuintiles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            # Unmet Social Care by Quintile - Bar chart
+            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []
+            for z in range(numRepeats):
+                G1.append(np.sum(output[z][i][j]['unmetSocialCareNeed_Q1']))
+                G2.append(np.sum(output[z][i][j]['unmetSocialCareNeed_Q2']))
+                G3.append(np.sum(output[z][i][j]['unmetSocialCareNeed_Q3']))
+                G4.append(np.sum(output[z][i][j]['unmetSocialCareNeed_Q4']))
+                G5.append(np.sum(output[z][i][j]['unmetSocialCareNeed_Q5']))
+            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5)]
+            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5)]
+            
+            fig, ax = plt.subplots()
+            objects = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+            y_pos = np.arange(len(objects))
+            ax.bar(y_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+            plt.xticks(y_pos, objects)
+            # plt.ylim(1200000, 1400000)
+            ax.xaxis.set_ticks_position('none')
+            ax.set_ylabel('Total hours')
+            ax.yaxis.grid(True)
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            # ax.set_title('Formal Child Care (2020-2040)')
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'unmetSocialCareByQuintiles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+       
+        
+            ###  Add the other single-policy charts
+        
+            # infectious, hospitalized, intubated, 
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'infectious'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Number')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'infectious_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    num = float(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'susceptibles'].values[0])
+                    den = float(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'currentPop'].values[0])
+                    dayValues.append(num/den)
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Share')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'susceptiblesShare_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'hospitalized'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Number')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'hospitalized_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'intubated'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            
+            fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+            ax.plot(days, meanValues, color="black", linewidth=2)
+            ax.fill_between(days, minValues, maxValues, alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
+            ax.set_ylabel('Number')
+            # ax.set_title('Cost of Public Social Care')
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+            # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'intubated_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []
+            for z in range(numRepeats):
+                G1.append(np.sum(output[z][i][j]['infectedByClass_0']))
+                G2.append(np.sum(output[z][i][j]['infectedByClass_1']))
+                G3.append(np.sum(output[z][i][j]['infectedByClass_2']))
+                G4.append(np.sum(output[z][i][j]['infectedByClass_3']))
+                G5.append(np.sum(output[z][i][j]['infectedByClass_4']))
+            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5)]
+            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5)]
+            
+            fig, ax = plt.subplots()
+            objects = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+            y_pos = np.arange(len(objects))
+            ax.bar(y_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+            plt.xticks(y_pos, objects)
+            # plt.ylim(1200000, 1400000)
+            ax.xaxis.set_ticks_position('none')
+            ax.set_ylabel('Number')
+            ax.yaxis.grid(True)
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            # ax.set_title('Formal Child Care (2020-2040)')
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'infectedByQuintiles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []
+            for z in range(numRepeats):
+                G1.append(np.sum(output[z][i][j]['hospitalizedByClass_0']))
+                G2.append(np.sum(output[z][i][j]['hospitalizedByClass_1']))
+                G3.append(np.sum(output[z][i][j]['hospitalizedByClass_2']))
+                G4.append(np.sum(output[z][i][j]['hospitalizedByClass_3']))
+                G5.append(np.sum(output[z][i][j]['hospitalizedByClass_4']))
+            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5)]
+            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5)]
+            
+            fig, ax = plt.subplots()
+            objects = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+            y_pos = np.arange(len(objects))
+            ax.bar(y_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+            plt.xticks(y_pos, objects)
+            # plt.ylim(1200000, 1400000)
+            ax.xaxis.set_ticks_position('none')
+            ax.set_ylabel('Number')
+            ax.yaxis.grid(True)
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            # ax.set_title('Formal Child Care (2020-2040)')
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'hospitalizedByQuintiles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+            G1 = []; G2 = []; G3 = []; G4 = []; G5 = []
+            for z in range(numRepeats):
+                G1.append(np.sum(output[z][i][j]['intubatedByClass_0']))
+                G2.append(np.sum(output[z][i][j]['intubatedByClass_1']))
+                G3.append(np.sum(output[z][i][j]['intubatedByClass_2']))
+                G4.append(np.sum(output[z][i][j]['intubatedByClass_3']))
+                G5.append(np.sum(output[z][i][j]['intubatedByClass_4']))
+            meansOutput = [np.mean(G1), np.mean(G2), np.mean(G3), np.mean(G4), np.mean(G5)]
+            sdOutput = [np.std(G1), np.std(G2), np.std(G3), np.std(G4), np.std(G5)]
+            
+            fig, ax = plt.subplots()
+            objects = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+            y_pos = np.arange(len(objects))
+            ax.bar(y_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+            plt.xticks(y_pos, objects)
+            # plt.ylim(1200000, 1400000)
+            ax.xaxis.set_ticks_position('none')
+            ax.set_ylabel('Number')
+            ax.yaxis.grid(True)
+            formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+            formatter.set_scientific(True) 
+            formatter.set_powerlimits((-1,1)) 
+            ax.yaxis.set_major_formatter(formatter)
+            # ax.set_title('Formal Child Care (2020-2040)')
+            fig.tight_layout()
+            path = os.path.join(policyFolder, 'intubatedByQuintiles_Policy' + str(j) + '.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
+        
+        #####     Policies comparison charts    ###################
+        
+        folder = scenarioFolder + '/PoliciesComparisonGraphs'
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        
+        policies = ['Benchmark', 'Policy 1', 'Policy 2'] # , 'Policy 2', 'Policy 3', 'Policy 4']
+        
+        
+        # Total unmet social care need - Time series
         meanValues_P = []
         minValues_P = []
         maxValues_P = []
+        for j in range(numPolicies):
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'totalInformalSocialCare'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            meanValues_P.append(meanValues)
+            minValues_P.append(minValues)
+            maxValues_P.append(maxValues)
+            
+        fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+        colors = ["green", "blue", "red"]
+        for j in range(numPolicies):
+            policyLabel = 'Benchmark'
+            if j != 0:
+                policyLabel = 'Policy ' + str(j)
+            ax.plot(days, meanValues_P[j], color=colors[j], label = policyLabel, linewidth=2)
+            ax.fill_between(days, minValues_P[j], maxValues_P[j], alpha = 0.5, edgecolor='lightgrey', facecolor='lightgrey', linewidth=0)
+                            # edgecolor='#3F7F4C', facecolor='#7EFF99'
+        ax.set_ylabel('Total Hours')
+        # ax.set_title('Cost of Public Social Care')
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        handels, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+        # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalInformalSocialCare_TS.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
         
+        # Total unmet social care need - Time series
+        meanValues_P = []
+        minValues_P = []
+        maxValues_P = []
         for j in range(numPolicies):
             meanValues = []
             minValues = []
@@ -2499,27 +3168,297 @@ def multipleRepeatsGraphs(output, simFolder, p, numPolicies, numScenarios, numRe
             minValues_P.append(minValues)
             maxValues_P.append(maxValues)
             
-        # Create charts
         fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+        colors = ["green", "blue", "red"]
         for j in range(numPolicies):
-            ax.plot(days, meanValues[j], color="black", linewidth=2)
-            ax.fill_between(days, minValues[j], maxValues[j], alpha=1, edgecolor='#3F7F4C', facecolor='#7EFF99', linewidth=0)
-        ax.set_ylabel('Pounds/week')
+            policyLabel = 'Benchmark'
+            if j != 0:
+                policyLabel = 'Policy ' + str(j)
+            ax.plot(days, meanValues_P[j], color=colors[j], label = policyLabel, linewidth=2)
+            ax.fill_between(days, minValues_P[j], maxValues_P[j], alpha = 0.5, edgecolor='lightgrey', facecolor='lightgrey', linewidth=0)
+                            # edgecolor='#3F7F4C', facecolor='#7EFF99'
+        ax.set_ylabel('Total Hours')
         # ax.set_title('Cost of Public Social Care')
         formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
         formatter.set_scientific(True) 
         formatter.set_powerlimits((-1,1)) 
         ax.yaxis.set_major_formatter(formatter)
+        handels, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
-        ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+        # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+        # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
         fig.tight_layout()
-        path = os.path.join(folder, 'totalUnmetSocialCareNeed_Policies.pdf')
+        path = os.path.join(folder, 'totalUnmetSocialCareNeed_TS.pdf')
         pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
         
+        meansOutput = []
+        sdOutput = []
+        for j in range(numPolicies):
+            values = []
+            for z in range(numRepeats):
+                values.append(np.sum(output[z][i][j]['totalInformalSocialCare']))
+            meansOutput.append(np.mean(values))
+            sdOutput.append(np.std(values))
+        fig, ax = plt.subplots()
+        x_pos = np.arange(len(policies))
+        ax.bar(x_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Total Hours')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(policies)
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        # ax.set_title('Unmet Social Care Needs (mean 2025-2035)')
+        ax.yaxis.grid(True)
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalInformalSocialCare_BC.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        meansOutput = []
+        sdOutput = []
+        for j in range(numPolicies):
+            values = []
+            for z in range(numRepeats):
+                values.append(np.sum(output[z][i][j]['totalUnmetSocialCareNeed']))
+            meansOutput.append(np.mean(values))
+            sdOutput.append(np.std(values))
+        fig, ax = plt.subplots()
+        x_pos = np.arange(len(policies))
+        ax.bar(x_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Total Hours')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(policies)
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        # ax.set_title('Unmet Social Care Needs (mean 2025-2035)')
+        ax.yaxis.grid(True)
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalUnmetSocialCareNeed_BC.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        ##  Most-least deprived ratio bar chart
+        
+        meansOutput = []
+        sdOutput = []
+        for j in range(numPolicies):
+            values = []
+            for z in range(numRepeats):
+                values.append(np.mean(output[z][i][j]['mostLeastDeprivedRatio']))
+            meansOutput.append(np.mean(values))
+            sdOutput.append(np.std(values))
+        fig, ax = plt.subplots()
+        x_pos = np.arange(len(policies))
+        ax.bar(x_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Q1/Q5 Ratio')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(policies)
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        # ax.set_title('Unmet Social Care Needs (mean 2025-2035)')
+        ax.yaxis.grid(True)
+        fig.tight_layout()
+        path = os.path.join(folder, 'mostLeastDeprivedRatio_BC.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        
+        ###  Add other multiple-policy graphs....
+        
+        meanValues_P = []
+        minValues_P = []
+        maxValues_P = []
+        for j in range(numPolicies):
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'hospitalized'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            meanValues_P.append(meanValues)
+            minValues_P.append(minValues)
+            maxValues_P.append(maxValues)
+            
+        fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+        colors = ["green", "blue", "red"]
+        for j in range(numPolicies):
+            policyLabel = 'Benchmark'
+            if j != 0:
+                policyLabel = 'Policy ' + str(j)
+            ax.plot(days, meanValues_P[j], color=colors[j], label = policyLabel, linewidth=2)
+            ax.fill_between(days, minValues_P[j], maxValues_P[j], alpha = 0.5, edgecolor='lightgrey', facecolor='lightgrey', linewidth=0)
+                            # edgecolor='#3F7F4C', facecolor='#7EFF99'
+        ax.set_ylabel('Number')
+        # ax.set_title('Cost of Public Social Care')
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        handels, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+        # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+        fig.tight_layout()
+        path = os.path.join(folder, 'hospitalized_TS.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        meanValues_P = []
+        minValues_P = []
+        maxValues_P = []
+        for j in range(numPolicies):
+            meanValues = []
+            minValues = []
+            maxValues = []
+            days = []
+            for dayOutput in range(180+1):
+                dayValues = []
+                for z in range(numRepeats):
+                    dayValues.append(output[z][i][j].loc[output[z][i][j]['day'] == dayOutput, 'intubated'].values[0])
+                mean = np.mean(dayValues)
+                meanValues.append(mean)
+                sd = np.std(dayValues)
+                minValues.append(mean-sd)
+                maxValues.append(mean+sd)
+                days.append(dayOutput)
+            meanValues_P.append(meanValues)
+            minValues_P.append(minValues)
+            maxValues_P.append(maxValues)
+            
+        fig, ax = plt.subplots() # Argument: figsize=(5, 3)
+        colors = ["green", "blue", "red"]
+        for j in range(numPolicies):
+            policyLabel = 'Benchmark'
+            if j != 0:
+                policyLabel = 'Policy ' + str(j)
+            ax.plot(days, meanValues_P[j], color=colors[j], label = policyLabel, linewidth=2)
+            ax.fill_between(days, minValues_P[j], maxValues_P[j], alpha = 0.5, edgecolor='lightgrey', facecolor='lightgrey', linewidth=0)
+                            # edgecolor='#3F7F4C', facecolor='#7EFF99'
+        ax.set_ylabel('Number')
+        # ax.set_title('Cost of Public Social Care')
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        handels, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        # ax.set_xlim(left = int(p['statsCollectFrom']), right = int(p['endYear']))
+        # ax.set_xticks(range(int(p['statsCollectFrom']), int(p['endYear'])+1, 20))
+        fig.tight_layout()
+        path = os.path.join(folder, 'intubated_TS.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        meansOutput = []
+        sdOutput = []
+        for j in range(numPolicies):
+            values = []
+            for z in range(numRepeats):
+                values.append(np.sum(output[z][i][j]['hospitalized']))
+            meansOutput.append(np.mean(values))
+            sdOutput.append(np.std(values))
+        fig, ax = plt.subplots()
+        x_pos = np.arange(len(policies))
+        ax.bar(x_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Total days')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(policies)
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        # ax.set_title('Unmet Social Care Needs (mean 2025-2035)')
+        ax.yaxis.grid(True)
+        fig.tight_layout()
+        path = os.path.join(folder, 'hospitalized_BC.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        
+        meansOutput = []
+        sdOutput = []
+        for j in range(numPolicies):
+            values = []
+            for z in range(numRepeats):
+                values.append(np.sum(output[z][i][j]['intubated']))
+            meansOutput.append(np.mean(values))
+            sdOutput.append(np.std(values))
+        fig, ax = plt.subplots()
+        x_pos = np.arange(len(policies))
+        ax.bar(x_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Total days')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(policies)
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        # ax.set_title('Unmet Social Care Needs (mean 2025-2035)')
+        ax.yaxis.grid(True)
+        fig.tight_layout()
+        path = os.path.join(folder, 'intubated_BC.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+       
+        
+        meansOutput = []
+        sdOutput = []
+        for j in range(numPolicies):
+            values = []
+            for z in range(numRepeats):
+                values.append(np.mean(output[z][i][j]['hospitalizedQuintilesRatio']))
+            meansOutput.append(np.mean(values))
+            sdOutput.append(np.std(values))
+        fig, ax = plt.subplots()
+        x_pos = np.arange(len(policies))
+        ax.bar(x_pos, meansOutput, yerr=sdOutput, width = 0.6, align='center', alpha=0.5, ecolor='black', capsize=10)
+        ax.set_ylabel('Q1/Q5 Ratio')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(policies)
+        formatter = ticker.ScalarFormatter(useMathText=True) #scientific notation
+        formatter.set_scientific(True) 
+        formatter.set_powerlimits((-1,1)) 
+        ax.yaxis.set_major_formatter(formatter)
+        # ax.set_title('Unmet Social Care Needs (mean 2025-2035)')
+        ax.yaxis.grid(True)
+        fig.tight_layout()
+        path = os.path.join(folder, 'hospitalizedQuintilesRatio_BC.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        
+        
+        
+        
+        # pdb.set_trace()
         ## Plots and Bar charts with error bars for:
         ## 1 - Total deaths
         ## 2 - Total Hospitalized
@@ -2568,6 +3507,7 @@ def multipleRepeatsGraphs(output, simFolder, p, numPolicies, numScenarios, numRe
         pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
+        
     
         meanValues_P = []
         minValues_P = []

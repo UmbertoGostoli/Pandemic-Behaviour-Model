@@ -27,10 +27,11 @@ class Person:
         # Pandemic variables
         self.healthStatus = healthStatus
         self.severityLevel = 0
+        self.symptomsLevel = 'None'
         self.mildConditionIndex = 0
         self.daysFromInfection = 0
         self.incubationPeriod = -1
-        self.symptomsLevel = -1
+        
         self.recoveryPeriod = -1
         self.workingShare = 1.0
         self.symptomatic = False
@@ -53,18 +54,37 @@ class Person:
         self.careRiskFactor = 0
         self.contagiousnessIndex = 0
         self.contactReductionRate = 1.0
+        self.perceivedRisk = 0
+        self.perceivedRisks = []
+        self.sensitivityToRisk = 0
+        self.isolationRate = 0.0
+        self.maxIsolationRate = 0.0
+        self.tempIR = self.isolationRate
+        self.isolationRates = []
+        self.testPropensity = 0
         self.viralLoad = 0
         self.relativeRisk = 0
-        self.placeOfDeath = None
+        self.placeOfDeath = 'None'
         
-        
-        
+        self.socialPreferenceIndex = np.random.random()
+        self.testingRate = 0
         self.testPositive = False
+        self.hadPandemicEvent = False
+        self.daysSincePositive = 0
+        self.daysSinceLastTest = 0
+        self.infectedIndex = 0
         self.dailyContacts = []
         self.randomContacts = []
         self.numContacts = 0
         self.networkContacts = 0
         self.numRandomContacts = 0
+        
+        self.probHospital = 0
+        self.probVentilation = 0
+        self.probDeath = 0
+        self.probInfection = 0
+        self.probInfections = []
+        self.costInfection = 0
         
         self.friends = []
         self.socialContacIDs = []
@@ -268,11 +288,11 @@ class Population:
             self.livingPeople.append(newWoman)
 
 class PandemicEvent:
-    def __init__ (self, age, condition, isolationRates, meanIsoRate, weight):
+    def __init__ (self, agent, age, condition, isolationRates, weight):
+        self.agent = agent
         self.age = age
         self.condition = condition
         self.contactReductionRates = isolationRates
-        self.meanIsolationRate = meanIsoRate
         self.distanceWeight = weight
         
 
