@@ -839,7 +839,7 @@ if __name__ == "__main__":
         graphsDummy.to_csv("graphsParams.csv", index=False)
         
     
-    parametersFromFiles = False
+    parametersFromFiles = True
     
     scenariosParams = []
     policiesParams = [[[]]]
