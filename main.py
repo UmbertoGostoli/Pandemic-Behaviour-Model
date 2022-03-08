@@ -38,8 +38,8 @@ def meta_params():
     m['favouriteSeed'] = int(time.time())
     m['loadFromFile'] = False
     m['saveSim'] = True
-    m['loadSim'] = True  # False
-    m['loadNetwork'] = True # False
+    m['loadSim'] = False
+    m['loadNetwork'] = False
     m['saveNetwork'] = True
     
     m['numberClasses'] = 5
