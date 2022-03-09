@@ -1613,7 +1613,7 @@ class Sim:
         
         # Create a 9-age-groups contacts matrix ############################################################################
         ageShares = []
-        numClasses = self.contacts.shape[1]
+        numClasses = int(self.contacts.shape[1])
         if (numClasses%2) != 0:
             numClasses -= 1
         for i in range(0, numClasses, 2):
@@ -1626,7 +1626,7 @@ class Sim:
             
         # 9-classes contacts matrix
         newMatrix = []
-        for i in range(self.contacts.shape[1]):
+        for i in range(int(self.contacts.shape[1])):
             newColumn = []
             col = list(self.contacts[i])
             numCol = int(len(col))
@@ -3966,7 +3966,7 @@ class Sim:
         vpFactors = []
         dpFactors = []
         
-        popByAgeClasses = [len([y for y in self.pop.livingPeople if y.ageClass == x]) for x in range(self.p['ageClasses'])]
+        popByAgeClasses = [len([y for y in self.pop.livingPeople if y.ageClass == x]) for x in range(int(self.p['ageClasses']))]
         for house in self.map.occupiedHouses:
             for agent in house.occupants:
                 # - Start from public (empirical) probabilities of hospitalization, ventilation and death
@@ -4104,7 +4104,7 @@ class Sim:
                 householdInfectionIndex = 1.0-np.exp(-1*self.p['houseInfectionsTestBeta']*houseInfections)
                 riskIndex = 0
                 maxLen = min(self.p['infectionMeanLength'], len(person.isolationRates))
-                for i in range(maxLen):
+                for i in range(int(maxLen)):
                     ti = i+1
                     riskIndex += (1.0-person.isolationRates[-ti])*person.probInfections[-ti]*np.power(self.p['timeDiscountingFactor'], i)
                 riskProb = 1.0-np.exp(-1*self.p['riskTestBeta']*riskIndex)
@@ -4494,7 +4494,7 @@ class Sim:
         
         # Compute age-classes shares
         ageShares = []
-        numClasses = self.contacts.shape[1]
+        numClasses = int(self.contacts.shape[1])
         if (numClasses%2) != 0:
             numClasses -= 1
         for i in range(0, numClasses, 2):
@@ -4507,7 +4507,7 @@ class Sim:
             
         # 9-classes contacts matrix
         newMatrix = []
-        for i in range(self.contacts.shape[1]):
+        for i in range(int(self.contacts.shape[1])):
             newColumn = []
             col = list(self.contacts[i])
             numCol = int(len(col))
@@ -4699,14 +4699,14 @@ class Sim:
             mortalityBias = self.p['femaleMortalityBias']
         
         a = 0
-        for i in range(self.p['numberClasses']):
+        for i in range(int(self.p['numberClasses'])):
             a += self.socialClassShares[i]*math.pow(mortalityBias, i)
         lowClassRate = baseRate/a
         
         classRate = lowClassRate*math.pow(mortalityBias, classRank)
        
         a = 0
-        for i in range(self.p['numCareLevels']):
+        for i in range(int(self.p['numCareLevels'])):
             a += self.careNeedShares[classRank][i]*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - i)
         higherNeedRate = classRate/a
        
@@ -10843,7 +10843,7 @@ class Sim:
         for a in range(0,int(self.p['num5YearAgeClasses'])):
             malePixel = 153
             femalePixel = 187
-            for c in range(0,self.p['numCareLevels']):
+            for c in range(0,int(self.p['numCareLevels'])):
                 mWidth = self.pyramid.maleData[a,c]
                 fWidth = self.pyramid.femaleData[a,c]
 
