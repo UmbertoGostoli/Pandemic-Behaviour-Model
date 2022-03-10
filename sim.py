@@ -3971,7 +3971,7 @@ class Sim:
             for agent in house.occupants:
                 # - Start from public (empirical) probabilities of hospitalization, ventilation and death
                 # - The empirical probabilities act as attraction points on the actual probabilities
-                ageGroup = min(int(agent.age/10), self.p['ageClasses']-1)
+                ageGroup = int(min(int(agent.age/10), self.p['ageClasses']-1))
                 # Expected hospitalization cost
                 probH = self.p['probSymptomatic'][ageGroup]*self.p['probsHospitalization'][ageGroup]
                 
@@ -4095,7 +4095,7 @@ class Sim:
                 person.daysSinceLastTest += 1
                 
                 # First element of probability of test: how is it likely that the person got the virus?
-                ageGroup = min(int(person.age/10), self.p['ageClasses']-1)
+                ageGroup = int(min(int(person.age/10), self.p['ageClasses']-1))
                 probAsymptomatic = 1.0-self.p['probSymptomatic'][ageGroup]
                 symptomsIndex = max(math.pow(person.mildConditionIndex, self.p['symptomsTestExp']), probAsymptomatic)
                 
