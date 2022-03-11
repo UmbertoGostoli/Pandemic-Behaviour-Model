@@ -3910,7 +3910,7 @@ class Sim:
         
         # It stores the probabilities to be hospitalized, intubated or to die if infected, according to age class
         self.probsConditionsByAge = [probCond1To18, probCond19To39, probCond40To59, probCond60To79, probCond80Over]
-        self.varsConditionsByAge = [varCond1To18, varCond19To39, varCond40To59, varCond60To79, varCond80Over]
+        # self.varsConditionsByAge = [varCond1To18, varCond19To39, varCond40To59, varCond60To79, varCond80Over]
         
         for town in self.map.towns:
             townPop = len([x for x in self.pop.livingPeople if x.house.town == town])
