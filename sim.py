@@ -3824,13 +3824,13 @@ class Sim:
         self.shareIntubated1To18_TS.append(self.shareIntubated1To18)
         self.shareDeaths1To18_TS.append(self.shareDeaths1To18)
         
-        sampleSize = min(len(self.shareHospitalized1To18_TS), self.p['maxSampleSize'])
-        self.shareHospitalized1To18_var = np.var(self.shareHospitalized1To18_TS[-sampleSize:])
-        self.shareIntubated1To18_var = np.var(self.shareIntubated1To18_TS[-sampleSize:])
-        self.shareDeaths1To18_var = np.var(self.shareDeaths1To18_TS[-sampleSize:])
+#        sampleSize = min(len(self.shareHospitalized1To18_TS), int(self.p['maxSampleSize']))
+#        self.shareHospitalized1To18_var = np.var(self.shareHospitalized1To18_TS[-sampleSize:])
+#        self.shareIntubated1To18_var = np.var(self.shareIntubated1To18_TS[-sampleSize:])
+#        self.shareDeaths1To18_var = np.var(self.shareDeaths1To18_TS[-sampleSize:])
         
         probCond1To18 = [self.shareHospitalized1To18, self.shareIntubated1To18, self.shareDeaths1To18]
-        varCond1To18 = [self.shareHospitalized1To18_var, self.shareIntubated1To18_var, self.shareDeaths1To18_var]
+        # varCond1To18 = [self.shareHospitalized1To18_var, self.shareIntubated1To18_var, self.shareDeaths1To18_var]
         
         self.shareHospitalized19To39 = 0 
         self.shareIntubated19To39 = 0
@@ -3844,12 +3844,12 @@ class Sim:
         self.shareIntubated19To39_TS.append(self.shareIntubated19To39)
         self.shareDeaths19To39_TS.append(self.shareDeaths19To39)
         
-        self.shareHospitalized19To39_var = np.var(self.shareHospitalized19To39_TS[-sampleSize:]) 
-        self.shareIntubated19To39_var = np.var(self.shareIntubated19To39_TS[-sampleSize:])
-        self.shareDeaths19To39_var = np.var(self.shareDeaths19To39_TS[-sampleSize:])
+#        self.shareHospitalized19To39_var = np.var(self.shareHospitalized19To39_TS[-sampleSize:]) 
+#        self.shareIntubated19To39_var = np.var(self.shareIntubated19To39_TS[-sampleSize:])
+#        self.shareDeaths19To39_var = np.var(self.shareDeaths19To39_TS[-sampleSize:])
         
         probCond19To39 = [self.shareHospitalized19To39, self.shareIntubated19To39, self.shareDeaths19To39]
-        varCond19To39 = [self.shareHospitalized19To39_var, self.shareIntubated19To39_var, self.shareDeaths19To39_var]
+        # varCond19To39 = [self.shareHospitalized19To39_var, self.shareIntubated19To39_var, self.shareDeaths19To39_var]
         
         self.shareHospitalized40To59 = 0 
         self.shareIntubated40To59 = 0
@@ -3863,12 +3863,12 @@ class Sim:
         self.shareIntubated40To59_TS.append(self.shareIntubated40To59)
         self.shareDeaths40To59_TS.append(self.shareDeaths40To59)    
         
-        self.shareHospitalized40To59_var = np.var(self.shareHospitalized19To39_TS[-sampleSize:]) 
-        self.shareIntubated40To59_var = np.var(self.shareIntubated19To39_TS[-sampleSize:])
-        self.shareDeaths40To59_var = np.var(self.shareDeaths19To39_TS[-sampleSize:])
+#        self.shareHospitalized40To59_var = np.var(self.shareHospitalized19To39_TS[-sampleSize:]) 
+#        self.shareIntubated40To59_var = np.var(self.shareIntubated19To39_TS[-sampleSize:])
+#        self.shareDeaths40To59_var = np.var(self.shareDeaths19To39_TS[-sampleSize:])
         
         probCond40To59 = [self.shareHospitalized40To59, self.shareIntubated40To59, self.shareDeaths40To59]
-        varCond40To59 = [self.shareHospitalized40To59_var, self.shareIntubated40To59_var, self.shareDeaths40To59_var]
+        # varCond40To59 = [self.shareHospitalized40To59_var, self.shareIntubated40To59_var, self.shareDeaths40To59_var]
         
         self.shareHospitalized60To79 = 0 
         self.shareIntubated60To79 = 0
@@ -3882,12 +3882,12 @@ class Sim:
         self.shareIntubated60To79_TS.append(self.shareIntubated60To79)
         self.shareDeaths60To79_TS.append(self.shareDeaths60To79)
         
-        self.shareHospitalized60To79_var = np.var(self.shareHospitalized60To79_TS[-sampleSize:]) 
-        self.shareIntubated60To79_var = np.var(self.shareIntubated60To79_TS[-sampleSize:])
-        self.shareDeaths60To79_var = np.var(self.shareDeaths60To79_TS[-sampleSize:])
+#        self.shareHospitalized60To79_var = np.var(self.shareHospitalized60To79_TS[-sampleSize:]) 
+#        self.shareIntubated60To79_var = np.var(self.shareIntubated60To79_TS[-sampleSize:])
+#        self.shareDeaths60To79_var = np.var(self.shareDeaths60To79_TS[-sampleSize:])
         
         probCond60To79 = [self.shareHospitalized60To79, self.shareIntubated60To79, self.shareDeaths60To79]
-        varCond60To79 = [self.shareHospitalized60To79_var, self.shareIntubated60To79_var, self.shareDeaths60To79_var]
+        # varCond60To79 = [self.shareHospitalized60To79_var, self.shareIntubated60To79_var, self.shareDeaths60To79_var]
             
         self.shareHospitalized80Over = 0 
         self.shareIntubated80Over = 0
@@ -3901,12 +3901,12 @@ class Sim:
         self.shareIntubated80Over_TS.append(self.shareIntubated80Over)
         self.shareDeaths80Over_TS.append(self.shareDeaths80Over)
         
-        self.shareHospitalized80Over_var = np.var(self.shareHospitalized80Over_TS[-sampleSize:]) 
-        self.shareIntubated80Over_var = np.var(self.shareIntubated80Over_TS[-sampleSize:])
-        self.shareDeaths80Over_var = np.var(self.shareDeaths80Over_TS[-sampleSize:])
+#        self.shareHospitalized80Over_var = np.var(self.shareHospitalized80Over_TS[-sampleSize:]) 
+#        self.shareIntubated80Over_var = np.var(self.shareIntubated80Over_TS[-sampleSize:])
+#        self.shareDeaths80Over_var = np.var(self.shareDeaths80Over_TS[-sampleSize:])
         
         probCond80Over = [self.shareHospitalized80Over, self.shareIntubated80Over, self.shareDeaths80Over]
-        varCond80Over = [self.shareHospitalized80Over_var, self.shareIntubated80Over_var, self.shareDeaths80Over_var]
+        # varCond80Over = [self.shareHospitalized80Over_var, self.shareIntubated80Over_var, self.shareDeaths80Over_var]
         
         # It stores the probabilities to be hospitalized, intubated or to die if infected, according to age class
         self.probsConditionsByAge = [probCond1To18, probCond19To39, probCond40To59, probCond60To79, probCond80Over]
