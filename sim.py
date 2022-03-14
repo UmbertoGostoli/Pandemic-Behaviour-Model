@@ -1874,49 +1874,49 @@ class Sim:
 #            randomContact.socialContacts.add_edge(randomContact, randomAgent, weight = weightLink)
         
     
-    def socialInteraction_Debug(self):
-        # In this function, the agent draws from his networks a number of daily contacts which depends on his isolation behaviour.
-        # The probability that a node is selected as daily contact depends on the links' weights,
-        
-        ## print 'Class Contacts Matrix: ' + str(self.classContactsMatrix)
-        
-        susceptible = [x for x in self.pop.livingPeople if x.healthStatus == 'susceptible']
-        for agent in susceptible:
-            agent.dailyContacts = []
-            # 1 - Get daily contacts
-            friends = [x for x in agent.socialContacts.nodes() if x != agent and x.dead == False and x.hospitalized == False and (agent.socialContacts[agent][x]['weight']*x.contactReductionRate) > 0]
-            if len(friends) > 0:
-                quintile = agent.incomeQuintile
-                if self.p['5yearAgeClasses'] == False:
-                    ageClasses = int(self.p['ageClasses'])
-                    agentAgeGroup = agent.ageClass
-                else:
-                    ageClasses = int(self.p['interactionAgeClasses'])
-                    agentAgeGroup = agent.interactionAgeClass
-                averageContacts = sum([self.classContactsMatrix[agentAgeGroup][x][quintile] for x in range(ageClasses)])*self.p['dailyContactsShare']
-                if self.lockdown == True:
-                    averageContacts *= self.p['lockdownContactReductionRate']
-                
-                den = sum([agent.socialContacts[agent][x]['weight'] for x in friends])
-                num = sum([agent.socialContacts[agent][x]['weight']*x.contactReductionRate for x in friends])
-                averageIsolationRate = 0
-                if den > 0:
-                    averageIsolationRate = num/den
-                meanNumContacts = float(averageContacts)*agent.contactReductionRate*averageIsolationRate
-                agent.numContacts = np.random.poisson(meanNumContacts)
-                # Now, the contacts are randomly sampled from the agent's social network
-                if agent.numContacts > len(friends):
-                    agent.numContacts = len(friends)
-        
-        # Random contacts
-        totContacts = []
-        for agent in susceptible:
-            friends = [x for x in self.pop.livingPeople if x != agent and x.dead == False and x.hospitalized == False and x.contactReductionRate > 0]
-            agent.dailyContacts = np.random.choice(friends, agent.numContacts, replace = False)
-            
-            totContacts.append(agent.numContacts)
-        
-        print 'Average num of contacts: ' + str(np.mean(totContacts))
+#    def socialInteraction_Debug(self):
+#        # In this function, the agent draws from his networks a number of daily contacts which depends on his isolation behaviour.
+#        # The probability that a node is selected as daily contact depends on the links' weights,
+#        
+#        ## print 'Class Contacts Matrix: ' + str(self.classContactsMatrix)
+#        
+#        susceptible = [x for x in self.pop.livingPeople if x.healthStatus == 'susceptible']
+#        for agent in susceptible:
+#            agent.dailyContacts = []
+#            # 1 - Get daily contacts
+#            friends = [x for x in agent.socialContacts.nodes() if x != agent and x.dead == False and x.hospitalized == False and (agent.socialContacts[agent][x]['weight']*x.contactReductionRate) > 0]
+#            if len(friends) > 0:
+#                quintile = agent.incomeQuintile
+#                if self.p['5yearAgeClasses'] == False:
+#                    ageClasses = int(self.p['ageClasses'])
+#                    agentAgeGroup = agent.ageClass
+#                else:
+#                    ageClasses = int(self.p['interactionAgeClasses'])
+#                    agentAgeGroup = agent.interactionAgeClass
+#                averageContacts = sum([self.classContactsMatrix[agentAgeGroup][x][quintile] for x in range(ageClasses)])*self.p['dailyContactsShare']
+#                if self.lockdown == True:
+#                    averageContacts *= self.p['lockdownContactReductionRate']
+#                
+#                den = sum([agent.socialContacts[agent][x]['weight'] for x in friends])
+#                num = sum([agent.socialContacts[agent][x]['weight']*x.contactReductionRate for x in friends])
+#                averageIsolationRate = 0
+#                if den > 0:
+#                    averageIsolationRate = num/den
+#                meanNumContacts = float(averageContacts)*agent.contactReductionRate*averageIsolationRate
+#                agent.numContacts = np.random.poisson(meanNumContacts)
+#                # Now, the contacts are randomly sampled from the agent's social network
+#                if agent.numContacts > len(friends):
+#                    agent.numContacts = len(friends)
+#        
+#        # Random contacts
+#        totContacts = []
+#        for agent in susceptible:
+#            friends = [x for x in self.pop.livingPeople if x != agent and x.dead == False and x.hospitalized == False and x.contactReductionRate > 0]
+#            agent.dailyContacts = np.random.choice(friends, agent.numContacts, replace = False)
+#            
+#            totContacts.append(agent.numContacts)
+#        
+#        print 'Average num of contacts: ' + str(np.mean(totContacts))
     
     def commutingProcess(self):
         commutingAgents = [x for x in self.pop.livingPeople if x.age > 17 and x.age < 65]
@@ -2191,248 +2191,248 @@ class Sim:
 
 
                 
-    def socialInteraction_SPE(self):
-        
-        # In this function, the agents are assigned to venues, in a way consistent with the empirical contact matrix.
-        # First, the venues are emptied...
-        
-        # Then, agents are randomly allocated to venues.
-        # np.random.shuffle(self.pop.livingPeople)
-        
-        if self.p['5yearAgeClasses'] == False:
-            ageClasses = int(self.p['ageClasses'])
-        else:
-            ageClasses = int(self.p['interactionAgeClasses'])
-      
-
-        remainingContacts = self.totalInteractions
-        
-                    # currentDistance += np.power(float(abs(self.totalAge1Age2Income1Contacts[i][j][z]-age1Age2Income1Contacts[i][j][z])), self.p['contactsDistanceExp'])
-        totalFitness = 0
-        
-        for contactClass in self.classesContacts:
-            contactClass.actualContactsByAge = [0]*int(self.p['interactionAgeClasses'])
-
-        effectiveContacts = []
-        for i in range(int(self.p['interactionAgeClasses'])):
-            incomeContacts = []
-            for j in range(int(self.p['incomeClasses'])):
-                incomeContacts.append(0)
-            effectiveContacts.append(incomeContacts)
-       
-        self.newVenues = 0
-        
-        while remainingContacts > 0:
-        
-            # At each cicle, create a random venue with a certain prob.
-#            if np.random.random() < self.p['probNewVenue']:
-#                # Selecet randomly a town
-#                popTowns = [len(x.people) for x in self.map.towns]
-#                probs = [float(x)/sum(popTowns) for x in popTowns]
-#                town = np.random.choice(self.map.towns, p = probs)
-#                emptyVenues = [x for x in town.venues if len(x.occupants) == 0]
-#                if len(emptyVenues) == 0:
-#                    occupiedSpots = [[i.x, i.y] for i in town.houses]
-#                    occupiedSpots.extend([[i.x, i.y] for i in town.venues])
-#                    newVenue = Venue(town)
-#                    # Determine venue's location
-#                    randomX = random.randint(0, int(self.p['townGridDimension']))
-#                    randomY = random.randint(0, int(self.p['townGridDimension']))
-#                    while [randomX, randomY] in occupiedSpots:
-#                        'Print occupied spot.'
-#                        randomX = random.randint(0, int(self.p['townGridDimension']))
-#                        randomY = random.randint(0, int(self.p['townGridDimension']))
+#    def socialInteraction_SPE(self):
+#        
+#        # In this function, the agents are assigned to venues, in a way consistent with the empirical contact matrix.
+#        # First, the venues are emptied...
+#        
+#        # Then, agents are randomly allocated to venues.
+#        # np.random.shuffle(self.pop.livingPeople)
+#        
+#        if self.p['5yearAgeClasses'] == False:
+#            ageClasses = int(self.p['ageClasses'])
+#        else:
+#            ageClasses = int(self.p['interactionAgeClasses'])
+#      
+#
+#        remainingContacts = self.totalInteractions
+#        
+#                    # currentDistance += np.power(float(abs(self.totalAge1Age2Income1Contacts[i][j][z]-age1Age2Income1Contacts[i][j][z])), self.p['contactsDistanceExp'])
+#        totalFitness = 0
+#        
+#        for contactClass in self.classesContacts:
+#            contactClass.actualContactsByAge = [0]*int(self.p['interactionAgeClasses'])
+#
+#        effectiveContacts = []
+#        for i in range(int(self.p['interactionAgeClasses'])):
+#            incomeContacts = []
+#            for j in range(int(self.p['incomeClasses'])):
+#                incomeContacts.append(0)
+#            effectiveContacts.append(incomeContacts)
+#       
+#        self.newVenues = 0
+#        
+#        while remainingContacts > 0:
+#        
+#            # At each cicle, create a random venue with a certain prob.
+##            if np.random.random() < self.p['probNewVenue']:
+##                # Selecet randomly a town
+##                popTowns = [len(x.people) for x in self.map.towns]
+##                probs = [float(x)/sum(popTowns) for x in popTowns]
+##                town = np.random.choice(self.map.towns, p = probs)
+##                emptyVenues = [x for x in town.venues if len(x.occupants) == 0]
+##                if len(emptyVenues) == 0:
+##                    occupiedSpots = [[i.x, i.y] for i in town.houses]
+##                    occupiedSpots.extend([[i.x, i.y] for i in town.venues])
+##                    newVenue = Venue(town)
+##                    # Determine venue's location
+##                    randomX = random.randint(0, int(self.p['townGridDimension']))
+##                    randomY = random.randint(0, int(self.p['townGridDimension']))
+##                    while [randomX, randomY] in occupiedSpots:
+##                        'Print occupied spot.'
+##                        randomX = random.randint(0, int(self.p['townGridDimension']))
+##                        randomY = random.randint(0, int(self.p['townGridDimension']))
+##                        
+##                    newVenue.x = randomX
+##                    newVenue.y = randomY
+##                    town.venues.append(newVenue)
+##                    self.map.allVenues.append(newVenue)
+##                    self.newVenues += 1
+##                    print 'New venue created.'
+#            
+#            # 1 - A venue is randomly chosen
+#            venue = np.random.choice(self.map.allVenues)
+#            # 2 - All the agents in the venue's town (who did not commute to anotehr town) are selected
+#            agents = [x for x in self.pop.livingPeople if x.house.town == venue.town and x.commutingTown == None]
+#            # The agents commuting to the venue's town are added
+#            agents.extend([x for x in self.pop.livingPeople if x.commutingTown == venue.town]) # Add commuters
+#            emptyClasses = []
+#            for i in range(int(self.p['interactionAgeClasses'])):
+#                for j in range(int(self.p['incomeClasses'])):
+#                    # Select age/income interaction info
+#                    intClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
+#                    # Select all the agents of that age/income class
+#                    potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
+#                    if len(potentialVisitors) == 0:
+#                        emptyClasses.append(intClass)
+#            while len(emptyClasses) == len(self.classesContacts):
+#                venue = np.random.choice(self.map.allVenues)
+#                agents = [x for x in self.pop.livingPeople if x.house.town == venue.town and x.commutingTown == None]
+#                agents.extend([x for x in self.pop.livingPeople if x.commutingTown == venue.town]) # Add commuters
+#                emptyClasses = []
+#                for i in range(int(self.p['interactionAgeClasses'])):
+#                    for j in range(int(self.p['incomeClasses'])):
+#                        intClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
+#                        potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
+#                        if len(potentialVisitors) == 0:
+#                            emptyClasses.append(intClass)
+#                    
+#            # Select an age/income group based on number of residual contacts 
+#            if len(venue.occupants) == 0: 
+#               
+#                for i in range(int(self.p['interactionAgeClasses'])):
+#                    for j in range(int(self.p['incomeClasses'])):
+#                        ageIncomeClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
+#                        # The probabliity of an age/income class being selected depends on the residual number of contacts for that class
+#                        weightsClass = ageIncomeClass.contacts-effectiveContacts[i][j]
+#                        ageIncomeClass.weight = float(np.exp(self.p['deltaContactsBeta']*weightsClass))
+#                weightsClasses = [x.weight for x in self.classesContacts]
+#                potentialVisitors = []
+#                visitedClasses = []
+#                while len(potentialVisitors) == 0:
+#                    remainingClasses = [x for x in self.classesContacts if x not in visitedClasses]
+#                    weightsClasses = [x.weight for x in remainingClasses]
+#                    probsClasses = [float(x)/sum(weightsClasses) for x in weightsClasses]
+#                    intClass = np.random.choice(remainingClasses, p = probsClasses)
+#                    if intClass not in visitedClasses:
+#                        visitedClasses.append(intClass)
+#                    potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
+#                distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
+#                
+#                meanDist = np.mean(distances)
+#                if meanDist <= 0:
+#                    meanDist = 1.0
+#                newDist = []
+#                for x in distances:
+#                    if x == 0:
+#                        newDist.append(meanDist)
+#                    else:
+#                        newDist.append(x)
+#                distances = [x for x in newDist]
+#                
+#                weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
+#                probs = [x/sum(weights) for x in weights]
+##                if sum(probs) < 1.0:
+##                    print ''
+##                    print 'Error: probs do not add to !'
+##                    print weights
+##                    print probs
+##                    print len(potentialVisitors)
+##                    print 'Venue coordinates: ' + str(venue.x) + ' - ' + str(venue.y)
+##                    print ''
+#                agent = np.random.choice(potentialVisitors, p = probs)
+#                venue.occupants.append(agent)
+#                venue.numVirtualOccupants += 1
+#               
+#            else:
+#                # In this case, the probability of an age/income class being selected depends on the venue's attendants
+#                weightsAges = []
+#                for j in range(int(self.p['interactionAgeClasses'])):
+#                    deltaContacts = []
+#                    for agent in venue.occupants:
+#                        i = agent.interactionAgeClass
+#                        z = agent.incomeQuintile
+#                        intClass = [x for x in self.classesContacts if x.age == i and x.quintile == z][0]
+#                        deltaAgeContacts = float(intClass.totContactsByAge[j]-intClass.actualContactsByAge[j])
+#                        deltaContacts.append(deltaAgeContacts)
+#                    meanDeltaContacts = np.mean(deltaContacts)
+#                    weightsAges.append(float(np.exp(self.p['deltaContactsBeta']*meanDeltaContacts)))
+#                if sum(weightsAges) > 0:
+#                    probs = [float(x)/sum(weightsAges) for x in weightsAges]
+#                    ageClass = np.random.choice(range(int(self.p['interactionAgeClasses'])), p = probs)
+#                    potentialVisitors = [x for x in agents if x.interactionAgeClass == ageClass and x not in venue.occupants]
+#                elif sum(weightsAges) == 0 or len(potentialVisitors) == 0:
+#                    if sum(weightsAges) == 0:
+#                        print 'Weights age equal zero'
+#                    if len(potentialVisitors) == 0:
+#                        print 'Len visitors equal zero'
+#                    visitedAges = []
+#                    cond = False
+#                    while cond == False:
+#                        ageClass = np.random.choice(range(int(self.p['interactionAgeClasses'])))
+#                        if ageClass not in visitedAges:
+#                            visitedAges.append(ageClass)
+#                        potentialVisitors = [x for x in agents if x.interactionAgeClass == ageClass and x not in venue.occupants]
+#                        if len(potentialVisitors) > 0:
+#                            cond = True
+#                        if len(potentialVisitors) == 0 and len(visitedAges) == int(self.p['interactionAgeClasses']):
+#                            print 'Error: all the age classes have zero potential visitors!'
+#                            sys.exit()
+#                
+#                if len(potentialVisitors) > 0:
+#                    
+#                    distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
+#                    
+#                    meanDist = np.mean(distances)
+#                    if meanDist <= 0:
+#                        meanDist = 1.0
+#                    newDist = []
+#                    for x in distances:
+#                        if x == 0:
+#                            newDist.append(meanDist)
+#                        else:
+#                            newDist.append(x)
+#                    distances = [x for x in newDist]
+#                    
+#                    weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
+#                    
+#                    probs = [x/sum(weights) for x in weights]
+#                    
+#                    agent = np.random.choice(potentialVisitors, p = probs)
+#                    lastRemCont = remainingContacts
+#                    remainingContacts -= 2*int(math.ceil(math.pow(venue.numVirtualOccupants, self.p['venueBetaExp'])))
+#                    
+#                    if remainingContacts == lastRemCont:
+#                        print 'Error: rem contacts do not diminish!'
+#                        print remainingContacts
+#                        print venue.numVirtualOccupants
+#                        print len(potentialVisitors)
+#                        sys.exit()
+#                    
+#                    venue.numVirtualOccupants += 1
+#                    if agent.hospitalized == False:
+#                        if self.p['behaviourModuleOn'] == True:
+#                            probAttendance = self.computeAttendanceProb(agent, venue)
+#                            if np.random.random() < probAttendance:
+#                                venue.occupants.append(agent)
+#                            else:
+#                                self.cumulatedAbsences += 1
+#                        else:
+#                            venue.occupants.append(agent)
 #                        
-#                    newVenue.x = randomX
-#                    newVenue.y = randomY
-#                    town.venues.append(newVenue)
-#                    self.map.allVenues.append(newVenue)
-#                    self.newVenues += 1
-#                    print 'New venue created.'
-            
-            # 1 - A venue is randomly chosen
-            venue = np.random.choice(self.map.allVenues)
-            # 2 - All the agents in the venue's town (who did not commute to anotehr town) are selected
-            agents = [x for x in self.pop.livingPeople if x.house.town == venue.town and x.commutingTown == None]
-            # The agents commuting to the venue's town are added
-            agents.extend([x for x in self.pop.livingPeople if x.commutingTown == venue.town]) # Add commuters
-            emptyClasses = []
-            for i in range(int(self.p['interactionAgeClasses'])):
-                for j in range(int(self.p['incomeClasses'])):
-                    # Select age/income interaction info
-                    intClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-                    # Select all the agents of that age/income class
-                    potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
-                    if len(potentialVisitors) == 0:
-                        emptyClasses.append(intClass)
-            while len(emptyClasses) == len(self.classesContacts):
-                venue = np.random.choice(self.map.allVenues)
-                agents = [x for x in self.pop.livingPeople if x.house.town == venue.town and x.commutingTown == None]
-                agents.extend([x for x in self.pop.livingPeople if x.commutingTown == venue.town]) # Add commuters
-                emptyClasses = []
-                for i in range(int(self.p['interactionAgeClasses'])):
-                    for j in range(int(self.p['incomeClasses'])):
-                        intClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-                        potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
-                        if len(potentialVisitors) == 0:
-                            emptyClasses.append(intClass)
-                    
-            # Select an age/income group based on number of residual contacts 
-            if len(venue.occupants) == 0: 
-               
-                for i in range(int(self.p['interactionAgeClasses'])):
-                    for j in range(int(self.p['incomeClasses'])):
-                        ageIncomeClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-                        # The probabliity of an age/income class being selected depends on the residual number of contacts for that class
-                        weightsClass = ageIncomeClass.contacts-effectiveContacts[i][j]
-                        ageIncomeClass.weight = float(np.exp(self.p['deltaContactsBeta']*weightsClass))
-                weightsClasses = [x.weight for x in self.classesContacts]
-                potentialVisitors = []
-                visitedClasses = []
-                while len(potentialVisitors) == 0:
-                    remainingClasses = [x for x in self.classesContacts if x not in visitedClasses]
-                    weightsClasses = [x.weight for x in remainingClasses]
-                    probsClasses = [float(x)/sum(weightsClasses) for x in weightsClasses]
-                    intClass = np.random.choice(remainingClasses, p = probsClasses)
-                    if intClass not in visitedClasses:
-                        visitedClasses.append(intClass)
-                    potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
-                distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
-                
-                meanDist = np.mean(distances)
-                if meanDist <= 0:
-                    meanDist = 1.0
-                newDist = []
-                for x in distances:
-                    if x == 0:
-                        newDist.append(meanDist)
-                    else:
-                        newDist.append(x)
-                distances = [x for x in newDist]
-                
-                weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
-                probs = [x/sum(weights) for x in weights]
-#                if sum(probs) < 1.0:
-#                    print ''
-#                    print 'Error: probs do not add to !'
-#                    print weights
-#                    print probs
-#                    print len(potentialVisitors)
-#                    print 'Venue coordinates: ' + str(venue.x) + ' - ' + str(venue.y)
-#                    print ''
-                agent = np.random.choice(potentialVisitors, p = probs)
-                venue.occupants.append(agent)
-                venue.numVirtualOccupants += 1
-               
-            else:
-                # In this case, the probability of an age/income class being selected depends on the venue's attendants
-                weightsAges = []
-                for j in range(int(self.p['interactionAgeClasses'])):
-                    deltaContacts = []
-                    for agent in venue.occupants:
-                        i = agent.interactionAgeClass
-                        z = agent.incomeQuintile
-                        intClass = [x for x in self.classesContacts if x.age == i and x.quintile == z][0]
-                        deltaAgeContacts = float(intClass.totContactsByAge[j]-intClass.actualContactsByAge[j])
-                        deltaContacts.append(deltaAgeContacts)
-                    meanDeltaContacts = np.mean(deltaContacts)
-                    weightsAges.append(float(np.exp(self.p['deltaContactsBeta']*meanDeltaContacts)))
-                if sum(weightsAges) > 0:
-                    probs = [float(x)/sum(weightsAges) for x in weightsAges]
-                    ageClass = np.random.choice(range(int(self.p['interactionAgeClasses'])), p = probs)
-                    potentialVisitors = [x for x in agents if x.interactionAgeClass == ageClass and x not in venue.occupants]
-                elif sum(weightsAges) == 0 or len(potentialVisitors) == 0:
-                    if sum(weightsAges) == 0:
-                        print 'Weights age equal zero'
-                    if len(potentialVisitors) == 0:
-                        print 'Len visitors equal zero'
-                    visitedAges = []
-                    cond = False
-                    while cond == False:
-                        ageClass = np.random.choice(range(int(self.p['interactionAgeClasses'])))
-                        if ageClass not in visitedAges:
-                            visitedAges.append(ageClass)
-                        potentialVisitors = [x for x in agents if x.interactionAgeClass == ageClass and x not in venue.occupants]
-                        if len(potentialVisitors) > 0:
-                            cond = True
-                        if len(potentialVisitors) == 0 and len(visitedAges) == int(self.p['interactionAgeClasses']):
-                            print 'Error: all the age classes have zero potential visitors!'
-                            sys.exit()
-                
-                if len(potentialVisitors) > 0:
-                    
-                    distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
-                    
-                    meanDist = np.mean(distances)
-                    if meanDist <= 0:
-                        meanDist = 1.0
-                    newDist = []
-                    for x in distances:
-                        if x == 0:
-                            newDist.append(meanDist)
-                        else:
-                            newDist.append(x)
-                    distances = [x for x in newDist]
-                    
-                    weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
-                    
-                    probs = [x/sum(weights) for x in weights]
-                    
-                    agent = np.random.choice(potentialVisitors, p = probs)
-                    lastRemCont = remainingContacts
-                    remainingContacts -= 2*int(math.ceil(math.pow(venue.numVirtualOccupants, self.p['venueBetaExp'])))
-                    
-                    if remainingContacts == lastRemCont:
-                        print 'Error: rem contacts do not diminish!'
-                        print remainingContacts
-                        print venue.numVirtualOccupants
-                        print len(potentialVisitors)
-                        sys.exit()
-                    
-                    venue.numVirtualOccupants += 1
-                    if agent.hospitalized == False:
-                        if self.p['behaviourModuleOn'] == True:
-                            probAttendance = self.computeAttendanceProb(agent, venue)
-                            if np.random.random() < probAttendance:
-                                venue.occupants.append(agent)
-                            else:
-                                self.cumulatedAbsences += 1
-                        else:
-                            venue.occupants.append(agent)
-                        
-                    numContacts = int(math.ceil(math.pow(len(venue.occupants)-1, self.p['venueBetaExp'])))
-                    otherAttendants = [x for x in venue.occupants if x != agent]
-                    newContacts = np.random.choice(otherAttendants, numContacts, replace = False)
-                    i = agent.interactionAgeClass
-                    j = agent.incomeQuintile
-                    agentClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-                    effectiveContacts[i][j] += numContacts
-                    for attendant in newContacts:
-                        agentClass.actualContactsByAge[attendant.interactionAgeClass] += 1
-                        i = attendant.interactionAgeClass
-                        j = attendant.incomeQuintile
-                        attendantClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-                        attendantClass.actualContactsByAge[agent.interactionAgeClass] += 1
-                        effectiveContacts[i][j] += 1
-    
-        
-        for venue in self.map.allVenues:
-#            actualVisitors = []
-#            for agent in venue.occupants:
-#                probAttendance = self.computeAttendanceProb(agent, len(venue.occupants))
-#                if np.random.random() < agent.contactReductionRate:
-#                    actualVisitors.append(agent)
-#            venue.occupants = [x for x in actualVisitors]
-            venue.pastAttendants.append(len(venue.occupants))
-            # Update past attendance
-            
-            attendancesDiscounted = 0
-            den = 0
-            for i in range(len(venue.pastAttendants)):
-                index = len(venue.pastAttendants)-1
-                attendancesDiscounted += venue.pastAttendants[index-i]*np.power(self.p['timeDiscountingFactor'], i)
-                den += np.power(self.p['timeDiscountingFactor'], i)
-            venue.pastAttendance = float(attendancesDiscounted)/float(den)
+#                    numContacts = int(math.ceil(math.pow(len(venue.occupants)-1, self.p['venueBetaExp'])))
+#                    otherAttendants = [x for x in venue.occupants if x != agent]
+#                    newContacts = np.random.choice(otherAttendants, numContacts, replace = False)
+#                    i = agent.interactionAgeClass
+#                    j = agent.incomeQuintile
+#                    agentClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
+#                    effectiveContacts[i][j] += numContacts
+#                    for attendant in newContacts:
+#                        agentClass.actualContactsByAge[attendant.interactionAgeClass] += 1
+#                        i = attendant.interactionAgeClass
+#                        j = attendant.incomeQuintile
+#                        attendantClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
+#                        attendantClass.actualContactsByAge[agent.interactionAgeClass] += 1
+#                        effectiveContacts[i][j] += 1
+#    
+#        
+#        for venue in self.map.allVenues:
+##            actualVisitors = []
+##            for agent in venue.occupants:
+##                probAttendance = self.computeAttendanceProb(agent, len(venue.occupants))
+##                if np.random.random() < agent.contactReductionRate:
+##                    actualVisitors.append(agent)
+##            venue.occupants = [x for x in actualVisitors]
+#            venue.pastAttendants.append(len(venue.occupants))
+#            # Update past attendance
+#            
+#            attendancesDiscounted = 0
+#            den = 0
+#            for i in range(len(venue.pastAttendants)):
+#                index = len(venue.pastAttendants)-1
+#                attendancesDiscounted += venue.pastAttendants[index-i]*np.power(self.p['timeDiscountingFactor'], i)
+#                den += np.power(self.p['timeDiscountingFactor'], i)
+#            venue.pastAttendance = float(attendancesDiscounted)/float(den)
     
     def updateVenuesDistribution(self):
         
@@ -2703,93 +2703,93 @@ class Sim:
         return prob
     
     
-    def socialInteraction(self):
-        # In this function, the agent draws from his networks a number of daily contacts which depends on his isolation behaviour.
-        # The probability that a node is selected as daily contact depends on the links' weights,
-        
-        ## print 'Class Contacts Matrix: ' + str(self.classContactsMatrix)
-        
-        susceptible = [x for x in self.pop.livingPeople if x.healthStatus == 'susceptible']
-        for agent in susceptible:
-            agent.dailyContacts = []
-            agent.randomContacts = []
-            # 1 - Get daily contacts
-            agent.numContacts = 0
-            friends = [x for x in agent.socialContacts.nodes() if x != agent and x.dead == False and x.hospitalized == False and (agent.socialContacts[agent][x]['weight']*x.contactReductionRate) > 0]
-            if len(friends) > 0:
-                quintile = agent.incomeQuintile
-                if self.p['5yearAgeClasses'] == False:
-                    ageClasses = int(self.p['ageClasses'])
-                    agentAgeGroup = agent.ageClass
-                else:
-                    ageClasses = int(self.p['interactionAgeClasses'])
-                    agentAgeGroup = agent.interactionAgeClass
-                averageContacts = sum([self.classContactsMatrix[agentAgeGroup][x][quintile] for x in range(ageClasses)])*self.p['dailyContactsShare']
-                if self.lockdown == True:
-                    averageContacts *= self.p['lockdownContactReductionRate']
-                
-#                if agent.age >= 65:
-#                    averageContacts *= 3.0
-                
-#                den = sum([agent.socialContacts[agent][x]['weight'] for x in friends])
-#                num = sum([agent.socialContacts[agent][x]['weight']*x.contactReductionRate for x in friends])
-#                averageIsolationRate = 0
-#                if den > 0:
-#                    averageIsolationRate = num/den
-#                meanNumContacts = float(averageContacts)*agent.contactReductionRate*averageIsolationRate
-                    
-                agent.numContacts = np.random.poisson(averageContacts)
-                
-                agent.numRandomContacts = int(float(agent.numContacts)*self.p['randomContactsShare'])
-                # Now, the contacts are randomly sampled from the agent's social network
-                if agent.numContacts > len(friends):
-                    agent.numContacts = len(friends)
-    
-        # totContacts = []
-        
-        # Once the agents' number of daily contacts has been computed, the actual contacts are randomlyb drawn from the network of friends.
-        random.shuffle(susceptible)
-        
-        for agent in susceptible:
-            friends = [x for x in agent.socialContacts.nodes() if x != agent and x not in agent.dailyContacts and x.dead == False and x.hospitalized == False and (agent.socialContacts[agent][x]['weight']*x.contactReductionRate) > 0 and x.numContacts > len(x.dailyContacts)]
-            if agent.numContacts > len(agent.dailyContacts) and len(friends) > 0:
-                additionalContacts = agent.numContacts-len(agent.dailyContacts)
-                if additionalContacts > len(friends):
-                    additionalContacts = len(friends)
-                isolationRates = [x.contactReductionRate for x in friends]
-                townIndexes = []
-                for friend in friends:
-                    if friend.house.town == agent.house.town:
-                        townIndexes.append(self.p['sameTownWeight'])
-                    else:
-                        townIndexes.append(1.0)
-                linksWeights = [agent.socialContacts[agent][x]['weight'] for x in friends]
-                weights = [w*r*t for w, r, t in zip(linksWeights, isolationRates, townIndexes)]
-                contactsProbs = [x/sum(weights) for x in weights]
-                metFriends = np.random.choice(friends, additionalContacts, replace = False, p = contactsProbs)
-                agent.dailyContacts.extend(metFriends)
-                
-                for friend in metFriends:
-                    friend.dailyContacts.append(agent)
-        
-        outOfTownContacts = 0
-        outOfTownFriends = 0
-        totFriends = 0
-        totContacts = 0
-        for agent in susceptible:
-            
-            # print 'Num daily contacts: ' + str(len([x for x in agent.dailyContacts]))
-            
-            totFriends += agent.socialContacts.number_of_nodes()
-            totContacts += len([x for x in agent.dailyContacts])
-            outOfTownFriends += len([x for x in agent.socialContacts.nodes() if x.house.town != agent.house.town])
-            outOfTownContacts += len([x for x in agent.dailyContacts if x.house.town != agent.house.town])
-        
-        print 'Over ' + str(len(susceptible)) + ' susceptible, there are ' + str(outOfTownFriends) + ' out-of-town friends'
-        print 'Over ' + str(len(susceptible)) + ' susceptible, there are ' + str(outOfTownContacts) + ' out-of-town contacts'
-        
-        print 'Share of out-of-town friends: ' + str(float(outOfTownFriends)/float(totFriends))
-        print 'Share of out-of-town contacts: ' + str(float(outOfTownContacts)/float(totContacts))
+#    def socialInteraction(self):
+#        # In this function, the agent draws from his networks a number of daily contacts which depends on his isolation behaviour.
+#        # The probability that a node is selected as daily contact depends on the links' weights,
+#        
+#        ## print 'Class Contacts Matrix: ' + str(self.classContactsMatrix)
+#        
+#        susceptible = [x for x in self.pop.livingPeople if x.healthStatus == 'susceptible']
+#        for agent in susceptible:
+#            agent.dailyContacts = []
+#            agent.randomContacts = []
+#            # 1 - Get daily contacts
+#            agent.numContacts = 0
+#            friends = [x for x in agent.socialContacts.nodes() if x != agent and x.dead == False and x.hospitalized == False and (agent.socialContacts[agent][x]['weight']*x.contactReductionRate) > 0]
+#            if len(friends) > 0:
+#                quintile = agent.incomeQuintile
+#                if self.p['5yearAgeClasses'] == False:
+#                    ageClasses = int(self.p['ageClasses'])
+#                    agentAgeGroup = agent.ageClass
+#                else:
+#                    ageClasses = int(self.p['interactionAgeClasses'])
+#                    agentAgeGroup = agent.interactionAgeClass
+#                averageContacts = sum([self.classContactsMatrix[agentAgeGroup][x][quintile] for x in range(ageClasses)])*self.p['dailyContactsShare']
+#                if self.lockdown == True:
+#                    averageContacts *= self.p['lockdownContactReductionRate']
+#                
+##                if agent.age >= 65:
+##                    averageContacts *= 3.0
+#                
+##                den = sum([agent.socialContacts[agent][x]['weight'] for x in friends])
+##                num = sum([agent.socialContacts[agent][x]['weight']*x.contactReductionRate for x in friends])
+##                averageIsolationRate = 0
+##                if den > 0:
+##                    averageIsolationRate = num/den
+##                meanNumContacts = float(averageContacts)*agent.contactReductionRate*averageIsolationRate
+#                    
+#                agent.numContacts = np.random.poisson(averageContacts)
+#                
+#                agent.numRandomContacts = int(float(agent.numContacts)*self.p['randomContactsShare'])
+#                # Now, the contacts are randomly sampled from the agent's social network
+#                if agent.numContacts > len(friends):
+#                    agent.numContacts = len(friends)
+#    
+#        # totContacts = []
+#        
+#        # Once the agents' number of daily contacts has been computed, the actual contacts are randomlyb drawn from the network of friends.
+#        random.shuffle(susceptible)
+#        
+#        for agent in susceptible:
+#            friends = [x for x in agent.socialContacts.nodes() if x != agent and x not in agent.dailyContacts and x.dead == False and x.hospitalized == False and (agent.socialContacts[agent][x]['weight']*x.contactReductionRate) > 0 and x.numContacts > len(x.dailyContacts)]
+#            if agent.numContacts > len(agent.dailyContacts) and len(friends) > 0:
+#                additionalContacts = agent.numContacts-len(agent.dailyContacts)
+#                if additionalContacts > len(friends):
+#                    additionalContacts = len(friends)
+#                isolationRates = [x.contactReductionRate for x in friends]
+#                townIndexes = []
+#                for friend in friends:
+#                    if friend.house.town == agent.house.town:
+#                        townIndexes.append(self.p['sameTownWeight'])
+#                    else:
+#                        townIndexes.append(1.0)
+#                linksWeights = [agent.socialContacts[agent][x]['weight'] for x in friends]
+#                weights = [w*r*t for w, r, t in zip(linksWeights, isolationRates, townIndexes)]
+#                contactsProbs = [x/sum(weights) for x in weights]
+#                metFriends = np.random.choice(friends, additionalContacts, replace = False, p = contactsProbs)
+#                agent.dailyContacts.extend(metFriends)
+#                
+#                for friend in metFriends:
+#                    friend.dailyContacts.append(agent)
+#        
+#        outOfTownContacts = 0
+#        outOfTownFriends = 0
+#        totFriends = 0
+#        totContacts = 0
+#        for agent in susceptible:
+#            
+#            # print 'Num daily contacts: ' + str(len([x for x in agent.dailyContacts]))
+#            
+#            totFriends += agent.socialContacts.number_of_nodes()
+#            totContacts += len([x for x in agent.dailyContacts])
+#            outOfTownFriends += len([x for x in agent.socialContacts.nodes() if x.house.town != agent.house.town])
+#            outOfTownContacts += len([x for x in agent.dailyContacts if x.house.town != agent.house.town])
+#        
+#        print 'Over ' + str(len(susceptible)) + ' susceptible, there are ' + str(outOfTownFriends) + ' out-of-town friends'
+#        print 'Over ' + str(len(susceptible)) + ' susceptible, there are ' + str(outOfTownContacts) + ' out-of-town contacts'
+#        
+#        print 'Share of out-of-town friends: ' + str(float(outOfTownFriends)/float(totFriends))
+#        print 'Share of out-of-town contacts: ' + str(float(outOfTownContacts)/float(totContacts))
                     
         ### Add random contacts
 #        for agent in susceptible:
