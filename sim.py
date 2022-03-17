@@ -433,7 +433,11 @@ class Sim:
 #                                height=self.p['screenHeight'],
 #                                background=self.p['bgColour'])
 
-
+    def setFolders(self, scenario, folder):
+        self.folder = folder + '/Scenario_' + str(scenario)
+        
+        
+        
     def runYears(self, policy, policyParams, seed):
         """Run the simulation from year start to year end."""
         

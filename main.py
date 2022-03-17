@@ -804,16 +804,19 @@ def multiprocessParams(scenariosParams, policiesParams, numRepeats, fSeed, folde
 
 def multiprocessingSim(params):
     # Create Sim instance
-    folderRun = params[0]['rootFolder'] + '/Rep_' + str(params[0]['repeatIndex'])
     
-    s = Sim(params[0]['scenarioIndex'], params[0], folderRun)
+    s = params[0]
+    
+    folderRun = params[1]['rootFolder'] + '/Rep_' + str(params[1]['repeatIndex'])
+    s.setFolders(params[1]['scenarioIndex'], folderRun)
+    # s = Sim()
     
     print''
-    print 'Policy index: ' + str(params[1]['policyIndex'])
-    print 'Policy params: ' + str(params[1])
+    print 'Policy index: ' + str(params[2]['policyIndex'])
+    print 'Policy params: ' + str(params[2])
     print''
     
-    s.runDays(params[1]['policyIndex'], params[1], params[1]['randomSeed'])
+    s.runDays(params[2]['policyIndex'], params[2], params[2]['randomSeed'])
         
 
 if __name__ == "__main__":
@@ -951,7 +954,7 @@ if __name__ == "__main__":
                         
                     pool = multiprocessing.Pool(processors)
                     # Create a list of dictionaries (number repetitions times number of scenarios), adding repeat index for folders' creation
-                    params = multiprocessParams(scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 0)
+                    params = multiprocessParams(s, scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 0)
                     pool.map(multiprocessingSim, params)
                     pool.close()
                     pool.join()
@@ -960,7 +963,7 @@ if __name__ == "__main__":
                         # multiporcessing for the policies
                         pool = multiprocessing.Pool(processors)
                         # Create a list of policy parameters (numer of policies times number of scenarios times number of repeats)
-                        params = multiprocessParams(scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 1)
+                        params = multiprocessParams(s, scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 1)
                         pool.map(multiprocessingSim, params)
                         pool.close()
                         pool.join()
