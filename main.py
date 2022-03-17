@@ -813,7 +813,7 @@ def multiprocessingSim(params):
     print 'Policy params: ' + str(params[1])
     print''
     
-    s.run(params[1]['policyIndex'], params[1], params[1]['randomSeed'])
+    s.runDays(params[1]['policyIndex'], params[1], params[1]['randomSeed'])
         
 
 if __name__ == "__main__":
@@ -921,44 +921,49 @@ if __name__ == "__main__":
     numRepeats = int(metaParams['numRepeats'])
     fSeed = int(metaParams['favouriteSeed'])
     
-    if metaParams['multiprocessing'] == False or parametersFromFiles == False:
     
-        for r in range(numRepeats):
-            # Create Run folders
-            folderRun = folder + '/Rep_' + str(r)
-            if not os.path.exists(folderRun):
-                os.makedirs(folderRun)
-            # Set seed
-            seed = fSeed
-            if r > 0:
-                seed = int(time.time()/(r+1))
-            for i in range(len(scenariosParams)):
-                n = OrderedDict(scenariosParams[i])
-                s = Sim(i, n, folderRun)
-                for j in range(len(policiesParams[i])):
-                    p = OrderedDict(policiesParams[i][j])
-                    s.run(j, p, seed) # Add policy paramters later
+    
+    for r in range(numRepeats):
+        # Create Run folders
+        folderRun = folder + '/Rep_' + str(r)
+        if not os.path.exists(folderRun):
+            os.makedirs(folderRun)
+        # Set seed
+        seed = fSeed
+        if r > 0:
+            seed = int(time.time()/(r+1))
+        for i in range(len(scenariosParams)):
+            n = OrderedDict(scenariosParams[i])
+            s = Sim(i, n, folderRun)
+            for j in range(len(policiesParams[i])):
+                p = OrderedDict(policiesParams[i][j])
+                if metaParams['loadSim'] == False:
+                    s.runYears(j, p, seed) # Add policy paramters later
+                else:
+                    s.loadSim()
+                if metaParams['multiprocessing'] == False or parametersFromFiles == False:
+                    # Run the pandemic
+                    s.runDays(j, p, seed)
+                else:
+                    processors = int(metaParams['numberProcessors'])
+                    if processors > multiprocessing.cpu_count():
+                        processors = multiprocessing.cpu_count()
+                        
+                    pool = multiprocessing.Pool(processors)
+                    # Create a list of dictionaries (number repetitions times number of scenarios), adding repeat index for folders' creation
+                    params = multiprocessParams(scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 0)
+                    pool.map(multiprocessingSim, params)
+                    pool.close()
+                    pool.join()
                     
-    else:
-        processors = int(metaParams['numberProcessors'])
-        if processors > multiprocessing.cpu_count():
-            processors = multiprocessing.cpu_count()
-            
-        pool = multiprocessing.Pool(processors)
-        # Create a list of dictionaries (number repetitions times number of scenarios), adding repeat index for folders' creation
-        params = multiprocessParams(scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 0)
-        pool.map(multiprocessingSim, params)
-        pool.close()
-        pool.join()
-        
-        if numberPolicies > 1:
-            # multiporcessing for the policies
-            pool = multiprocessing.Pool(processors)
-            # Create a list of policy parameters (numer of policies times number of scenarios times number of repeats)
-            params = multiprocessParams(scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 1)
-            pool.map(multiprocessingSim, params)
-            pool.close()
-            pool.join()
+                    if numberPolicies > 1:
+                        # multiporcessing for the policies
+                        pool = multiprocessing.Pool(processors)
+                        # Create a list of policy parameters (numer of policies times number of scenarios times number of repeats)
+                        params = multiprocessParams(scenariosParams, policiesParams, metaParams['numRepeats'], fSeed, folder, 1)
+                        pool.map(multiprocessingSim, params)
+                        pool.close()
+                        pool.join()
             
     # Code to save the sensitivity outputs to a file
     if metaParams['sensitivityMode'] == True:
