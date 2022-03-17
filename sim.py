@@ -644,8 +644,8 @@ class Sim:
             # self.policyStartDeaths = self.totalDeaths
             # self.lockdownMaxCases = self.maxNewCases
             # Save outputs
-            self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
-            self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
+#            self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
+#            self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
             # Save simulation
             pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
             pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
