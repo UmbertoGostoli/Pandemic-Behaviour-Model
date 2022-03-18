@@ -768,8 +768,8 @@ def loadPolicies(scenarios):
     return policiesParams
 
 # multiprocessing functions
-def multiprocessParams(scenariosParams, policiesParams, numRepeats, fSeed, folder, n):
-    params = []
+def multiprocessParams(s, scenariosParams, policiesParams, numRepeats, fSeed, folder, n):
+    params = [s]
     for j in range(int(numRepeats)):
         randSeed = int(time.time()/(j+1))
         for i in range(len(scenariosParams)):
