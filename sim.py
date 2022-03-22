@@ -740,6 +740,25 @@ class SimPop:
                 town.venues.append(newVenue)
                 self.map.allVenues.append(newVenue)
                 
+    def townDistance(self, agentTown, contactTown):
+        agentX = agentTown.x
+        agentY = agentTown.y
+        contactX = contactTown.x
+        contactY = contactTown.y
+        xDist = abs(agentX - contactX)
+        yDist = abs(agentY - contactY)
+        return xDist + yDist
+        
+    def geoDistance(self, agentHouse, contactHouse):
+        d = self.p['townGridDimension']
+        agentX = agentHouse.town.x*d+agentHouse.x
+        agentY = agentHouse.town.y*d+agentHouse.y 
+        contactX = contactHouse.town.x*d+contactHouse.x
+        contactY = contactHouse.town.y*d+contactHouse.y 
+        xDist = abs(agentX - contactX)
+        yDist = abs(agentY - contactY)
+        return xDist + yDist
+                
     
         
 class SimCov:
