@@ -94,6 +94,7 @@ class SimPop:
         self.totalPensionRevenue = 0
         self.statePensionExpenditure = []
         self.pensionExpenditure = 0
+        self.lockdown = False
         
     def load_Data(self):
 
@@ -122,6 +123,9 @@ class SimPop:
         if self.p['loadSim'] == False:
             for self.year in range(int(self.p['startYear']), int(self.p['endYear'])):
                
+                
+                print 'Year ' + str(self.year)
+                
                 self.doOneYear(self.year)
                 
             self.createInfoNetworks_R()
@@ -392,6 +396,1175 @@ class SimPop:
         self.doMovingAround()
         
         self.checkHouseholdsRelocations()
+        
+    def computeWage(self, person):
+        
+        # newK = self.p['incomeFinalLevels'][classRank]*math.exp(dK)    
+        # c = np.math.log(self.p['incomeInitialLevels'][classRank]/newK)
+        # wage = newK*np.math.exp(c*np.math.exp(-1*self.p['incomeGrowthRate'][classRank]*workExperience))
+        c = np.math.log(person.initialIncome/person.finalIncome)
+        wage = person.finalIncome*np.math.exp(c*np.math.exp(-1*self.p['incomeGrowthRate'][person.classRank]*person.workExperience))
+        dK = np.random.normal(0, self.p['wageVar'])
+        wage *= math.exp(dK)
+        return wage
+    
+    def computeBirthProb(self, fertilityBias, rawRate, womanRank):
+        womenOfReproductiveAge = [x for x in self.pop.livingPeople
+                                  if x.sex == 'female' and x.age >= self.p['minPregnancyAge']]
+        womanClassShares = []
+        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 0])/float(len(womenOfReproductiveAge)))
+        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 1])/float(len(womenOfReproductiveAge)))
+        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 2])/float(len(womenOfReproductiveAge)))
+        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 3])/float(len(womenOfReproductiveAge)))
+        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 4])/float(len(womenOfReproductiveAge)))
+        a = 0
+        for i in range(int(self.p['numberClasses'])):
+            a += womanClassShares[i]*math.pow(self.p['fertilityBias'], i)
+        baseRate = rawRate/a
+        birthProb = baseRate*math.pow(self.p['fertilityBias'], womanRank)
+        return birthProb
+    
+    def computeSplitProb(self, rawRate, classRank):
+        a = 0
+        for i in range(int(self.p['numberClasses'])):
+            a += self.socialClassShares[i]*math.pow(self.p['divorceBias'], i)
+        baseRate = rawRate/a
+        splitProb = baseRate*math.pow(self.p['divorceBias'], classRank)
+        return splitProb
+    
+    def computeHouseholdIncome(self, house):
+        householdCarers = [x for x in house.occupants if x.age >= self.p['ageTeenagers'] and x.maternityStatus == False]
+        employed = [x for x in householdCarers if x.status == 'worker']
+        householdIncome = 0
+        for worker in employed:
+            worker.income = worker.residualWorkingHours*worker.wage
+        householdIncome = sum([x.income for x in householdCarers])
+        return householdIncome
+            
+    def doMovingAround(self):
+        """
+        Various reasons why a person or family group might want to
+        move around. People who are in partnerships but not living
+        together are highly likely to find a place together. Adults
+        still living at home might be ready to move out this year.
+        Single people might want to move in order to find partners. A
+        family might move at random for work reasons. Older people
+        might move back in with their kids.
+        """
+        self.relocationCostFactors[:] = []
+        self.incomeFactors[:] = []
+        self.probsRelocation[:] = []
+        
+        for i in self.pop.livingPeople:
+            i.movedThisYear = False
+            
+        ## Need to keep track of this to avoid multiple moves
+        separetedSpouses = [x for x in self.pop.livingPeople if x.partner != None and x.house != x.partner.house]
+        couples = []
+        for i in separetedSpouses:
+            couples.append([i, i.partner])
+       
+        for person in separetedSpouses:
+            
+            if person.house != person.partner.house:
+                if random.random() < self.p['probApartWillMoveTogether']:
+                    peopleToMove = [person, person.partner]
+                    personChildren = self.bringTheKids(person)
+                    personChildrenToMove = [x for x in personChildren if x not in separetedSpouses]
+                    peopleToMove += personChildrenToMove
+                    partnerChildren = self.bringTheKids(person.partner)
+                    partnerChildrenToMove = [x for x in partnerChildren if x not in separetedSpouses]
+                    peopleToMove += [x for x in partnerChildrenToMove if x not in personChildrenToMove]
+                    
+                    if random.random() < self.p['coupleMovesToExistingHousehold']:
+                        myHousePop = len(person.house.occupants)
+                        yourHousePop = len(person.partner.house.occupants)
+                        if yourHousePop < myHousePop:
+                            targetHouse = person.partner.house
+                        else:
+                            targetHouse = person.house
+                                
+                        self.movePeopleIntoChosenHouse(targetHouse,person.house,peopleToMove, 0)                        
+                    else:
+                        
+                        towns = [person.house.town, person.partner.house.town]
+                                
+                        self.findNewHouse(peopleToMove, towns)                        
+    
+                    if person.independentStatus == False:
+                        person.independentStatus = True
+                    if person.partner.independentStatus == False:
+                        person.partner.independentStatus = True
+
+        for person in self.pop.livingPeople:
+            age = self.year - person.birthdate
+            ageClass = age / 10
+            
+            if person.movedThisYear:
+                continue
+            
+            elif person.status == 'worker' and person.independentStatus == False and person.partner == None:
+                ## a single person who hasn't left home yet
+                if random.random() < ( self.p['basicProbAdultMoveOut']
+                                       * self.p['probAdultMoveOutModifierByDecade'][ageClass] ):
+                    peopleToMove = [person]
+                    peopleToMove += self.bringTheKids(person)
+                    distance = random.choice(['here','near'])
+                    
+                    # Select a town based on:
+                    # 1 - Distance form current town
+                    # 2 - Size of town
+                    # Gravitational model: town attraction = Size/pow(distance+1, beta)
+                    towns = self.selectTown(person.house.town)    #[person.house.town]
+                    
+                    self.findNewHouse(peopleToMove, towns)
+                    person.independentStatus = True
+
+            elif person.status == 'retired' and len(person.house.occupants) == 1:
+                ## a retired person who lives alone
+                for c in person.children:
+                    if ( c.dead == False ):
+                        distance = self.manhattanDistance(person.house.town,c.house.town)
+                        distance += 1.0
+                        if self.year < self.p['thePresent']:
+                            mbRate = self.p['agingParentsMoveInWithKids']/distance
+                        else:
+                            mbRate = self.p['variableMoveBack']/distance
+                        if random.random() < mbRate:
+                            peopleToMove = [person]
+                                
+                            self.movePeopleIntoChosenHouse(c.house,person.house,peopleToMove, 0)
+                            break
+ 
+            elif person.partner != None and person.yearMarried[-1] != self.year and person.house.vacated == False:
+                ## any other kind of married person, e.g., a family with kids
+                house = person.house
+                household = [x for x in house.occupants]
+                
+                # Compute relocation probability
+                # Relocation cost: the higher the lower the prob to relocate
+                relocationCost = self.p['relocationCostParam']*sum([math.pow(x.yearInTown, self.p['yearsInTownBeta']) for x in household])
+                relocationCostFactor = 1.0/math.exp(self.p['relocationCostBeta']*relocationCost)
+                # Support the household is getting in the current town: the hoigher the lower the probability to relocate
+                supportNetworkFactor = 1.0/math.exp(self.p['supportNetworkBeta']*house.networkSupport)
+                # Income factor: the higher the higher the probability to relocate
+                perCapitaIncome = self.computeHouseholdIncome(house)/float(len(household))
+                incomeFactorElement = math.exp(self.p['incomeRelocationBeta']*perCapitaIncome)
+                incomeFactor = (incomeFactorElement-1.0)/incomeFactorElement
+                relativeRelocationFactor = supportNetworkFactor*relocationCostFactor*incomeFactor
+                probRelocation = self.p['baseRelocationRate']*relativeRelocationFactor
+                
+                self.relocationCostFactors.append(relocationCostFactor)
+                self.incomeFactors.append(incomeFactor)
+                self.probsRelocation.append(probRelocation)
+                if np.random.random() < probRelocation: #self.p['basicProbFamilyMove']*self.p['probFamilyMoveModifierByDecade'][int(ageClass)]:
+                    person.house.vacated = True
+                    peopleToMove = [x for x in person.house.occupants]
+                    towns = self.selectTown(person.house.town)
+                        
+                    self.findNewHouse(peopleToMove,towns)
+    
+    def selectTown(self, personTown):
+        sizes = [len(x.houses) for x in self.map.towns]
+        distances = [self.manhattanDistance(personTown, x) for x in self.map.towns]
+        weights = [float(s)/float(np.power(d+1, self.p['townSelectionExp'])) for s, d, in zip(sizes, distances)]
+        probs = [x/sum(weights) for x in weights]
+        newTown = np.random.choice(self.map.towns, p = probs)
+        return [newTown]
+    
+    def checkHouseholdsRelocations(self):
+
+        newResidences = len([x for x in self.map.occupiedHouses if x.vacated == True])
+        shareRelocations = float(newResidences)/float(len(self.map.occupiedHouses))
+        
+#        print 'Mean relocation cost factors: ' + str(np.mean(self.relocationCostFactors))
+#        print 'Mean income factors: ' + str(np.mean(self.incomeFactors))
+#        print 'Mean prob relocation: ' + str(np.mean(self.probsRelocation))
+#        print 'Share of households relocated: ' + str(shareRelocations)
+        
+        for house in self.map.allHouses:
+            house.vacated = False      
+    
+    def selectSpousesTown(self, town1, town2):
+        prob1 = float(len(town1.houses))/(float(len(town1.houses))+float(len(town2.houses)))
+        if np.random.random() < prob1:
+            return town1
+        else:
+            return town2
+    
+    def manhattanDistance(self,t1,t2):
+        """Calculates the distance between two towns"""
+        xDist = abs(t1.x - t2.x)
+        yDist = abs(t1.y - t2.y)
+        return xDist + yDist
+
+
+    def bringTheKids(self,person):
+        """Given a person, return a list of their dependent kids who live in the same house as them."""
+        returnList = []
+        for i in person.children:
+            if ( i.house == person.house
+                 and i.independentStatus == False
+                 and i.dead == False ):
+                returnList.append(i)
+        return returnList
+
+    def findNewHouseInNewTown(self, personList, newTown):
+        """Find an appropriate empty house for the named person and put them in it."""
+
+        person = personList[0]
+        departureHouse = person.house
+        maxQuintile = max([x.incomeQuintile for x in person.house.occupants])
+        
+        emptyHousesInTown = []
+        houseDesirabilityIndex = []
+        rearrangedAvailableHouses = []
+        availableHouses = [x for x in self.map.allHouses if x.town == newTown and len(x.occupants) < 1]
+        emptyHousesInTown.extend(availableHouses)
+        occupiedHouses = [x for x in self.map.allHouses if x.town == newTown and len(x.occupants) > 0]
+        if len(occupiedHouses) > 0:
+            for house in availableHouses:
+                rearrangedAvailableHouses.append(house)
+                affinityIndexes = []
+                for unit in occupiedHouses:
+                    distance = self.geoDistance(house, unit)
+                    deltaClass = float(abs(unit.occupants[0].incomeQuintile-maxQuintile))
+                    affinity = 1.0/math.exp(self.p['classAffinityExp']*deltaClass)
+                    affinityIndexes.append(affinity/math.pow(distance, self.p['distanceAffinityExp']))
+                houseDesirabilityIndex.append(np.mean(affinityIndexes))
+        if sum(houseDesirabilityIndex) > 0:
+            probs = [x/sum(houseDesirabilityIndex) for x in houseDesirabilityIndex]
+            newHouse = np.random.choice(rearrangedAvailableHouses, p = probs)
+        else:
+            if len(emptyHousesInTown) > 0:
+                newHouse = np.random.choice(emptyHousesInTown)
+            else:
+                newHouse = np.random.choice([x for x in self.map.allHouses if len(x.occupants) < 1])
+
+        ## Quit with an error message if we've run out of houses
+        if newHouse in self.map.occupiedHouses:
+            print 'Error in house selection: already occupied!'
+            print newHouse.id
+
+        ## Actually make the chosen move
+        self.movePeopleIntoChosenHouse(newHouse, departureHouse, personList, 1)
+
+    def findNewHouse(self, personList, towns):
+      
+        person = personList[0]
+        departureHouse = person.house
+        
+        emptyHousesInTown = []
+        houseDesirabilityIndex = []
+        rearrangedAvailableHouses = []
+        for town in towns:
+            availableHouses = [x for x in self.map.allHouses if x.town == town and len(x.occupants) < 1]
+            emptyHousesInTown.extend(availableHouses)
+            occupiedHouses = [x for x in self.map.allHouses if x.town == town and len(x.occupants) > 0]
+            if len(occupiedHouses) > 0:
+                for house in availableHouses:
+                    rearrangedAvailableHouses.append(house)
+                    affinityIndexes = []
+                    for unit in occupiedHouses:
+                        distance = self.geoDistance(house, unit)
+                        deltaClass = float(abs(unit.occupants[0].incomeQuintile-personList[0].incomeQuintile))
+                        affinity = 1.0/math.exp(self.p['classAffinityExp']*deltaClass)
+                        affinityIndexes.append(affinity/math.pow(distance, self.p['distanceAffinityExp']))
+                    houseDesirabilityIndex.append(np.mean(affinityIndexes))
+        if sum(houseDesirabilityIndex) > 0:
+            probs = [x/sum(houseDesirabilityIndex) for x in houseDesirabilityIndex]
+            newHouse = np.random.choice(rearrangedAvailableHouses, p = probs)
+        else:
+            if len(emptyHousesInTown) > 0:
+                newHouse = np.random.choice(emptyHousesInTown)
+            else:
+                newHouse = np.random.choice([x for x in self.map.allHouses if len(x.occupants) < 1])
+
+        ## Quit with an error message if we've run out of houses
+        if newHouse in self.map.occupiedHouses:
+            print 'Error in house selection: already occupied!'
+            print newHouse.id
+            
+        ## Actually make the chosen move
+        self.movePeopleIntoChosenHouse(newHouse,departureHouse,personList, 1)
+
+
+    def movePeopleIntoChosenHouse(self,newHouse,departureHouse,personList, case):
+
+        ## Put the new house onto the list of occupied houses if it was empty
+        household = list(personList)
+        
+        newHouse.newOccupancy = True
+        
+        if len(household) != len(set(household)):
+            print 'Error in movePeopleIntoChosenHouse: double counting people'
+            for member in household:
+                print member.id
+            sys.exit()
+        
+        
+        ## Move everyone on the list over from their former house to the new one
+        for i in household:
+            if newHouse.town != departureHouse.town:
+                i.yearInTown = 0
+                
+            oldHouse = i.house
+                
+            oldHouse.occupants.remove(i)
+            
+            if len(oldHouse.occupants) == 0:
+                self.map.occupiedHouses.remove(oldHouse)
+                ##print "This house is now empty: ", oldHouse
+                if (self.p['interactiveGraphics']):
+                    self.canvas.itemconfig(oldHouse.icon, state='hidden')
+            
+            newHouse.occupants.append(i)
+            
+            i.house = newHouse
+            i.movedThisYear = True
+
+        if case == 1:
+            self.map.occupiedHouses.append(newHouse)
+        
+    def doDivorces(self):
+        menInRelationships = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner != None ]
+        for man in menInRelationships:
+            
+            age = self.year - man.birthdate 
+
+            if self.year < self.p['thePresent']:
+                rawRate = self.p['basicDivorceRate'] * self.p['divorceModifierByDecade'][int(age)/10]
+            else:
+                rawRate = self.p['variableDivorce'] * self.p['divorceModifierByDecade'][int(age)/10]
+                
+            splitProb = self.computeSplitProb(rawRate, man.classRank)
+                
+            if random.random() < splitProb:
+                wife = man.partner
+                man.partner = None
+                wife.partner = None
+                man.yearDivorced.append(self.year)
+                wife.yearDivorced.append(self.year)
+                if wife.status == 'student':
+                    wife.independentStatus = True
+                    self.startWorking(wife)
+                self.divorceTally += 1
+                towns = [man.house.town]
+                # manChildren = [x for x in man.children if x.dead == False and x.house == man.house and x.father == man and x.mother != wife]
+                
+                manChildren = []
+                children = [x for x in man.children if x.dead == False and x.house == man.house]
+                for child in children:
+                    if child.father == man and child.mother != wife:
+                        manChildren.append(child)
+                    else:
+                        if np.random.random() < self.p['probChildrenWithFather']:
+                            manChildren.append(child)
+                        
+                peopleToMove = [man]
+                peopleToMove += manChildren
+                self.findNewHouse(peopleToMove, towns)
+                
+    def doMarriages(self):
+        
+        eligibleMen = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner == None and x.status != 'child' and x.status != 'student']
+        eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner == None and x.status != 'child']
+        
+        
+        if len(eligibleMen) > 0 and len (eligibleWomen) > 0:
+            random.shuffle(eligibleMen)
+            random.shuffle(eligibleWomen)
+            
+            interestedWomen = []
+            for w in eligibleWomen:
+                womanMarriageProb = self.p['basicFemaleMarriageProb']*self.p['femaleMarriageModifierByDecade'][w.age/10]
+                if random.random() < womanMarriageProb:
+                    interestedWomen.append(w)
+        
+            for man in eligibleMen:
+                
+                ageClass = int(man.age/10)
+                manMarriageProb = self.p['basicMaleMarriageProb']*self.p['maleMarriageModifierByDecade'][ageClass]
+                
+                ageClassPop = [x for x in eligibleMen if int(x.age/10) == ageClass]
+                noChildrenMen = [x for x in ageClassPop if len([y for y in x.children if y.dead == False and y.house == x.house]) == 0]
+                shareNoChildren = float(len(noChildrenMen))/float(len(ageClassPop))
+                den = shareNoChildren + (1-shareNoChildren)*self.p['manWithChildrenBias']
+                baseRate = manMarriageProb/den
+                if man in noChildrenMen:
+                    manMarriageProb = baseRate
+                else:
+                    manMarriageProb = baseRate*self.p['manWithChildrenBias']
+
+                manMarriageProb *= self.p['maleMarriageMultiplier']
+                
+                
+                if random.random() < manMarriageProb:
+                    potentialBrides = []
+                    for woman in interestedWomen:
+                        deltaAge = man.age - woman.age
+                        if deltaAge < 20 and deltaAge > -10:
+                            if woman.house != man.house:
+                                if man.mother != None and woman.mother != None:
+                                    if man.mother != woman.mother and man not in woman.children and woman not in man.children:
+                                        potentialBrides.append(woman)
+                                else:
+                                    if man not in woman.children and woman not in man.children:
+                                        potentialBrides.append(woman)
+                    
+                    if len(potentialBrides) > 0:
+                        manTown = man.house.town
+                        bridesWeights = []
+                        for woman in potentialBrides:
+                            
+                            womanTown = woman.house.town
+                            geoDistance = self.manhattanDistance(manTown, womanTown)/float(self.p['mapGridXDimension'] + self.p['mapGridYDimension'])
+                            geoFactor = 1/math.exp(self.p['betaGeoExp']*geoDistance)
+                            
+                            womanRank = woman.classRank
+                            studentFactor = 1.0
+                            if woman.status == 'student':
+                                studentFactor = self.p['studentFactorParam']
+                                womanRank = max(woman.father.classRank, woman.mother.classRank)
+                            statusDistance = float(abs(man.classRank-womanRank))/float((self.p['numberClasses']-1))
+                            if man.classRank < womanRank:
+                                betaExponent = self.p['betaSocExp']
+                            else:
+                                betaExponent = self.p['betaSocExp']*self.p['rankGenderBias']
+                            socFactor = 1/math.exp(betaExponent*statusDistance)
+                            
+                            ageFactor = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
+                            
+                            numChildrenWithWoman = len([x for x in woman.children if x.house == woman.house])
+                            
+                            childrenFactor = 1/math.exp(self.p['bridesChildrenExp']*numChildrenWithWoman)
+                            
+                            marriageProb = geoFactor*socFactor*ageFactor*childrenFactor*studentFactor
+                            
+                            bridesWeights.append(marriageProb)
+                            
+                        if sum(bridesWeights) > 0:
+                            bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
+                            woman = np.random.choice(potentialBrides, p = bridesProb)
+                        else:
+                            woman = np.random.choice(potentialBrides)
+                        man.partner = woman
+                        woman.partner = man
+                        man.yearMarried.append(self.year)
+                        woman.yearMarried.append(self.year)
+                        interestedWomen.remove(woman)
+                        
+                        self.marriageTally += 1
+ 
+    def deltaAge(self, dA):
+        if dA <= -10 :
+            cat = 0
+        elif dA >= -9 and dA <= -3:
+            cat = 1
+        elif dA >= -2 and dA <= 0:
+            cat = 2
+        elif dA >= 1 and dA <= 4:
+            cat = 3
+        elif dA >= 5 and dA <= 9:
+            cat = 4
+        else:
+            cat = 5
+        return cat
+    
+    def startWorking(self, person):
+        
+        person.status = 'worker'
+        person.outOfTownStudent = False
+        
+        dKi = np.random.normal(0, self.p['wageVar'])
+        person.initialIncome = self.p['incomeInitialLevels'][person.classRank]*math.exp(dKi)
+        dKf = np.random.normal(dKi, self.p['wageVar'])
+        person.finalIncome = self.p['incomeFinalLevels'][person.classRank]*math.exp(dKf)
+        
+        person.wage = person.initialIncome
+        person.income = person.wage*self.p['dailyHours'][int(person.careNeedLevel)]
+        person.potentialIncome = person.income
+        
+    def doSocialTransition(self):
+        
+        for person in self.pop.livingPeople:
+            if person.age == self.p['workingAge'][person.classRank] and person.status == 'student':
+            # With a certain probability p the person enters the workforce, 
+            # with a probability 1-p goes to the next educational level
+                if person.classRank == 4:
+                    probStudy = 0.0
+                else:
+                    probStudy = self.transitionProb(person) # Probability of keeping studying
+                
+                if random.random() > probStudy:
+                    self.startWorking(person)
+                    
+                else:
+                    person.classRank += 1
+                    
+    def transitionProb (self, person):
+        household = [x for x in person.house.occupants]
+        if person.father.dead + person.mother.dead != 2:
+            disposableIncome = sum([x.income for x in household])
+            perCapitaDisposableIncome = disposableIncome/len(household)
+            # print('Per Capita Disposable Income: ' + str(perCapitaDisposableIncome))
+            
+            if perCapitaDisposableIncome > 0.0:
+                
+                forgoneSalary = self.p['incomeInitialLevels'][person.classRank]*self.p['dailyHours'][person.careNeedLevel]
+                # educationCosts = self.p['educationCosts'][person.classRank]
+                
+                # relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
+                
+                relCost = forgoneSalary/perCapitaDisposableIncome
+               
+                
+                incomeEffect = (self.p['costantIncomeParam']+1)/(math.exp(self.p['eduWageSensitivity']*relCost) + self.p['costantIncomeParam']) # Min-Max: 0 - 10
+                
+                incomeFactor = math.exp(self.p['eduWageSensitivity']*perCapitaDisposableIncome)
+                incomeEffect = incomeFactor/(incomeFactor+self.p['costantIncomeParam'])
+                
+                targetEL = max(person.father.classRank, person.mother.classRank)
+                
+                dE = float(targetEL - person.classRank)
+                expEdu = math.exp(self.p['eduRankSensitivity']*dE)
+                educationEffect = expEdu/(expEdu+self.p['costantEduParam'])
+                
+                careEffect = 1/math.exp(self.p['careEducationParam']*person.socialWork)
+                
+                pStudy = incomeEffect*educationEffect*careEffect
+
+                if person.classRank == 0 and self.socialClassShares[0] > 0.2:
+                    pStudy *= 1.0/0.9
+                
+                if person.classRank == 0 and self.socialClassShares[0] < 0.2:
+                    pStudy *= 0.85
+                
+                if person.classRank == 1 and self.socialClassShares[1] > 0.35:
+                    pStudy *= 1.0/0.8
+                    
+                if person.classRank == 2 and self.socialClassShares[2] > 0.25:
+                    pStudy *= 1.0/0.85
+                
+                if pStudy < 0:
+                    pStudy = 0
+            else:
+                pStudy = 0
+        else:
+            pStudy = 0
+
+        return pStudy
+        
+    def updateIncome(self):
+        
+        for person in self.pop.livingPeople:
+            if person.status == 'worker' and person.careNeedLevel < 2:
+                person.workExperience *= self.p['workDiscountingTime']
+                if person.maternityStatus == False:
+                    if self.p['dailyHours'][person.careNeedLevel] > 0:
+                        person.workingPeriods += float(self.p['dailyHours'][person.careNeedLevel])/8.0
+                        person.workExperience += person.residualWorkingHours/8.0
+                    person.wage = self.computeWage(person)
+                    person.income = person.wage*person.residualWorkingHours   # self.p['weeklyHours'][int(person.careNeedLevel)]
+                    person.lastIncome = person.income
+                elif person.maternityStatus == True:
+                    person.wage = 0
+                    person.income = 0
+                   
+            elif person.age == self.p['ageOfRetirement'] or person.careNeedLevel > 1:
+                person.wage = 0
+                shareWorkingTime = person.workingPeriods/float(self.p['minContributionYears'])
+                dK = np.random.normal(0, self.p['wageVar'])
+#                averageIncome = 0
+#                if person.workingPeriods > 0:
+#                    averageIncome = person.cumulativeIncome/person.workingPeriods
+                person.income = person.lastIncome*shareWorkingTime*math.exp(dK) #self.p['pensionWage'][person.classRank]*self.p['weeklyHours'][0]
+#                if person.income < self.p['statePension']:
+#                    person.income = self.p['statePension']
+            person.cumulativeIncome += (person.income - person.incomeExpenses)
+            person.cumulativeIncome = max(person.cumulativeIncome, 0)
+        
+        self.grossDomesticProduct = sum([x.income for x in self.pop.livingPeople if x.wage > 0])
+        
+        for house in self.map.occupiedHouses:
+            house.outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in house.occupants])
+            house.householdIncome = sum([x.income for x in house.occupants])
+            house.incomePerCapita = house.householdIncome/float(len(house.occupants))
+           
+        households = [x for x in self.map.occupiedHouses]
+        # households.sort(key=operator.attrgetter("incomePerCapita"))
+        households.sort(key=operator.attrgetter("householdIncome"))
+        for i in range(5):
+            number = int(round(len(households)/(5.0-float(i))))
+            quintile = households[:number]
+            for j in quintile:
+                j.incomeQuintile = i
+                for agent in j.occupants:
+                    agent.incomeQuintile = i
+            households = [x for x in households if x not in quintile]
+ 
+        # Compute tax revenue and income after tax
+        earningPeople = [x for x in self.pop.livingPeople if x.status == 'worker' and x.maternityStatus == False]
+        self.totalTaxRevenue = 0
+        self.totalPensionRevenue = 0
+        for person in earningPeople:
+            employeePensionContribution = 0
+            # Pension Contributions
+            if person.income > 162.0:
+                if person.income < 893.0:
+                    employeePensionContribution = (person.income - 162.0)*0.12
+                else:
+                    employeePensionContribution = (893.0 - 162.0)*0.12
+                    employeePensionContribution += (person.income - 893.0)*0.02
+            person.income -= employeePensionContribution
+            self.totalPensionRevenue += employeePensionContribution
+            
+            # Tax Revenues
+            tax = 0
+            residualIncome = person.income
+            for i in range(len(self.p['taxBrackets'])):
+                if residualIncome > self.p['taxBrackets'][i]:
+                    taxable = residualIncome - self.p['taxBrackets'][i]
+                    tax += taxable*self.p['taxationRates'][i]
+                    residualIncome -= taxable
+            person.income -= tax
+            self.totalTaxRevenue += tax
+        self.statePensionRevenue.append(self.totalPensionRevenue)
+        self.stateTaxRevenue.append(self.totalTaxRevenue)
+        
+        # Pensions Expenditure
+        pensioners = [x for x in self.pop.livingPeople if x.status == 'retired']
+        totalIncome = sum([x.income for x in earningPeople if x.status == 'worker'])
+        self.pensionExpenditure = self.p['statePension']*len(pensioners) + totalIncome*self.p['statePensionContribution']
+        self.statePensionExpenditure.append(self.pensionExpenditure)
+        
+        # Assign incomes according to empirical income distribution
+        #####   Temporarily disactivating the top-down income attribution   ############################
+        
+#        earningPeople = [x for x in self.pop.livingPeople if x.income > 0] #x.status == 'worker']
+#        earningPeople.sort(key=operator.attrgetter("income"))
+#        
+#        workersToAssign = list(earningPeople)
+#        incomePercentiles = []
+#        for i in range(99, 0, -1):
+#            groupNum = int(float(len(workersToAssign))/float(i))
+#            workersGroup = workersToAssign[0:groupNum]
+#            incomePercentiles.append(workersGroup)
+#            workersToAssign = workersToAssign[groupNum:]
+#        
+#        for i in range(99):
+#            wage = float(self.incomesPercentiles[i])/(52*40)
+#            for person in incomePercentiles[i]:
+#                dK = np.random.normal(0, self.p['wageVar'])
+#                person.wage = wage*math.exp(dK)
+#                person.income = person.wage*self.p['weeklyHours'][int(person.careNeedLevel)]
+        
+    def doBirths(self):
+        marriedPercentage = []
+        adultWomen = [x for x in self.pop.livingPeople
+                                       if x.sex == 'female' and x.age >= self.p['minPregnancyAge']]
+        womenOfReproductiveAge = [x for x in self.pop.livingPeople
+                                  if x.sex == 'female'
+                                  and x.age >= self.p['minPregnancyAge']
+                                  and x.age <= self.p['maxPregnancyAge']
+                                  and x.partner != None]
+        
+        adultLadies_1 = [x for x in adultWomen if x.classRank == 0]   
+        marriedLadies_1 = len([x for x in adultLadies_1 if x.partner != None])
+        if len(adultLadies_1) > 0:
+            marriedPercentage.append(marriedLadies_1/float(len(adultLadies_1)))
+        else:
+            marriedPercentage.append(0)
+        adultLadies_2 = [x for x in adultWomen if x.classRank == 1]    
+        marriedLadies_2 = len([x for x in adultLadies_2 if x.partner != None])
+        if len(adultLadies_2) > 0:
+            marriedPercentage.append(marriedLadies_2/float(len(adultLadies_2)))
+        else:
+            marriedPercentage.append(0)
+        adultLadies_3 = [x for x in adultWomen if x.classRank == 2]   
+        marriedLadies_3 = len([x for x in adultLadies_3 if x.partner != None]) 
+        if len(adultLadies_3) > 0:
+            marriedPercentage.append(marriedLadies_3/float(len(adultLadies_3)))
+        else:
+            marriedPercentage.append(0)
+        adultLadies_4 = [x for x in adultWomen if x.classRank == 3]  
+        marriedLadies_4 = len([x for x in adultLadies_4 if x.partner != None])   
+        if len(adultLadies_4) > 0:
+            marriedPercentage.append(marriedLadies_4/float(len(adultLadies_4)))
+        else:
+            marriedPercentage.append(0)
+        adultLadies_5 = [x for x in adultWomen if x.classRank == 4]   
+        marriedLadies_5 = len([x for x in adultLadies_5 if x.partner != None]) 
+        if len(adultLadies_5) > 0:
+            marriedPercentage.append(marriedLadies_5/float(len(adultLadies_5)))
+        else:
+            marriedPercentage.append(0)
+      
+        for woman in womenOfReproductiveAge:
+            
+            womanClassRank = woman.classRank
+            if woman.status == 'student':
+                womanClassRank = woman.parentsClassRank
+
+            if self.year < 1951:
+                rawRate = self.p['growingPopBirthProb']
+                birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, womanClassRank)
+            else:
+                rawRate = self.fert_data[(self.year - woman.birthdate)-16, self.year-1950]
+                birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, womanClassRank)/marriedPercentage[womanClassRank]
+            
+            if random.random() < birthProb:
+                # (self, mother, father, age, birthYear, sex, status, house,
+                # classRank, sec, edu, wage, income, finalIncome):
+                parentsClassRank = max([woman.classRank, woman.partner.classRank])
+                baby = Person(woman, woman.partner, self.year, 0, 'random', woman.house, woman.sec, -1, parentsClassRank, 
+                              0, 0, 0, 0, 0, 0, 'child', False, 'susceptible')
+                baby.lifeExpectancy = max(90-baby.age, 5.0)
+                self.pop.allPeople.append(baby)
+                self.pop.livingPeople.append(baby)
+                woman.house.occupants.append(baby)
+                woman.children.append(baby)
+                woman.partner.children.append(baby)
+                woman.maternityStatus = True
+                woman.residualWorkingHours = 0
+                woman.availableWorkingHours = 0
+                woman.potentialIncome = 0
+                woman.income = 0
+    
+        
+    def doAgeTransitions(self):
+        
+        for person in self.pop.livingPeople:
+            person.age += 1
+            if person.age in self.p['ageBreaks']:
+                person.ageClass += 1
+            if person.age in self.p['interactionAgeBreaks']:
+                person.interactionAgeClass += 1
+            if person.age in self.p['mortalityAgeBreaks']:
+                person.mortalityAgeClass += 1
+            person.yearInTown += 1
+            person.maternityStatus = False
+        """Check whether people have moved on to a new status in life."""
+        peopleNotYetRetired = [x for x in self.pop.livingPeople if x.status != 'retired']
+        for person in peopleNotYetRetired:
+            age = self.year - person.birthdate
+            ## Do transitions to adulthood and retirement
+            if person.age == self.p['ageTeenagers']:
+                person.status == 'teenager'
+            if person.age == self.p['ageOfAdulthood']:
+                person.status = 'student'
+                if np.random.random() < self.p['probOutOfTownStudent']:
+                    person.outOfTownStudent = True
+                person.classRank = 0 # max(person.father.classRank, person.mother.classRank)
+                
+            elif person.age == self.p['ageOfRetirement']:
+                person.status = 'retired'
+
+            ## If somebody is still at home but their parents have died, promote them to independent adult
+            if person.mother != None:
+                if person.status == 'worker' and person.mother not in person.house.occupants and person.father not in person.house.occupants:
+                    person.independentStatus = True
+            if person.status == 'student' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
+                if person.mother.dead:
+                    if person.father.dead:
+                        person.independentStatus = True
+                        self.startWorking(person)
+                    else:
+                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0)
+                else:
+                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0)
+                    
+            ## If somebody is a *child* at home and their parents have died, they need to be adopted
+            if person.status == 'retired' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
+                person.independentStatus = True
+            
+            if person.status == 'child' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
+                if person.mother.dead:
+                    if person.father.dead:
+                
+                        while True:
+                            adoptiveMother = random.choice(self.pop.livingPeople)
+                            if ( adoptiveMother.status != 'child'
+                                 and adoptiveMother.sex == 'female'
+                                 and adoptiveMother.partner != None ):
+                                break
+        
+                        person.mother = adoptiveMother
+                        adoptiveMother.children.append(person)
+                        person.father = adoptiveMother.partner
+                        adoptiveMother.partner.children.append(person)                
+
+                        self.movePeopleIntoChosenHouse(adoptiveMother.house,person.house,[person], 0)   
+                    else:
+                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0)
+                else:
+                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0)
+        
+    def householdCareSupply(self):
+        
+        for house in self.map.occupiedHouses:
+        
+            household = list(house.occupants)
+            householdCarers = [x for x in household if x.age >= self.p['ageTeenagers'] and x.hoursSocialCareDemand == 0 and x.maternityStatus == False]
+            for member in householdCarers:
+                # Teenager supplies
+                if member.status == 'teenager':
+                    supplies = list(self.p['teenagerSupply'])
+                    if member.symptomatic == True:
+                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
+                            supplies = [0 for x in supplies]
+                        elif member.symptomsLevel == 'mild':
+                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
+                    if self.lockdown == True:
+                        homeSupply = supplies[0]
+                        if member.symptomatic == False or member.mildConditionIndex < self.p['symptomSocialCareThreshold']:
+                            homeSupply = float(supplies[0])*(1.0+self.p['increasedSupplyFactor'])
+                        if self.p['careLockdown'] == False:
+                            otherSupplies = [float(x)*(1.0+self.p['increasedSupplyFactor']) for x in supplies[1:]]
+                        else:
+                            otherSupplies = [0 for x in supplies[1:]]
+                        supplies = [homeSupply]
+                        supplies.extend(otherSupplies)
+                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
+                    member.residualInformalSupplies = supplies
+                
+                # Student supplies
+                elif member.status == 'student' and member.outOfTownStudent == False:
+                    supplies = list(self.p['studentSupply'])
+                    if member.symptomatic == True:
+                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
+                            supplies = [0 for x in supplies]
+                        elif member.symptomsLevel == 'mild':
+                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
+                    if self.lockdown == True:
+                        homeSupply = supplies[0]
+                        if member.symptomatic == False or member.mildConditionIndex < self.p['symptomSocialCareThreshold']:
+                            homeSupply = float(supplies[0])*(1.0+self.p['increasedSupplyFactor'])
+                        if self.p['careLockdown'] == False:
+                            otherSupplies = [float(x)*(1.0+self.p['increasedSupplyFactor']) for x in supplies[1:]]
+                        else:
+                            otherSupplies = [0 for x in supplies[1:]]
+                        supplies = [homeSupply]
+                        supplies.extend(otherSupplies)
+                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
+                    member.residualInformalSupplies = supplies
+                
+                # Retired supplies
+                elif member.status == 'retired':
+                    supplies = list(self.p['retiredSupply'])
+                    if member.symptomatic == True:
+                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
+                            supplies = [0 for x in supplies]
+                        elif member.symptomsLevel == 'mild':
+                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
+                    if self.lockdown == True:
+                        homeSupply = supplies[0]
+                        if self.p['careLockdown'] == False:
+                            otherSupplies = [float(x) for x in supplies[1:]]
+                        else:
+                            otherSupplies = [0 for x in supplies[1:]]
+                        supplies = [homeSupply]
+                        supplies.extend(otherSupplies)
+                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
+                    member.residualInformalSupplies = supplies
+        
+                # Workers supplies
+                elif member.status == 'worker' and member.careNeedLevel == 0:
+                    supplies = list(self.p['employedSupply'])
+                    if member.symptomatic == True:
+                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
+                            supplies = [0 for x in supplies]
+                        elif member.symptomsLevel == 'mild':
+                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
+                    if self.lockdown == True:
+                        homeSupply = supplies[0]
+                        if member.symptomatic == False or member.mildConditionIndex < self.p['symptomSocialCareThreshold']:
+                            homeSupply = float(supplies[0])*(1.0+self.p['increasedSupplyFactor'])
+                        if self.p['careLockdown'] == False:
+                            otherSupplies = [float(x)*(1.0+self.p['increasedSupplyFactor']) for x in supplies[1:]]
+                        else:
+                            otherSupplies = [0 for x in supplies[1:]]
+                        supplies = [homeSupply]
+                        supplies.extend(otherSupplies)
+                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
+                    member.residualInformalSupplies = supplies
+                    
+                # member.residualInformalSupplies = [max(x-member.hoursSocialCareDemand, 0) for x in member.residualInformalSupplies]
+                member.hoursInformalSupplies = member.residualInformalSupplies
+                
+            house.householdInformalSupplies = []
+            for i in range(4):
+                house.householdInformalSupplies.append(sum([x.residualInformalSupplies[i] for x in householdCarers]))
+            
+            employed = [x for x in householdCarers if x.status == 'worker']
+            for worker in employed:
+                if worker.careNeedLevel < 2:
+                    worker.residualWorkingHours = self.p['dailyHours'][worker.careNeedLevel]
+                    worker.availableWorkingHours = worker.residualWorkingHours
+                worker.potentialIncome = self.p['dailyHours'][worker.careNeedLevel]*worker.wage
+                
+            potentialIncomes = [x.potentialIncome for x in household if x.maternityStatus == False]
+            potentialIncomes.extend([x.income for x in household if x.status == 'retired'])
+            potentialIncome = sum(potentialIncomes)
+            
+            house.residualIncomeForChildCare = potentialIncome
+            house.initialResidualIncomeForChildCare = house.residualIncomeForChildCare
+            
+            # The household's tax brackets are the sum of the individual income brackets.
+            taxBands = len(self.p['taxBrackets'])
+            house.incomeByTaxBand = [0]*taxBands
+            house.incomeByTaxBand[-1] = potentialIncome
+            for i in range(taxBands-1):
+                for income in potentialIncomes:
+                    if income > self.p['taxBrackets'][i]:
+                        bracket = income-self.p['taxBrackets'][i]
+                        house.incomeByTaxBand[i] += bracket
+                        house.incomeByTaxBand[-1] -= bracket
+                        potentialIncomes[potentialIncomes.index(income)] -= bracket
+        
+    def resetCareVariables_KN(self):
+        
+        for house in self.map.occupiedHouses:
+            
+            
+            house.totalSocialCareNeed = 0
+            house.totalUnmetSocialCareNeed = 0
+            house.totalChildCareNeed = 0
+            house.childCareNeeds = []
+            house.childCarePrices = []
+            house.highPriceChildCare = 0
+            house.lowPriceChildCare = 0
+            house.residualIncomeForChildCare = 0
+            house.initialResidualIncomeForChildCare = 0
+            house.residualIncomeForSocialCare = []
+            house.householdInformalSupplies = []
+            house.householdFormalSupply = []
+            house.networkSupply = 0
+            house.networkTotalSupplies = []
+            house.networkInformalSupplies = []
+            house.formalChildCareSupply = 0
+            house.networkFormalSocialCareSupplies = []
+            house.totalSupplies = []
+            house.netCareSupply = 0
+            house.childCareWeights = []
+            house.formalCaresRatios = []
+            house.informalChildCareReceived = 0
+            house.informalSocialCareReceived = 0
+            house.formalChildCareReceived = 0
+            house.formalChildCareCost = 0
+            house.formalSocialCareReceived = 0
+            house.householdFormalSupplyCost = 0
+            house.wealthForCare = 0
+            house.incomeByTaxBand = []
+            house.averageChildCarePrice = 0
+            house.networkSupport = 0
+            house.outOfWorkSocialCare = 0
+            house.townAttractiveness = []
+            house.netCareDemand = 0
+            house.careAttractionFactor = 0
+            house.newOccupancy = False
+            
+            for person in house.occupants:
+                person.careNetwork.clear()
+                person.hoursChildCareDemand = 0
+                person.netChildCareDemand = 0
+                person.unmetChildCareNeed = 0
+                person.hoursSocialCareDemand = 0
+                person.unmetSocialCareNeed = 0
+                person.informalChildCareReceived = 0
+                person.formalChildCareReceived = 0
+                person.publicChildCareContribution = 0
+                person.informalSocialCareReceived = 0
+                person.formalSocialCareReceived = 0
+                person.childWork = 0
+                person.socialWork = 0
+                person.potentialIncome = 0
+                person.wealthPV = 0
+                person.wealthForCare = 0
+                person.incomeExpenses = 0
+                person.outOfWorkChildCare = 0
+                person.outOfWorkSocialCare = 0
+                person.residualWorkingHours = 0
+                person.availableWorkingHours = 0
+                person.residualInformalSupplies = [0.0, 0.0, 0.0, 0.0]
+                person.residualInformalSupply = 0
+                person.hoursInformalSupplies = [0.0, 0.0, 0.0, 0.0]
+                person.maxFormalCareSupply = 0
+                person.totalSupply = 0
+                person.informalSupplyByKinship = [0.0, 0.0, 0.0, 0.0]
+                person.formalSupplyByKinship = [0.0, 0.0, 0.0, 0.0]
+                person.careForFamily = False
+                person.wealthSpentOnCare = 0
+                # Social care provision variables
+                person.networkSupply = 0
+                person.networkTotalSupplies = []
+                person.weightedTotalSupplies = []
+                person.networkInformalSupplies = []
+                person.networkFormalSocialCareSupplies = []
+                person.suppliers = []
+                person.networkInfectionFactor = 0
+        
+    def doCareTransitions_UCN(self):
+        """Consider the possibility of each person coming to require care."""
+        peopleNotInCriticalCare = [x for x in self.pop.livingPeople if x.careNeedLevel < self.p['numCareLevels']-1]
+        for person in peopleNotInCriticalCare:
+            age = self.year - person.birthdate
+            if person.sex == 'male':
+                ageCareProb = ( ( math.exp( age /
+                                            self.p['maleAgeCareScaling'] ) )
+                               * self.p['personCareProb'] )
+            else:
+                ageCareProb = ( ( math.exp( age /
+                                           self.p['femaleAgeCareScaling'] ) )
+                               * self.p['personCareProb'] )
+            baseProb = self.p['baseCareProb'] + ageCareProb
+            
+            baseProb = self.baseRate(self.p['careBias'], baseProb)
+            
+            unmetNeedFactor = 1.0/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
+            
+            
+            classRank = person.classRank
+            if person.status == 'child' or person.status == 'student':
+                classRank = person.parentsClassRank
+            
+            careProb = baseProb*math.pow(self.p['careBias'], classRank)/unmetNeedFactor 
+            
+            if np.random.random() < careProb:
+                baseTransition = self.baseRate(self.p['careBias'], 1.0-self.p['careTransitionRate'])
+                if baseTransition >= 1.0:
+                    print 'Error: base transition >= 1'
+                    # sys.exit()
+                    
+                    
+                if person.careNeedLevel > 0:
+                    unmetNeedFactor = 1.0/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
+                else:
+                    unmetNeedFactor = 1.0
+                transitionRate = (1.0 - baseTransition*math.pow(self.p['careBias'], classRank))*unmetNeedFactor
+                
+                stepCare = 1
+                bound = transitionRate
+                
+                while np.random.random() > bound and stepCare < self.p['numCareLevels'] - 1:
+                    stepCare += 1
+                    bound += (1.0-bound)*transitionRate
+                person.careNeedLevel += stepCare
+                    
+                if person.careNeedLevel >= self.p['numCareLevels']:
+                    person.careNeedLevel = int(self.p['numCareLevels'] - 1)
+                if person.careNeedLevel > 1:
+                    person.wage = 0
+    
+    def baseRate(self, bias, cp):
+        a = 0
+        for i in range(int(self.p['numberClasses'])):
+            a += self.socialClassShares[i]*math.pow(bias, i)
+        baseRate = cp/a
+        return (baseRate)
+    
+    def deathProb(self, baseRate, person):  ##, shareUnmetNeed, classPop):
+        
+        classRank = person.classRank
+        if person.status == 'child' or person.status == 'student':
+            classRank = person.parentsClassRank
+        
+        if person.sex == 'male':
+            mortalityBias = self.p['maleMortalityBias']
+        else:
+            mortalityBias = self.p['femaleMortalityBias']
+        
+        deathProb = baseRate
+        
+        a = 0
+        for i in range(int(self.p['numberClasses'])):
+            a += self.socialClassShares[i]*math.pow(mortalityBias, i)
+            
+        if a > 0:
+            
+            lowClassRate = baseRate/a
+            
+            classRate = lowClassRate*math.pow(mortalityBias, classRank)
+            
+            deathProb = classRate
+           
+            b = 0
+            for i in range(int(self.p['numCareLevels'])):
+                b += self.careNeedShares[classRank][i]*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - i)
+                
+            if b > 0:
+                
+                higherNeedRate = classRate/b
+               
+                deathProb = higherNeedRate*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - person.careNeedLevel) # deathProb
+        
+        return deathProb
+        
+    def doDeaths(self):
+        
+        deaths = [0, 0, 0, 0, 0]
+        """Consider the possibility of death for each person in the sim."""
+        for person in self.pop.livingPeople:
+            age = person.age
+            
+            ####     Death process with histroical data  after 1950   ##################
+            if self.year >= 1950:
+                if age > 109:
+                    age = 109
+                if person.sex == 'male':
+                    rawRate = self.death_male[age, self.year-1950]
+                if person.sex == 'female':
+                    rawRate = self.death_female[age, self.year-1950]
+                    
+                classPop = [x for x in self.pop.livingPeople if x.careNeedLevel == person.careNeedLevel]
+                
+                dieProb = self.deathProb(rawRate, person)
+                
+                person.lifeExpectancy = max(90-person.age, 5.0)
+                # dieProb = self.deathProb_UCN(rawRate, person, person.averageShareUnmetNeed, classPop)
+
+            #############################################################################
+            
+                if random.random() < dieProb:
+                    person.dead = True
+                    person.deadYear = self.year
+                    person.house.occupants.remove(person)
+                    if len(person.house.occupants) == 0:
+                        self.map.occupiedHouses.remove(person.house)
+                    if person.partner != None:
+                        person.partner.partner = None
+    
+            else: 
+                #######   Death process with made-up rates  ######################
+                babyDieProb = 0.0
+                if age < 1:
+                    babyDieProb = self.p['babyDieProb']
+                if person.sex == 'male':
+                    ageDieProb = (math.exp(age/self.p['maleAgeScaling']))*self.p['maleAgeDieProb'] 
+                else:
+                    ageDieProb = (math.exp(age/self.p['femaleAgeScaling']))* self.p['femaleAgeDieProb']
+                rawRate = self.p['baseDieProb'] + babyDieProb + ageDieProb
+                
+                dieProb = self.deathProb(rawRate, person)
+                
+                person.lifeExpectancy = max(90-person.age, 5.0)
+                #### Temporarily by-passing the effect of unmet care need   ######
+                # dieProb = self.deathProb_UCN(rawRate, person.parentsClassRank, person.careNeedLevel, person.averageShareUnmetNeed, classPop)
+                
+                if random.random() < dieProb:
+                    person.dead = True
+                    person.deadYear = self.year
+                    deaths[person.classRank] += 1
+                    person.house.occupants.remove(person)
+                    if len(person.house.occupants) == 0:
+                        self.map.occupiedHouses.remove(person.house)
+                    if person.partner != None:
+                        person.partner.partner = None
+                  
+        self.pop.livingPeople[:] = [x for x in self.pop.livingPeople if x.dead == False]
+        
+    
+        
     
     def createInfoNetworks_R(self):
         
@@ -758,6 +1931,27 @@ class SimPop:
         xDist = abs(agentX - contactX)
         yDist = abs(agentY - contactY)
         return xDist + yDist
+    
+    def computeClassShares(self):
+        
+        self.socialClassShares[:] = []
+        self.careNeedShares[:] = []
+        peopleWithRank = [x for x in self.pop.livingPeople if x.classRank != -1]
+        numPop = float(len(peopleWithRank))
+        for c in range(int(self.p['numberClasses'])):
+            classPop = [x for x in peopleWithRank if x.classRank == c]
+            numclassPop = float(len(classPop))
+            self.socialClassShares.append(numclassPop/numPop)
+            
+            needShares = []
+            for b in range(int(self.p['numCareLevels'])):
+                needPop = [x for x in classPop if x.careNeedLevel == b]
+                numNeedPop = float(len(needPop))
+                if numclassPop > 0:
+                    needShares.append(numNeedPop/numclassPop)
+                else:
+                    needShares.append(0.0)
+            self.careNeedShares.append(needShares)    
                 
     def updateWealth_Ind(self):
         # Only workers: retired are assigned a wealth at the end of their working life (which they consume thereafter)
@@ -4514,75 +5708,9 @@ class SimCov:
                 
             
 ####################   doDeath - SES version    ################################################
-    def computeClassShares(self):
-        
-        self.socialClassShares[:] = []
-        self.careNeedShares[:] = []
-        peopleWithRank = [x for x in self.pop.livingPeople if x.classRank != -1]
-        numPop = float(len(peopleWithRank))
-        for c in range(int(self.p['numberClasses'])):
-            classPop = [x for x in peopleWithRank if x.classRank == c]
-            numclassPop = float(len(classPop))
-            self.socialClassShares.append(numclassPop/numPop)
-            
-            needShares = []
-            for b in range(int(self.p['numCareLevels'])):
-                needPop = [x for x in classPop if x.careNeedLevel == b]
-                numNeedPop = float(len(needPop))
-                if numclassPop > 0:
-                    needShares.append(numNeedPop/numclassPop)
-                else:
-                    needShares.append(0.0)
-            self.careNeedShares.append(needShares)    
-            
-        print self.socialClassShares
     
-    def deathProb(self, baseRate, person):  ##, shareUnmetNeed, classPop):
-        
-        classRank = person.classRank
-        if person.status == 'child' or person.status == 'student':
-            classRank = person.parentsClassRank
-        
-        if person.sex == 'male':
-            mortalityBias = self.p['maleMortalityBias']
-        else:
-            mortalityBias = self.p['femaleMortalityBias']
-        
-        deathProb = baseRate
-        
-        a = 0
-        for i in range(int(self.p['numberClasses'])):
-            a += self.socialClassShares[i]*math.pow(mortalityBias, i)
-            
-        if a > 0:
-            
-            lowClassRate = baseRate/a
-            
-            classRate = lowClassRate*math.pow(mortalityBias, classRank)
-            
-            deathProb = classRate
-           
-            b = 0
-            for i in range(int(self.p['numCareLevels'])):
-                b += self.careNeedShares[classRank][i]*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - i)
-                
-            if b > 0:
-                
-                higherNeedRate = classRate/b
-               
-                deathProb = higherNeedRate*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - person.careNeedLevel) # deathProb
-      
-        # Add the effect of unmet care need on mortality rate for each care need level
-        
-        ##### Temporarily by-passing the effect of Unmet Care Need   #############
-        
-#        a = 0
-#        for x in classPop:
-#            a += math.pow(self.p['unmetCareNeedBias'], 1-x.averageShareUnmetNeed)
-#        higherUnmetNeed = (classRate*len(classPop))/a
-#        deathProb = higherUnmetNeed*math.pow(self.p['unmetCareNeedBias'], 1-shareUnmetNeed)
-        
-        return deathProb
+    
+    
     
     def deathProb_UCN(self, baseRate, sex, classRank, needLevel, shareUnmetNeed, classPop):
         
@@ -4718,64 +5846,7 @@ class SimCov:
                     person.careNeedLevel = int(self.p['numCareLevels'] - 1)
                             
 
-    def doCareTransitions_UCN(self):
-        """Consider the possibility of each person coming to require care."""
-        peopleNotInCriticalCare = [x for x in self.pop.livingPeople if x.careNeedLevel < self.p['numCareLevels']-1]
-        for person in peopleNotInCriticalCare:
-            age = self.year - person.birthdate
-            if person.sex == 'male':
-                ageCareProb = ( ( math.exp( age /
-                                            self.p['maleAgeCareScaling'] ) )
-                               * self.p['personCareProb'] )
-            else:
-                ageCareProb = ( ( math.exp( age /
-                                           self.p['femaleAgeCareScaling'] ) )
-                               * self.p['personCareProb'] )
-            baseProb = self.p['baseCareProb'] + ageCareProb
-            
-            baseProb = self.baseRate(self.p['careBias'], baseProb)
-            
-            unmetNeedFactor = 1.0/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
-            
-            
-            classRank = person.classRank
-            if person.status == 'child' or person.status == 'student':
-                classRank = person.parentsClassRank
-            
-            careProb = baseProb*math.pow(self.p['careBias'], classRank)/unmetNeedFactor 
-            
-            if np.random.random() < careProb:
-                baseTransition = self.baseRate(self.p['careBias'], 1.0-self.p['careTransitionRate'])
-                if baseTransition >= 1.0:
-                    print 'Error: base transition >= 1'
-                    # sys.exit()
-                    
-                    
-                if person.careNeedLevel > 0:
-                    unmetNeedFactor = 1.0/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
-                else:
-                    unmetNeedFactor = 1.0
-                transitionRate = (1.0 - baseTransition*math.pow(self.p['careBias'], classRank))*unmetNeedFactor
-                
-                stepCare = 1
-                bound = transitionRate
-                
-                while np.random.random() > bound and stepCare < self.p['numCareLevels'] - 1:
-                    stepCare += 1
-                    bound += (1.0-bound)*transitionRate
-                person.careNeedLevel += stepCare
-                    
-                if person.careNeedLevel >= self.p['numCareLevels']:
-                    person.careNeedLevel = int(self.p['numCareLevels'] - 1)
-                if person.careNeedLevel > 1:
-                    person.wage = 0
     
-    def baseRate(self, bias, cp):
-        a = 0
-        for i in range(int(self.p['numberClasses'])):
-            a += self.socialClassShares[i]*math.pow(bias, i)
-        baseRate = cp/a
-        return (baseRate)
     
     def updateUnmetCareNeed(self):
         
@@ -7181,16 +8252,7 @@ class SimCov:
                 break
         return cost
     
-    def computeHouseholdIncome(self, house):
-        householdCarers = [x for x in house.occupants if x.age >= self.p['ageTeenagers'] and x.maternityStatus == False]
-        employed = [x for x in householdCarers if x.status == 'worker']
-        householdIncome = 0
-        for worker in employed:
-            worker.income = worker.residualWorkingHours*worker.wage
-            
-        householdIncome = sum([x.income for x in householdCarers])
-
-        return householdIncome
+    
         
         
     def updateChildCareNeeds(self, house):
@@ -7611,87 +8673,7 @@ class SimCov:
 #        
 #        return totHours
             
-    def resetCareVariables_KN(self):
-        
-        for house in self.map.occupiedHouses:
-            
-            
-            house.totalSocialCareNeed = 0
-            house.totalUnmetSocialCareNeed = 0
-            house.totalChildCareNeed = 0
-            house.childCareNeeds = []
-            house.childCarePrices = []
-            house.highPriceChildCare = 0
-            house.lowPriceChildCare = 0
-            house.residualIncomeForChildCare = 0
-            house.initialResidualIncomeForChildCare = 0
-            house.residualIncomeForSocialCare = []
-            house.householdInformalSupplies = []
-            house.householdFormalSupply = []
-            house.networkSupply = 0
-            house.networkTotalSupplies = []
-            house.networkInformalSupplies = []
-            house.formalChildCareSupply = 0
-            house.networkFormalSocialCareSupplies = []
-            house.totalSupplies = []
-            house.netCareSupply = 0
-            house.childCareWeights = []
-            house.formalCaresRatios = []
-            house.informalChildCareReceived = 0
-            house.informalSocialCareReceived = 0
-            house.formalChildCareReceived = 0
-            house.formalChildCareCost = 0
-            house.formalSocialCareReceived = 0
-            house.householdFormalSupplyCost = 0
-            house.wealthForCare = 0
-            house.incomeByTaxBand = []
-            house.averageChildCarePrice = 0
-            house.networkSupport = 0
-            house.outOfWorkSocialCare = 0
-            house.townAttractiveness = []
-            house.netCareDemand = 0
-            house.careAttractionFactor = 0
-            house.newOccupancy = False
-            
-            for person in house.occupants:
-                person.careNetwork.clear()
-                person.hoursChildCareDemand = 0
-                person.netChildCareDemand = 0
-                person.unmetChildCareNeed = 0
-                person.hoursSocialCareDemand = 0
-                person.unmetSocialCareNeed = 0
-                person.informalChildCareReceived = 0
-                person.formalChildCareReceived = 0
-                person.publicChildCareContribution = 0
-                person.informalSocialCareReceived = 0
-                person.formalSocialCareReceived = 0
-                person.childWork = 0
-                person.socialWork = 0
-                person.potentialIncome = 0
-                person.wealthPV = 0
-                person.wealthForCare = 0
-                person.incomeExpenses = 0
-                person.outOfWorkChildCare = 0
-                person.outOfWorkSocialCare = 0
-                person.residualWorkingHours = 0
-                person.availableWorkingHours = 0
-                person.residualInformalSupplies = [0.0, 0.0, 0.0, 0.0]
-                person.residualInformalSupply = 0
-                person.hoursInformalSupplies = [0.0, 0.0, 0.0, 0.0]
-                person.maxFormalCareSupply = 0
-                person.totalSupply = 0
-                person.informalSupplyByKinship = [0.0, 0.0, 0.0, 0.0]
-                person.formalSupplyByKinship = [0.0, 0.0, 0.0, 0.0]
-                person.careForFamily = False
-                person.wealthSpentOnCare = 0
-                # Social care provision variables
-                person.networkSupply = 0
-                person.networkTotalSupplies = []
-                person.weightedTotalSupplies = []
-                person.networkInformalSupplies = []
-                person.networkFormalSocialCareSupplies = []
-                person.suppliers = []
-                person.networkInfectionFactor = 0
+    
     
     def householdSocialCareNetwork(self):
         
@@ -8252,127 +9234,7 @@ class SimCov:
         if totalChildCareNeed > 0:
             self.sharePublicChildCare = 1.0 - float(totalUnmetChildCareNeed)/float(totalChildCareNeed)
             
-    def householdCareSupply(self):
-        
-        for house in self.map.occupiedHouses:
-        
-            household = list(house.occupants)
-            householdCarers = [x for x in household if x.age >= self.p['ageTeenagers'] and x.hoursSocialCareDemand == 0 and x.maternityStatus == False]
-            for member in householdCarers:
-                # Teenager supplies
-                if member.status == 'teenager':
-                    supplies = list(self.p['teenagerSupply'])
-                    if member.symptomatic == True:
-                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
-                            supplies = [0 for x in supplies]
-                        elif member.symptomsLevel == 'mild':
-                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
-                    if self.lockdown == True:
-                        homeSupply = supplies[0]
-                        if member.symptomatic == False or member.mildConditionIndex < self.p['symptomSocialCareThreshold']:
-                            homeSupply = float(supplies[0])*(1.0+self.p['increasedSupplyFactor'])
-                        if self.p['careLockdown'] == False:
-                            otherSupplies = [float(x)*(1.0+self.p['increasedSupplyFactor']) for x in supplies[1:]]
-                        else:
-                            otherSupplies = [0 for x in supplies[1:]]
-                        supplies = [homeSupply]
-                        supplies.extend(otherSupplies)
-                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
-                    member.residualInformalSupplies = supplies
-                
-                # Student supplies
-                elif member.status == 'student' and member.outOfTownStudent == False:
-                    supplies = list(self.p['studentSupply'])
-                    if member.symptomatic == True:
-                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
-                            supplies = [0 for x in supplies]
-                        elif member.symptomsLevel == 'mild':
-                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
-                    if self.lockdown == True:
-                        homeSupply = supplies[0]
-                        if member.symptomatic == False or member.mildConditionIndex < self.p['symptomSocialCareThreshold']:
-                            homeSupply = float(supplies[0])*(1.0+self.p['increasedSupplyFactor'])
-                        if self.p['careLockdown'] == False:
-                            otherSupplies = [float(x)*(1.0+self.p['increasedSupplyFactor']) for x in supplies[1:]]
-                        else:
-                            otherSupplies = [0 for x in supplies[1:]]
-                        supplies = [homeSupply]
-                        supplies.extend(otherSupplies)
-                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
-                    member.residualInformalSupplies = supplies
-                
-                # Retired supplies
-                elif member.status == 'retired':
-                    supplies = list(self.p['retiredSupply'])
-                    if member.symptomatic == True:
-                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
-                            supplies = [0 for x in supplies]
-                        elif member.symptomsLevel == 'mild':
-                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
-                    if self.lockdown == True:
-                        homeSupply = supplies[0]
-                        if self.p['careLockdown'] == False:
-                            otherSupplies = [float(x) for x in supplies[1:]]
-                        else:
-                            otherSupplies = [0 for x in supplies[1:]]
-                        supplies = [homeSupply]
-                        supplies.extend(otherSupplies)
-                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
-                    member.residualInformalSupplies = supplies
-        
-                # Workers supplies
-                elif member.status == 'worker' and member.careNeedLevel == 0:
-                    supplies = list(self.p['employedSupply'])
-                    if member.symptomatic == True:
-                        if member.symptomsLevel == 'severe' or member.symptomsLevel == 'critical' or member.symptomsLevel == 'dead' or member.mildConditionIndex > self.p['symptomSocialCareThreshold'] or member.testPositive == True:
-                            supplies = [0 for x in supplies]
-                        elif member.symptomsLevel == 'mild':
-                            supplies = [float(x)*(1.0-member.mildConditionIndex) for x in supplies]
-                    if self.lockdown == True:
-                        homeSupply = supplies[0]
-                        if member.symptomatic == False or member.mildConditionIndex < self.p['symptomSocialCareThreshold']:
-                            homeSupply = float(supplies[0])*(1.0+self.p['increasedSupplyFactor'])
-                        if self.p['careLockdown'] == False:
-                            otherSupplies = [float(x)*(1.0+self.p['increasedSupplyFactor']) for x in supplies[1:]]
-                        else:
-                            otherSupplies = [0 for x in supplies[1:]]
-                        supplies = [homeSupply]
-                        supplies.extend(otherSupplies)
-                    supplies = [int((x+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare'] for x in supplies]
-                    member.residualInformalSupplies = supplies
-                    
-                # member.residualInformalSupplies = [max(x-member.hoursSocialCareDemand, 0) for x in member.residualInformalSupplies]
-                member.hoursInformalSupplies = member.residualInformalSupplies
-                
-            house.householdInformalSupplies = []
-            for i in range(4):
-                house.householdInformalSupplies.append(sum([x.residualInformalSupplies[i] for x in householdCarers]))
-            
-            employed = [x for x in householdCarers if x.status == 'worker']
-            for worker in employed:
-                if worker.careNeedLevel < 2:
-                    worker.residualWorkingHours = self.p['dailyHours'][worker.careNeedLevel]
-                    worker.availableWorkingHours = worker.residualWorkingHours
-                worker.potentialIncome = self.p['dailyHours'][worker.careNeedLevel]*worker.wage
-                
-            potentialIncomes = [x.potentialIncome for x in household if x.maternityStatus == False]
-            potentialIncomes.extend([x.income for x in household if x.status == 'retired'])
-            potentialIncome = sum(potentialIncomes)
-            
-            house.residualIncomeForChildCare = potentialIncome
-            house.initialResidualIncomeForChildCare = house.residualIncomeForChildCare
-            
-            # The household's tax brackets are the sum of the individual income brackets.
-            taxBands = len(self.p['taxBrackets'])
-            house.incomeByTaxBand = [0]*taxBands
-            house.incomeByTaxBand[-1] = potentialIncome
-            for i in range(taxBands-1):
-                for income in potentialIncomes:
-                    if income > self.p['taxBrackets'][i]:
-                        bracket = income-self.p['taxBrackets'][i]
-                        house.incomeByTaxBand[i] += bracket
-                        house.incomeByTaxBand[-1] -= bracket
-                        potentialIncomes[potentialIncomes.index(income)] -= bracket
+    
                         
 
     def computeNetCareDemand(self):
@@ -8555,287 +9417,6 @@ class SimCov:
         houseBenefitRoom = min(houseBenefitRoom, 4)
         houseBenefitRoom -= 1
         return houseBenefitRoom
-        
-    def doAgeTransitions(self):
-        
-        for person in self.pop.livingPeople:
-            person.age += 1
-            if person.age in self.p['ageBreaks']:
-                person.ageClass += 1
-            if person.age in self.p['interactionAgeBreaks']:
-                person.interactionAgeClass += 1
-            if person.age in self.p['mortalityAgeBreaks']:
-                person.mortalityAgeClass += 1
-            person.yearInTown += 1
-            person.maternityStatus = False
-        """Check whether people have moved on to a new status in life."""
-        peopleNotYetRetired = [x for x in self.pop.livingPeople if x.status != 'retired']
-        for person in peopleNotYetRetired:
-            age = self.year - person.birthdate
-            ## Do transitions to adulthood and retirement
-            if person.age == self.p['ageTeenagers']:
-                person.status == 'teenager'
-            if person.age == self.p['ageOfAdulthood']:
-                person.status = 'student'
-                if np.random.random() < self.p['probOutOfTownStudent']:
-                    person.outOfTownStudent = True
-                person.classRank = 0 # max(person.father.classRank, person.mother.classRank)
-                
-            elif person.age == self.p['ageOfRetirement']:
-                person.status = 'retired'
-
-            ## If somebody is still at home but their parents have died, promote them to independent adult
-            if person.mother != None:
-                if person.status == 'worker' and person.mother not in person.house.occupants and person.father not in person.house.occupants:
-                    person.independentStatus = True
-            if person.status == 'student' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
-                if person.mother.dead:
-                    if person.father.dead:
-                        person.independentStatus = True
-                        self.startWorking(person)
-                    else:
-                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0)
-                else:
-                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0)
-                    
-            ## If somebody is a *child* at home and their parents have died, they need to be adopted
-            if person.status == 'retired' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
-                person.independentStatus = True
-            
-            if person.status == 'child' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
-                if person.mother.dead:
-                    if person.father.dead:
-                
-                        while True:
-                            adoptiveMother = random.choice(self.pop.livingPeople)
-                            if ( adoptiveMother.status != 'child'
-                                 and adoptiveMother.sex == 'female'
-                                 and adoptiveMother.partner != None ):
-                                break
-        
-                        person.mother = adoptiveMother
-                        adoptiveMother.children.append(person)
-                        person.father = adoptiveMother.partner
-                        adoptiveMother.partner.children.append(person)                
-
-                        self.movePeopleIntoChosenHouse(adoptiveMother.house,person.house,[person], 0)   
-                    else:
-                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0)
-                else:
-                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0)
-                    
-    def startWorking(self, person):
-        
-        person.status = 'worker'
-        person.outOfTownStudent = False
-        
-        dKi = np.random.normal(0, self.p['wageVar'])
-        person.initialIncome = self.p['incomeInitialLevels'][person.classRank]*math.exp(dKi)
-        dKf = np.random.normal(dKi, self.p['wageVar'])
-        person.finalIncome = self.p['incomeFinalLevels'][person.classRank]*math.exp(dKf)
-        
-        person.wage = person.initialIncome
-        person.income = person.wage*self.p['dailyHours'][int(person.careNeedLevel)]
-        person.potentialIncome = person.income
-    
-    def doSocialTransition(self):
-        
-        for person in self.pop.livingPeople:
-            if person.age == self.p['workingAge'][person.classRank] and person.status == 'student':
-            # With a certain probability p the person enters the workforce, 
-            # with a probability 1-p goes to the next educational level
-                if person.classRank == 4:
-                    probStudy = 0.0
-                else:
-                    probStudy = self.transitionProb(person) # Probability of keeping studying
-                
-                if random.random() > probStudy:
-                    self.startWorking(person)
-                    
-                else:
-                    person.classRank += 1
-                    
-    def transitionProb (self, person):
-        household = [x for x in person.house.occupants]
-        if person.father.dead + person.mother.dead != 2:
-            disposableIncome = sum([x.income for x in household])
-            perCapitaDisposableIncome = disposableIncome/len(household)
-            # print('Per Capita Disposable Income: ' + str(perCapitaDisposableIncome))
-            
-            if perCapitaDisposableIncome > 0.0:
-                
-                forgoneSalary = self.p['incomeInitialLevels'][person.classRank]*self.p['dailyHours'][person.careNeedLevel]
-                educationCosts = self.p['educationCosts'][person.classRank]
-                
-                # relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
-                
-                relCost = forgoneSalary/perCapitaDisposableIncome
-                
-                # Check variable
-#                if self.year == self.p['getCheckVariablesAtYear']:
-#                    self.relativeEducationCost.append(relCost) # 0.2 - 5
-                
-                incomeEffect = (self.p['costantIncomeParam']+1)/(math.exp(self.p['eduWageSensitivity']*relCost) + self.p['costantIncomeParam']) # Min-Max: 0 - 10
-                
-                incomeFactor = math.exp(self.p['eduWageSensitivity']*perCapitaDisposableIncome)
-                incomeEffect = incomeFactor/(incomeFactor+self.p['costantIncomeParam'])
-                
-                targetEL = max(person.father.classRank, person.mother.classRank)
-                
-                dE = float(targetEL - person.classRank)
-                expEdu = math.exp(self.p['eduRankSensitivity']*dE)
-                educationEffect = expEdu/(expEdu+self.p['costantEduParam'])
-                
-                careEffect = 1/math.exp(self.p['careEducationParam']*person.socialWork)
-                
-                
-                ### Fixing probability to keep studying   ######################
-                
-                pStudy = incomeEffect*educationEffect*careEffect
-                
-#                shareAdjustmentFactor = self.socialClassShares[person.classRank] - self.p['shareClasses'][person.classRank]
-#                
-#                pStudy *= math.exp(self.p['classAdjustmentBeta']*shareAdjustmentFactor)
-                
-                if person.classRank == 0 and self.socialClassShares[0] > 0.2:
-                    pStudy *= 1.0/0.9
-                
-                if person.classRank == 0 and self.socialClassShares[0] < 0.2:
-                    pStudy *= 0.85
-                
-                if person.classRank == 1 and self.socialClassShares[1] > 0.35:
-                    pStudy *= 1.0/0.8
-                    
-                if person.classRank == 2 and self.socialClassShares[2] > 0.25:
-                    pStudy *= 1.0/0.85
-                    
-                
-                #####################################################################
-                
-                # pStudy = math.pow(incomeEffect, self.p['incEduExp'])*math.pow(educationEffect, 1-self.p['incEduExp'])
-                if pStudy < 0:
-                    pStudy = 0
-                # Check
-#                if self.year == self.p['getCheckVariablesAtYear']:
-#                    self.probKeepStudying.append(pStudy)
-#                    self.person.classRankStudent.append(person.classRank)
-                
-            else:
-                # print('perCapitaDisposableIncome: ' + str(perCapitaDisposableIncome))
-                pStudy = 0
-        else:
-            pStudy = 0
-        # pWork = math.exp(-1*self.p['eduEduSensitivity']*dE1)
-        # return (pStudy/(pStudy+pWork))
-        #pStudy = 0.8
-        return pStudy
-    
-    
-    def updateIncome(self):
-        
-        for person in self.pop.livingPeople:
-            if person.status == 'worker' and person.careNeedLevel < 2:
-                person.workExperience *= self.p['workDiscountingTime']
-                if person.maternityStatus == False:
-                    if self.p['dailyHours'][person.careNeedLevel] > 0:
-                        person.workingPeriods += float(self.p['dailyHours'][person.careNeedLevel])/8.0
-                        person.workExperience += person.residualWorkingHours/8.0
-                    person.wage = self.computeWage(person)
-                    person.income = person.wage*person.residualWorkingHours   # self.p['weeklyHours'][int(person.careNeedLevel)]
-                    person.lastIncome = person.income
-                elif person.maternityStatus == True:
-                    person.wage = 0
-                    person.income = 0
-                   
-            elif person.age == self.p['ageOfRetirement'] or person.careNeedLevel > 1:
-                person.wage = 0
-                shareWorkingTime = person.workingPeriods/float(self.p['minContributionYears'])
-                dK = np.random.normal(0, self.p['wageVar'])
-#                averageIncome = 0
-#                if person.workingPeriods > 0:
-#                    averageIncome = person.cumulativeIncome/person.workingPeriods
-                person.income = person.lastIncome*shareWorkingTime*math.exp(dK) #self.p['pensionWage'][person.classRank]*self.p['weeklyHours'][0]
-#                if person.income < self.p['statePension']:
-#                    person.income = self.p['statePension']
-            person.cumulativeIncome += (person.income - person.incomeExpenses)
-            person.cumulativeIncome = max(person.cumulativeIncome, 0)
-        
-        self.grossDomesticProduct = sum([x.income for x in self.pop.livingPeople if x.wage > 0])
-        
-        for house in self.map.occupiedHouses:
-            house.outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in house.occupants])
-            house.householdIncome = sum([x.income for x in house.occupants])
-            house.incomePerCapita = house.householdIncome/float(len(house.occupants))
-           
-        households = [x for x in self.map.occupiedHouses]
-        # households.sort(key=operator.attrgetter("incomePerCapita"))
-        households.sort(key=operator.attrgetter("householdIncome"))
-        for i in range(5):
-            number = int(round(len(households)/(5.0-float(i))))
-            quintile = households[:number]
-            for j in quintile:
-                j.incomeQuintile = i
-                for agent in j.occupants:
-                    agent.incomeQuintile = i
-            households = [x for x in households if x not in quintile]
- 
-        # Compute tax revenue and income after tax
-        earningPeople = [x for x in self.pop.livingPeople if x.status == 'worker' and x.maternityStatus == False]
-        self.totalTaxRevenue = 0
-        self.totalPensionRevenue = 0
-        for person in earningPeople:
-            employeePensionContribution = 0
-            # Pension Contributions
-            if person.income > 162.0:
-                if person.income < 893.0:
-                    employeePensionContribution = (person.income - 162.0)*0.12
-                else:
-                    employeePensionContribution = (893.0 - 162.0)*0.12
-                    employeePensionContribution += (person.income - 893.0)*0.02
-            person.income -= employeePensionContribution
-            self.totalPensionRevenue += employeePensionContribution
-            
-            # Tax Revenues
-            tax = 0
-            residualIncome = person.income
-            for i in range(len(self.p['taxBrackets'])):
-                if residualIncome > self.p['taxBrackets'][i]:
-                    taxable = residualIncome - self.p['taxBrackets'][i]
-                    tax += taxable*self.p['taxationRates'][i]
-                    residualIncome -= taxable
-            person.income -= tax
-            self.totalTaxRevenue += tax
-        self.statePensionRevenue.append(self.totalPensionRevenue)
-        self.stateTaxRevenue.append(self.totalTaxRevenue)
-        
-        # Pensions Expenditure
-        pensioners = [x for x in self.pop.livingPeople if x.status == 'retired']
-        totalIncome = sum([x.income for x in earningPeople if x.status == 'worker'])
-        self.pensionExpenditure = self.p['statePension']*len(pensioners) + totalIncome*self.p['statePensionContribution']
-        self.statePensionExpenditure.append(self.pensionExpenditure)
-        
-        # Assign incomes according to empirical income distribution
-        #####   Temporarily disactivating the top-down income attribution   ############################
-        
-#        earningPeople = [x for x in self.pop.livingPeople if x.income > 0] #x.status == 'worker']
-#        earningPeople.sort(key=operator.attrgetter("income"))
-#        
-#        workersToAssign = list(earningPeople)
-#        incomePercentiles = []
-#        for i in range(99, 0, -1):
-#            groupNum = int(float(len(workersToAssign))/float(i))
-#            workersGroup = workersToAssign[0:groupNum]
-#            incomePercentiles.append(workersGroup)
-#            workersToAssign = workersToAssign[groupNum:]
-#        
-#        for i in range(99):
-#            wage = float(self.incomesPercentiles[i])/(52*40)
-#            for person in incomePercentiles[i]:
-#                dK = np.random.normal(0, self.p['wageVar'])
-#                person.wage = wage*math.exp(dK)
-#                person.income = person.wage*self.p['weeklyHours'][int(person.careNeedLevel)]
-        
-    
             
     def updateWealth(self):
         households = [x for x in self.map.occupiedHouses]
@@ -8871,685 +9452,7 @@ class SimCov:
             
         
         
-    def computeWage(self, person):
-        
-        # newK = self.p['incomeFinalLevels'][classRank]*math.exp(dK)    
-        # c = np.math.log(self.p['incomeInitialLevels'][classRank]/newK)
-        # wage = newK*np.math.exp(c*np.math.exp(-1*self.p['incomeGrowthRate'][classRank]*workExperience))
-        c = np.math.log(person.initialIncome/person.finalIncome)
-        wage = person.finalIncome*np.math.exp(c*np.math.exp(-1*self.p['incomeGrowthRate'][person.classRank]*person.workExperience))
-        dK = np.random.normal(0, self.p['wageVar'])
-        wage *= math.exp(dK)
-        return wage
     
-    def computeBirthProb(self, fertilityBias, rawRate, womanRank):
-        womenOfReproductiveAge = [x for x in self.pop.livingPeople
-                                  if x.sex == 'female' and x.age >= self.p['minPregnancyAge']]
-        womanClassShares = []
-        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 0])/float(len(womenOfReproductiveAge)))
-        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 1])/float(len(womenOfReproductiveAge)))
-        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 2])/float(len(womenOfReproductiveAge)))
-        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 3])/float(len(womenOfReproductiveAge)))
-        womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 4])/float(len(womenOfReproductiveAge)))
-        a = 0
-        for i in range(int(self.p['numberClasses'])):
-            a += womanClassShares[i]*math.pow(self.p['fertilityBias'], i)
-        baseRate = rawRate/a
-        birthProb = baseRate*math.pow(self.p['fertilityBias'], womanRank)
-        return birthProb
-    
-    def doBirths(self):
-        
-        preBirth = len(self.pop.livingPeople)
-        
-        marriedLadies = 0
-        adultLadies = 0
-        births = [0, 0, 0, 0, 0]
-        marriedPercentage = []
-        
-        adultWomen = [x for x in self.pop.livingPeople
-                                       if x.sex == 'female' and x.age >= self.p['minPregnancyAge']]
-        
-        womenOfReproductiveAge = [x for x in self.pop.livingPeople
-                                  if x.sex == 'female'
-                                  and x.age >= self.p['minPregnancyAge']
-                                  and x.age <= self.p['maxPregnancyAge']
-                                  and x.partner != None]
-        
-        adultLadies_1 = [x for x in adultWomen if x.classRank == 0]   
-        marriedLadies_1 = len([x for x in adultLadies_1 if x.partner != None])
-        if len(adultLadies_1) > 0:
-            marriedPercentage.append(marriedLadies_1/float(len(adultLadies_1)))
-        else:
-            marriedPercentage.append(0)
-        adultLadies_2 = [x for x in adultWomen if x.classRank == 1]    
-        marriedLadies_2 = len([x for x in adultLadies_2 if x.partner != None])
-        if len(adultLadies_2) > 0:
-            marriedPercentage.append(marriedLadies_2/float(len(adultLadies_2)))
-        else:
-            marriedPercentage.append(0)
-        adultLadies_3 = [x for x in adultWomen if x.classRank == 2]   
-        marriedLadies_3 = len([x for x in adultLadies_3 if x.partner != None]) 
-        if len(adultLadies_3) > 0:
-            marriedPercentage.append(marriedLadies_3/float(len(adultLadies_3)))
-        else:
-            marriedPercentage.append(0)
-        adultLadies_4 = [x for x in adultWomen if x.classRank == 3]  
-        marriedLadies_4 = len([x for x in adultLadies_4 if x.partner != None])   
-        if len(adultLadies_4) > 0:
-            marriedPercentage.append(marriedLadies_4/float(len(adultLadies_4)))
-        else:
-            marriedPercentage.append(0)
-        adultLadies_5 = [x for x in adultWomen if x.classRank == 4]   
-        marriedLadies_5 = len([x for x in adultLadies_5 if x.partner != None]) 
-        if len(adultLadies_5) > 0:
-            marriedPercentage.append(marriedLadies_5/float(len(adultLadies_5)))
-        else:
-            marriedPercentage.append(0)
-        
-        # print(marriedPercentage)
-        
-#        for person in self.pop.livingPeople:
-#           
-#            if person.sex == 'female' and person.age >= self.p['minPregnancyAge']:
-#                adultLadies += 1
-#                if person.partner != None:
-#                    marriedLadies += 1
-#        marriedPercentage = float(marriedLadies)/float(adultLadies)
-        
-        for woman in womenOfReproductiveAge:
-            
-            womanClassRank = woman.classRank
-            if woman.status == 'student':
-                womanClassRank = woman.parentsClassRank
-
-            if self.year < 1951:
-                rawRate = self.p['growingPopBirthProb']
-                birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, womanClassRank)
-            else:
-                rawRate = self.fert_data[(self.year - woman.birthdate)-16, self.year-1950]
-                birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, womanClassRank)/marriedPercentage[womanClassRank]
-                
-            # birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, woman.classRank)
-            
-            #baseRate = self.baseRate(self.socialClassShares, self.p['fertilityBias'], rawRate)
-            #fertilityCorrector = (self.socialClassShares[woman.classRank] - self.p['initialClassShares'][woman.classRank])/self.p['initialClassShares'][woman.classRank]
-            #baseRate *= 1/math.exp(self.p['fertilityCorrector']*fertilityCorrector)
-            #birthProb = baseRate*math.pow(self.p['fertilityBias'], woman.classRank)
-            
-            if random.random() < birthProb:
-                # (self, mother, father, age, birthYear, sex, status, house,
-                # classRank, sec, edu, wage, income, finalIncome):
-                parentsClassRank = max([woman.classRank, woman.partner.classRank])
-                baby = Person(woman, woman.partner, self.year, 0, 'random', woman.house, woman.sec, -1, parentsClassRank, 
-                              0, 0, 0, 0, 0, 0, 'child', False, 'susceptible')
-                baby.lifeExpectancy = max(90-baby.age, 5.0)
-                self.pop.allPeople.append(baby)
-                self.pop.livingPeople.append(baby)
-                woman.house.occupants.append(baby)
-                woman.children.append(baby)
-                woman.partner.children.append(baby)
-                woman.maternityStatus = True
-                woman.residualWorkingHours = 0
-                woman.availableWorkingHours = 0
-                woman.potentialIncome = 0
-                woman.income = 0
-                    
-        postBirth = len(self.pop.livingPeople)
-        
-        print('the number of births is: ' + str(postBirth - preBirth))
-    
-    def computeSplitProb(self, rawRate, classRank):
-        a = 0
-        for i in range(int(self.p['numberClasses'])):
-            a += self.socialClassShares[i]*math.pow(self.p['divorceBias'], i)
-        baseRate = rawRate/a
-        splitProb = baseRate*math.pow(self.p['divorceBias'], classRank)
-        return splitProb
-            
-    def doDivorces(self):
-        menInRelationships = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner != None ]
-        for man in menInRelationships:
-            
-            age = self.year - man.birthdate 
-
-            if self.year < self.p['thePresent']:
-                rawRate = self.p['basicDivorceRate'] * self.p['divorceModifierByDecade'][int(age)/10]
-            else:
-                rawRate = self.p['variableDivorce'] * self.p['divorceModifierByDecade'][int(age)/10]
-                
-            splitProb = self.computeSplitProb(rawRate, man.classRank)
-                
-            if random.random() < splitProb:
-                wife = man.partner
-                man.partner = None
-                wife.partner = None
-                man.yearDivorced.append(self.year)
-                wife.yearDivorced.append(self.year)
-                if wife.status == 'student':
-                    wife.independentStatus = True
-                    self.startWorking(wife)
-                self.divorceTally += 1
-                towns = [man.house.town]
-                # manChildren = [x for x in man.children if x.dead == False and x.house == man.house and x.father == man and x.mother != wife]
-                
-                manChildren = []
-                children = [x for x in man.children if x.dead == False and x.house == man.house]
-                for child in children:
-                    if child.father == man and child.mother != wife:
-                        manChildren.append(child)
-                    else:
-                        if np.random.random() < self.p['probChildrenWithFather']:
-                            manChildren.append(child)
-                        
-                peopleToMove = [man]
-                peopleToMove += manChildren
-                self.findNewHouse(peopleToMove, towns)
-                
-    def doMarriages(self):
-        
-        eligibleMen = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner == None and x.status != 'child' and x.status != 'student']
-        eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner == None and x.status != 'child']
-        
-        
-        if len(eligibleMen) > 0 and len (eligibleWomen) > 0:
-            random.shuffle(eligibleMen)
-            random.shuffle(eligibleWomen)
-            
-            interestedWomen = []
-            for w in eligibleWomen:
-                womanMarriageProb = self.p['basicFemaleMarriageProb']*self.p['femaleMarriageModifierByDecade'][w.age/10]
-                if random.random() < womanMarriageProb:
-                    interestedWomen.append(w)
-        
-            for man in eligibleMen:
-                
-                ageClass = int(man.age/10)
-                manMarriageProb = self.p['basicMaleMarriageProb']*self.p['maleMarriageModifierByDecade'][ageClass]
-                
-                ageClassPop = [x for x in eligibleMen if int(x.age/10) == ageClass]
-                noChildrenMen = [x for x in ageClassPop if len([y for y in x.children if y.dead == False and y.house == x.house]) == 0]
-                shareNoChildren = float(len(noChildrenMen))/float(len(ageClassPop))
-                den = shareNoChildren + (1-shareNoChildren)*self.p['manWithChildrenBias']
-                baseRate = manMarriageProb/den
-                if man in noChildrenMen:
-                    manMarriageProb = baseRate
-                else:
-                    manMarriageProb = baseRate*self.p['manWithChildrenBias']
-
-                manMarriageProb *= self.p['maleMarriageMultiplier']
-                
-                
-                if random.random() < manMarriageProb:
-                    potentialBrides = []
-                    for woman in interestedWomen:
-                        deltaAge = man.age - woman.age
-                        if deltaAge < 20 and deltaAge > -10:
-                            if woman.house != man.house:
-                                if man.mother != None and woman.mother != None:
-                                    if man.mother != woman.mother and man not in woman.children and woman not in man.children:
-                                        potentialBrides.append(woman)
-                                else:
-                                    if man not in woman.children and woman not in man.children:
-                                        potentialBrides.append(woman)
-                    
-                    if len(potentialBrides) > 0:
-                        manTown = man.house.town
-                        bridesWeights = []
-                        for woman in potentialBrides:
-                            
-                            womanTown = woman.house.town
-                            geoDistance = self.manhattanDistance(manTown, womanTown)/float(self.p['mapGridXDimension'] + self.p['mapGridYDimension'])
-                            geoFactor = 1/math.exp(self.p['betaGeoExp']*geoDistance)
-                            
-                            womanRank = woman.classRank
-                            studentFactor = 1.0
-                            if woman.status == 'student':
-                                studentFactor = self.p['studentFactorParam']
-                                womanRank = max(woman.father.classRank, woman.mother.classRank)
-                            statusDistance = float(abs(man.classRank-womanRank))/float((self.p['numberClasses']-1))
-                            if man.classRank < womanRank:
-                                betaExponent = self.p['betaSocExp']
-                            else:
-                                betaExponent = self.p['betaSocExp']*self.p['rankGenderBias']
-                            socFactor = 1/math.exp(betaExponent*statusDistance)
-                            
-                            ageFactor = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
-                            
-                            numChildrenWithWoman = len([x for x in woman.children if x.house == woman.house])
-                            
-                            childrenFactor = 1/math.exp(self.p['bridesChildrenExp']*numChildrenWithWoman)
-                            
-                            marriageProb = geoFactor*socFactor*ageFactor*childrenFactor*studentFactor
-                            
-                            bridesWeights.append(marriageProb)
-                            
-                        if sum(bridesWeights) > 0:
-                            bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
-                            woman = np.random.choice(potentialBrides, p = bridesProb)
-                        else:
-                            woman = np.random.choice(potentialBrides)
-                        man.partner = woman
-                        woman.partner = man
-                        man.yearMarried.append(self.year)
-                        woman.yearMarried.append(self.year)
-                        interestedWomen.remove(woman)
-                        
-                        self.marriageTally += 1
- 
-    def deltaAge(self, dA):
-        if dA <= -10 :
-            cat = 0
-        elif dA >= -9 and dA <= -3:
-            cat = 1
-        elif dA >= -2 and dA <= 0:
-            cat = 2
-        elif dA >= 1 and dA <= 4:
-            cat = 3
-        elif dA >= 5 and dA <= 9:
-            cat = 4
-        else:
-            cat = 5
-        return cat
-
-    
-    def doMovingAround(self):
-        """
-        Various reasons why a person or family group might want to
-        move around. People who are in partnerships but not living
-        together are highly likely to find a place together. Adults
-        still living at home might be ready to move out this year.
-        Single people might want to move in order to find partners. A
-        family might move at random for work reasons. Older people
-        might move back in with their kids.
-        """
-        self.relocationCostFactors[:] = []
-        self.incomeFactors[:] = []
-        self.probsRelocation[:] = []
-        
-        for i in self.pop.livingPeople:
-            i.movedThisYear = False
-            
-        ## Need to keep track of this to avoid multiple moves
-        separetedSpouses = [x for x in self.pop.livingPeople if x.partner != None and x.house != x.partner.house]
-        couples = []
-        for i in separetedSpouses:
-            couples.append([i, i.partner])
-       
-        for person in separetedSpouses:
-            
-            if person.house != person.partner.house:
-                if random.random() < self.p['probApartWillMoveTogether']:
-                    peopleToMove = [person, person.partner]
-                    personChildren = self.bringTheKids(person)
-                    personChildrenToMove = [x for x in personChildren if x not in separetedSpouses]
-                    peopleToMove += personChildrenToMove
-                    partnerChildren = self.bringTheKids(person.partner)
-                    partnerChildrenToMove = [x for x in partnerChildren if x not in separetedSpouses]
-                    peopleToMove += [x for x in partnerChildrenToMove if x not in personChildrenToMove]
-                    
-                    if random.random() < self.p['coupleMovesToExistingHousehold']:
-                        myHousePop = len(person.house.occupants)
-                        yourHousePop = len(person.partner.house.occupants)
-                        if yourHousePop < myHousePop:
-                            targetHouse = person.partner.house
-                        else:
-                            targetHouse = person.house
-                                
-                        self.movePeopleIntoChosenHouse(targetHouse,person.house,peopleToMove, 0)                        
-                    else:
-                        
-                        towns = [person.house.town, person.partner.house.town]
-                                
-                        self.findNewHouse(peopleToMove, towns)                        
-    
-                    if person.independentStatus == False:
-                        person.independentStatus = True
-                    if person.partner.independentStatus == False:
-                        person.partner.independentStatus = True
-
-        for person in self.pop.livingPeople:
-            age = self.year - person.birthdate
-            ageClass = age / 10
-            
-            if person.movedThisYear:
-                continue
-            
-            elif person.status == 'worker' and person.independentStatus == False and person.partner == None:
-                ## a single person who hasn't left home yet
-                if random.random() < ( self.p['basicProbAdultMoveOut']
-                                       * self.p['probAdultMoveOutModifierByDecade'][ageClass] ):
-                    peopleToMove = [person]
-                    peopleToMove += self.bringTheKids(person)
-                    distance = random.choice(['here','near'])
-                    
-                    # Select a town based on:
-                    # 1 - Distance form current town
-                    # 2 - Size of town
-                    # Gravitational model: town attraction = Size/pow(distance+1, beta)
-                    towns = self.selectTown(person.house.town)    #[person.house.town]
-                    
-#                    if distance == 'near':
-#                        nearbyTowns = [ k for k in self.map.towns if abs(k.x - town.x) <= 1 and abs(k.y - town.y) <= 1 ]
-#                        weights = [float(len(x.houses)) for x in nearbyTowns]
-#                        probs = [x/sum(weights) for x in weights]
-#                        town = np.random.choice(nearbyTowns, p = probs)
-                            
-                    self.findNewHouse(peopleToMove, towns)
-                    person.independentStatus = True
-                    
-
-#            elif person.independentStatus == True and person.partner == None:
-#                ## a young-ish person who has left home but is still (or newly) single
-#                if random.random() < ( self.p['basicProbSingleMove']
-#                                       * self.p['probSingleMoveModifierByDecade'][int(ageClass)] ):
-#                    peopleToMove = [person]
-#                    peopleToMove += self.bringTheKids(person)
-#                    distance = random.choice(['here','near'])
-#                    if person.house == self.displayHouse:
-#                        messageString = str(self.year) + ": #" + str(person.id) + " moves to meet new people."
-#                        self.textUpdateList.append(messageString)
-#                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-#                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-#                            writer.writerow([self.year, messageString])
-#                            
-#                    self.findNewHouse(peopleToMove,distance, policyFolder)
-
-            elif person.status == 'retired' and len(person.house.occupants) == 1:
-                ## a retired person who lives alone
-                for c in person.children:
-                    if ( c.dead == False ):
-                        distance = self.manhattanDistance(person.house.town,c.house.town)
-                        distance += 1.0
-                        if self.year < self.p['thePresent']:
-                            mbRate = self.p['agingParentsMoveInWithKids']/distance
-                        else:
-                            mbRate = self.p['variableMoveBack']/distance
-                        if random.random() < mbRate:
-                            peopleToMove = [person]
-                                
-                            self.movePeopleIntoChosenHouse(c.house,person.house,peopleToMove, 0)
-                            break
-                        
-        
-            
-            elif person.partner != None and person.yearMarried[-1] != self.year and person.house.vacated == False:
-                ## any other kind of married person, e.g., a family with kids
-                house = person.house
-                household = [x for x in house.occupants]
-                
-                # Compute relocation probability
-                # Relocation cost: the higher the lower the prob to relocate
-                relocationCost = self.p['relocationCostParam']*sum([math.pow(x.yearInTown, self.p['yearsInTownBeta']) for x in household])
-                relocationCostFactor = 1.0/math.exp(self.p['relocationCostBeta']*relocationCost)
-                # Support the household is getting in the current town: the hoigher the lower the probability to relocate
-                supportNetworkFactor = 1.0/math.exp(self.p['supportNetworkBeta']*house.networkSupport)
-                # Income factor: the higher the higher the probability to relocate
-                perCapitaIncome = self.computeHouseholdIncome(house)/float(len(household))
-                incomeFactorElement = math.exp(self.p['incomeRelocationBeta']*perCapitaIncome)
-                incomeFactor = (incomeFactorElement-1.0)/incomeFactorElement
-                relativeRelocationFactor = supportNetworkFactor*relocationCostFactor*incomeFactor
-                probRelocation = self.p['baseRelocationRate']*relativeRelocationFactor
-                
-                self.relocationCostFactors.append(relocationCostFactor)
-                self.incomeFactors.append(incomeFactor)
-                self.probsRelocation.append(probRelocation)
-                if np.random.random() < probRelocation: #self.p['basicProbFamilyMove']*self.p['probFamilyMoveModifierByDecade'][int(ageClass)]:
-                    person.house.vacated = True
-                    peopleToMove = [x for x in person.house.occupants]
-#                    personChildren = self.bringTheKids(person)
-#                    peopleToMove += personChildren
-#                    partnerChildren = self.bringTheKids(person.partner)
-#                    peopleToMove += [x for x in partnerChildren if x not in personChildren]
-#                    stepChildrenPartner = [x for x in personChildren if x not in partnerChildren]
-#                    stepChildrenPerson = [x for x in partnerChildren if x not in personChildren]
-#                    person.children.extend(stepChildrenPerson)
-#                    person.partner.children.extend(stepChildrenPartner)
-                    
-                    # Add a choice of town which depends on kinship network and available houses.
-                    
-                    # distance = random.choice(['here,''near','far'])
-                    towns = self.selectTown(person.house.town)
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " and #" + str(person.partner.id) + " move house"
-                        if len(peopleToMove) > 2:
-                            messageString += " with kids"
-                        messageString += "."
-                        self.textUpdateList.append(messageString)
-                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                            writer.writerow([self.year, messageString])
-                        
-                    self.findNewHouse(peopleToMove,towns)
-                    
-        
-        # Update display house
-        if len(self.displayHouse.occupants) < 1:
-            self.displayHouse.display = False
-            ## Nobody lives in the display house any more, choose another
-            if self.nextDisplayHouse != None:
-                self.displayHouse = self.nextDisplayHouse
-                self.displayHouse.display = True
-                self.nextDisplayHouse = None
-            else:
-                self.displayHouse = random.choice(self.pop.livingPeople).house
-                self.displayHouse.display = True
-                self.textUpdateList.append(str(self.year) + ": Display house empty, going to " + self.displayHouse.name + ".")
-                messageString = "Residents: "
-                for k in self.displayHouse.occupants:
-                    messageString += "#" + str(k.id) + " "
-                self.textUpdateList.append(messageString)
-    
-    def selectTown(self, personTown):
-        sizes = [len(x.houses) for x in self.map.towns]
-        distances = [self.manhattanDistance(personTown, x) for x in self.map.towns]
-        weights = [float(s)/float(np.power(d+1, self.p['townSelectionExp'])) for s, d, in zip(sizes, distances)]
-        probs = [x/sum(weights) for x in weights]
-        newTown = np.random.choice(self.map.towns, p = probs)
-        return [newTown]
-    
-    def checkHouseholdsRelocations(self):
-
-        newResidences = len([x for x in self.map.occupiedHouses if x.vacated == True])
-        shareRelocations = float(newResidences)/float(len(self.map.occupiedHouses))
-        
-        print 'Mean relocation cost factors: ' + str(np.mean(self.relocationCostFactors))
-        print 'Mean income factors: ' + str(np.mean(self.incomeFactors))
-        print 'Mean prob relocation: ' + str(np.mean(self.probsRelocation))
-        print 'Share of households relocated: ' + str(shareRelocations)
-        
-        for house in self.map.allHouses:
-            house.vacated = False      
-    
-    def selectSpousesTown(self, town1, town2):
-        prob1 = float(len(town1.houses))/(float(len(town1.houses))+float(len(town2.houses)))
-        if np.random.random() < prob1:
-            return town1
-        else:
-            return town2
-    
-    def manhattanDistance(self,t1,t2):
-        """Calculates the distance between two towns"""
-        xDist = abs(t1.x - t2.x)
-        yDist = abs(t1.y - t2.y)
-        return xDist + yDist
-
-
-    def bringTheKids(self,person):
-        """Given a person, return a list of their dependent kids who live in the same house as them."""
-        returnList = []
-        for i in person.children:
-            if ( i.house == person.house
-                 and i.independentStatus == False
-                 and i.dead == False ):
-                returnList.append(i)
-        return returnList
-
-    def findNewHouseInNewTown(self, personList, newTown):
-        """Find an appropriate empty house for the named person and put them in it."""
-
-        person = personList[0]
-        departureHouse = person.house
-        maxQuintile = max([x.incomeQuintile for x in person.house.occupants])
-        
-        emptyHousesInTown = []
-        houseDesirabilityIndex = []
-        rearrangedAvailableHouses = []
-        availableHouses = [x for x in self.map.allHouses if x.town == newTown and len(x.occupants) < 1]
-        emptyHousesInTown.extend(availableHouses)
-        occupiedHouses = [x for x in self.map.allHouses if x.town == newTown and len(x.occupants) > 0]
-        if len(occupiedHouses) > 0:
-            for house in availableHouses:
-                rearrangedAvailableHouses.append(house)
-                affinityIndexes = []
-                for unit in occupiedHouses:
-                    distance = self.geoDistance(house, unit)
-                    deltaClass = float(abs(unit.occupants[0].incomeQuintile-maxQuintile))
-                    affinity = 1.0/math.exp(self.p['classAffinityExp']*deltaClass)
-                    affinityIndexes.append(affinity/math.pow(distance, self.p['distanceAffinityExp']))
-                houseDesirabilityIndex.append(np.mean(affinityIndexes))
-        if sum(houseDesirabilityIndex) > 0:
-            probs = [x/sum(houseDesirabilityIndex) for x in houseDesirabilityIndex]
-            newHouse = np.random.choice(rearrangedAvailableHouses, p = probs)
-        else:
-            if len(emptyHousesInTown) > 0:
-                newHouse = np.random.choice(emptyHousesInTown)
-            else:
-                newHouse = np.random.choice([x for x in self.map.allHouses if len(x.occupants) < 1])
-
-        ## Quit with an error message if we've run out of houses
-        if newHouse in self.map.occupiedHouses:
-            print 'Error in house selection: already occupied!'
-            print newHouse.id
-            
-#        if newHouse == None:
-#            print "No houses left for person of SEC " + str(person.sec)
-#            sys.exit()
-
-        ## Actually make the chosen move
-        self.movePeopleIntoChosenHouse(newHouse, departureHouse, personList, 1)
-
-    def findNewHouse(self, personList, towns):
-        ###  Called from:
-        ###  - divorce function: husband must find a new house
-        ###  - doMovingAround function
-        
-        """Find an appropriate empty house for the named person and put them in it."""
-        ###  Change this function: find a house with probabilities which depends on the house attractivity
-        ### House attractivities depend on SES
-        
-        person = personList[0]
-        departureHouse = person.house
-        
-        emptyHousesInTown = []
-        houseDesirabilityIndex = []
-        rearrangedAvailableHouses = []
-        for town in towns:
-            availableHouses = [x for x in self.map.allHouses if x.town == town and len(x.occupants) < 1]
-            emptyHousesInTown.extend(availableHouses)
-            occupiedHouses = [x for x in self.map.allHouses if x.town == town and len(x.occupants) > 0]
-            if len(occupiedHouses) > 0:
-                for house in availableHouses:
-                    rearrangedAvailableHouses.append(house)
-                    affinityIndexes = []
-                    for unit in occupiedHouses:
-                        distance = self.geoDistance(house, unit)
-                        deltaClass = float(abs(unit.occupants[0].incomeQuintile-personList[0].incomeQuintile))
-                        affinity = 1.0/math.exp(self.p['classAffinityExp']*deltaClass)
-                        affinityIndexes.append(affinity/math.pow(distance, self.p['distanceAffinityExp']))
-                    houseDesirabilityIndex.append(np.mean(affinityIndexes))
-        if sum(houseDesirabilityIndex) > 0:
-            probs = [x/sum(houseDesirabilityIndex) for x in houseDesirabilityIndex]
-            newHouse = np.random.choice(rearrangedAvailableHouses, p = probs)
-        else:
-            if len(emptyHousesInTown) > 0:
-                newHouse = np.random.choice(emptyHousesInTown)
-            else:
-                newHouse = np.random.choice([x for x in self.map.allHouses if len(x.occupants) < 1])
-        
-        # chose a new house 
-#        newHouse = None
-
-#        t = person.house.town
-#        if preference == 'here':
-#            ## Anything empty in this town of the right size?
-#            localPossibilities = [x for x in t.houses
-#                                  if len(x.occupants) < 1
-#                                  and person.sec == x.size ]
-#            if localPossibilities:
-#                newHouse = random.choice(localPossibilities)
-#        if preference == 'near' or newHouse == None:
-#            ## Neighbouring towns?
-#            if newHouse == None:
-#                nearbyTowns = [ k for k in self.map.towns
-#                                if abs(k.x - t.x) <= 1
-#                                and abs(k.y - t.y) <= 1 ]
-#                nearbyPossibilities = []
-#                for z in nearbyTowns:
-#                    for w in z.houses:
-#                        if len(w.occupants) < 1 and person.sec == w.size:
-#                            nearbyPossibilities.append(w)
-#                if nearbyPossibilities:
-#                    newHouse = random.choice(nearbyPossibilities)
-#        if ( preference == 'far' or newHouse == None ):
-#            ## Anywhere at all?
-#            if newHouse == None:
-#                allPossibilities = []
-#                for z in self.map.allHouses:
-#                    if len(z.occupants) < 1 and person.sec == z.size:
-#                        allPossibilities.append(z)
-#                if allPossibilities:
-#                    newHouse = random.choice(allPossibilities)
-
-        ## Quit with an error message if we've run out of houses
-        if newHouse in self.map.occupiedHouses:
-            print 'Error in house selection: already occupied!'
-            print newHouse.id
-            
-#        if newHouse == None:
-#            print "No houses left for person of SEC " + str(person.sec)
-#            sys.exit()
-
-        ## Actually make the chosen move
-        self.movePeopleIntoChosenHouse(newHouse,departureHouse,personList, 1)
-
-
-    def movePeopleIntoChosenHouse(self,newHouse,departureHouse,personList, case):
-
-        ## Put the new house onto the list of occupied houses if it was empty
-        household = list(personList)
-        
-        newHouse.newOccupancy = True
-        
-        if len(household) != len(set(household)):
-            print 'Error in movePeopleIntoChosenHouse: double counting people'
-            for member in household:
-                print member.id
-            sys.exit()
-        
-        
-        ## Move everyone on the list over from their former house to the new one
-        for i in household:
-            if newHouse.town != departureHouse.town:
-                i.yearInTown = 0
-                
-            oldHouse = i.house
-                
-            oldHouse.occupants.remove(i)
-            
-            if len(oldHouse.occupants) == 0:
-                self.map.occupiedHouses.remove(oldHouse)
-                ##print "This house is now empty: ", oldHouse
-                if (self.p['interactiveGraphics']):
-                    self.canvas.itemconfig(oldHouse.icon, state='hidden')
-            
-            newHouse.occupants.append(i)
-            
-            i.house = newHouse
-            i.movedThisYear = True
-
-        if case == 1:
-            self.map.occupiedHouses.append(newHouse)
 
             
     
