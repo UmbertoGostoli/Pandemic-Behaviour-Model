@@ -37,134 +37,10 @@ import copy
 import pdb
 
 
-class Sim:
-    """Instantiates a single run of the simulation."""    
-    def __init__ (self, scenario, params, folder):
-        
+class SimPop:
+    def __init__ (self, scenario, params):
         self.p = OrderedDict(params)
-        
-        self.dataMap = ['town_x', 'town_y', 'x', 'y', 'size', 'unmetNeed'] 
-        
-        self.dataPyramid = ['year', 'Class Age 0', 'Class Age 1', 'Class Age 2', 'Class Age 3', 'Class Age 4', 'Class Age 5', 'Class Age 6', 'Class Age 7',
-                            'Class Age 8', 'Class Age 9', 'Class Age 10', 'Class Age 11', 'Class Age 12', 'Class Age 13', 'Class Age 14', 'Class Age 15',
-                            'Class Age 16', 'Class Age 17', 'Class Age 18', 'Class Age 19', 'Class Age 20', 'Class Age 21', 'Class Age 22', 'Class Age 23', 
-                            'Class Age 24']
-        
-        self.houseData = ['year', 'House name', 'size']
-        
-        self.householdData = ['ID', 'Sex', 'Age', 'Health']
-        
-        self.log = ['year', 'message']
-        
-        self.housesOutputs = ['experiencedEvents[0]', 'kindOfEvents[0]', 'infectionEvents[0]', 'betas[0]', 'contactReductionRates[0]', 
-                         'isolationFactors[0]', 'individualIsolations[0]', 'neighborIsolations[0]', 'experiencedEvents[1]', 'kindOfEvents[1]', 
-                         'infectionEvents[1]', 'betas[1]', 'contactReductionRates[1]', 'isolationFactors[1]', 'individualIsolations[1]', 
-                         'neighborIsolations[1]', 'experiencedEvents[2]', 'kindOfEvents[2]', 'infectionEvents[2]', 'betas[2]', 
-                         'contactReductionRates[2]', 'isolationFactors[2]', 'individualIsolations[2]', 'neighborIsolations[2]',
-                         'experiencedEvents[3]', 'kindOfEvents[3]', 'infectionEvents[3]', 'betas[3]', 'contactReductionRates[3]', 
-                         'isolationFactors[3]', 'individualIsolations[3]', 'neighborIsolations[3]',
-                         'experiencedEvents[4]', 'kindOfEvents[4]', 'infectionEvents[4]', 'betas[4]', 'contactReductionRates[4]', 
-                         'isolationFactors[4]', 'individualIsolations[4]', 'neighborIsolations[4]', 'experiencedEvents[5]', 'kindOfEvents[5]', 
-                         'infectionEvents[5]', 'betas[5]', 'contactReductionRates[5]', 'isolationFactors[5]', 'individualIsolations[5]', 
-                         'neighborIsolations[5]', 'experiencedEvents[6]', 'kindOfEvents[6]', 'infectionEvents[6]', 'betas[6]', 
-                         'contactReductionRates[6]', 'isolationFactors[6]', 'individualIsolations[6]', 'neighborIsolations[6]',
-                         'experiencedEvents[7]', 'kindOfEvents[7]', 'infectionEvents[7]', 'betas[7]', 'contactReductionRates[7]', 
-                         'isolationFactors[7]', 'individualIsolations[7]', 'neighborIsolations[7]',
-                         'experiencedEvents[8]', 'kindOfEvents[8]', 'infectionEvents[8]', 'betas[8]', 'contactReductionRates[8]', 
-                         'isolationFactors[8]', 'individualIsolations[8]', 'neighborIsolations[8]', 'experiencedEvents[9]', 'kindOfEvents[9]', 
-                         'infectionEvents[9]', 'betas[9]', 'contactReductionRates[9]', 'isolationFactors[9]', 'individualIsolations[9]', 
-                         'neighborIsolations[9]', 'experiencedEvents[10]', 'kindOfEvents[10]', 'infectionEvents[10]', 'betas[10]', 
-                         'contactReductionRates[10]', 'isolationFactors[10]', 'individualIsolations[10]', 'neighborIsolations[10]',
-                         'experiencedEvents[11]', 'kindOfEvents[11]', 'infectionEvents[11]', 'betas[11]', 'contactReductionRates[11]', 
-                         'isolationFactors[11]', 'individualIsolations[11]', 'neighborIsolations[11]',
-                         'experiencedEvents[12]', 'kindOfEvents[12]', 'infectionEvents[12]', 'betas[12]', 'contactReductionRates[12]', 
-                         'isolationFactors[12]', 'individualIsolations[12]', 'neighborIsolations[12]', 'experiencedEvents[13]', 'kindOfEvents[13]', 
-                         'infectionEvents[13]', 'betas[13]', 'contactReductionRates[13]', 'isolationFactors[13]', 'individualIsolations[13]', 
-                         'neighborIsolations[13]', 'experiencedEvents[14]', 'kindOfEvents[14]', 'infectionEvents[14]', 'betas[14]', 
-                         'contactReductionRates[14]', 'isolationFactors[14]', 'individualIsolations[14]', 'neighborIsolations[14]',
-                         'experiencedEvents[15]', 'kindOfEvents[15]', 'infectionEvents[15]', 'betas[15]', 'contactReductionRates[15]', 
-                         'isolationFactors[15]', 'individualIsolations[15]', 'neighborIsolations[15]',
-                         'experiencedEvents[16]', 'kindOfEvents[16]', 'infectionEvents[16]', 'betas[16]', 'contactReductionRates[16]', 
-                         'isolationFactors[16]', 'individualIsolations[16]', 'neighborIsolations[16]', 'experiencedEvents[17]', 'kindOfEvents[17]', 
-                         'infectionEvents[17]', 'betas[17]', 'contactReductionRates[17]', 'isolationFactors[17]', 'individualIsolations[17]', 
-                         'neighborIsolations[17]', 'experiencedEvents[18]', 'kindOfEvents[18]', 'infectionEvents[18]', 'betas[18]', 
-                         'contactReductionRates[18]', 'isolationFactors[18]', 'individualIsolations[18]', 'neighborIsolations[18]',
-                         'experiencedEvents[19]', 'kindOfEvents[19]', 'infectionEvents[19]', 'betas[19]', 'contactReductionRates[19]', 
-                         'isolationFactors[19]', 'individualIsolations[19]', 'neighborIsolations[19]']
-        
-        self.Outputs = ['day', 'currentPop', 'popFromStart', 'numHouseholds', 'averageHouseholdSize', 'marriageTally', 
-                        'marriagePropNow', 'divorceTally', 'shareSingleParents', 'shareFemaleSingleParent', 
-                        'taxPayers', 'taxBurden', 'familyCareRatio', 'shareInHouseSocialCare', 'employmentRate', 'shareWorkingHours', 
-                        'publicSocialCare', 'costPublicSocialCare', 'sharePublicSocialCare', 'costTaxFreeSocialCare', 
-                        'publicChildCare', 'costPublicChildCare', 'sharePublicChildCare', 'costTaxFreeChildCare', 
-                        'totalTaxRevenue', 'totalPensionRevenue', 'pensionExpenditure', 'totalHospitalizationCost', 
-                        'totalInformalChildCare', 'formalChildCare', 'childcareIncomeShare', 'shareInformalChildCare', 'shareCareGivers', 
-                        'ratioFemaleMaleCarers', 'shareMaleCarers', 'shareFemaleCarers', 'ratioWage', 'ratioIncome', 
-                        'shareFamilyCarer', 'share_over20Hours_FamilyCarers', 'averageHoursOfCare', 'share_40to64_carers', 
-                        'share_over65_carers', 'share_10PlusHours_over70', 'totalSocialCareNeed', 
-                        'totalInformalSocialCare', 'totalFormalSocialCare', 'totalUnmetSocialCareNeed', 
-                        'totalSocialCare', 'share_InformalSocialCare', 'share_UnmetSocialCareNeed',
-                        'totalOWSC', 'shareOWSC', 'totalCostOWSC', 'inHouseCareSupplyRatio',
-                        'q1_socialCareNeed', 'q1_informalSocialCare', 'q1_formalSocialCare', 'q1_unmetSocialCareNeed', 'q1_outOfWorkSocialCare',
-                        'q2_socialCareNeed', 'q2_informalSocialCare', 'q2_formalSocialCare', 'q2_unmetSocialCareNeed', 'q2_outOfWorkSocialCare',
-                        'q3_socialCareNeed', 'q3_informalSocialCare', 'q3_formalSocialCare', 'q3_unmetSocialCareNeed', 'q3_outOfWorkSocialCare',
-                        'q4_socialCareNeed', 'q4_informalSocialCare', 'q4_formalSocialCare', 'q4_unmetSocialCareNeed', 'q4_outOfWorkSocialCare',
-                        'q5_socialCareNeed', 'q5_informalSocialCare', 'q5_formalSocialCare', 'q5_unmetSocialCareNeed', 'q5_outOfWorkSocialCare',
-                        'grossDomesticProduct', 'publicCareToGDP', 'susceptibles', 'exposed', 'infectious', 'recovered', 'totalDeaths', 
-                        'hospitalized', 'intubated', 'deaths', 'asymptomatic', 'mildCondition', 'newCases', 'newExposed', 'over70Hospitalized', 
-                        'over70Intubated', 
-                        'lockdownState', 'q1_infected', 'q1_hospitalized', 'q1_intubated', 'q2_infected', 'q2_hospitalized', 'q2_intubated',
-                        'q3_infected', 'q3_hospitalized', 'q3_intubated', 'q4_infected', 'q4_hospitalized', 'q4_intubated', 'q5_infected', 
-                        'q5_hospitalized', 'q5_intubated', 'totalHospitalized', 'cumulatedHospitalizations', 
-                        'cumulatedICUs', 'hospitalPopulation', 'icuPopulation',
-                        'infectedByClass_0', 'infectedByClass_1', 'infectedByClass_2', 'infectedByClass_3', 'infectedByClass_4',
-                        'infectedByAge_0', 'infectedByAge_1', 'infectedByAge_2', 'infectedByAge_3', 'infectedByAge_4',
-                        'infectedByAge_5', 'infectedByAge_6', 'infectedByAge_7', 'infectedByAge_8',
-                        'hospitalizedByClass_0', 'hospitalizedByClass_1', 'hospitalizedByClass_2', 'hospitalizedByClass_3', 'hospitalizedByClass_4',
-                        'hospitalizedQuintilesRatio', 'hospitalizedByAge_0', 'hospitalizedByAge_1', 'hospitalizedByAge_2', 'hospitalizedByAge_3', 
-                        'hospitalizedByAge_4', 'hospitalizedByAge_5', 'hospitalizedByAge_6', 'hospitalizedByAge_7', 'hospitalizedByAge_8',
-                        'intubatedByClass_0', 'intubatedByClass_1', 'intubatedByClass_2', 'intubatedByClass_3', 'intubatedByClass_4',
-                        'intubatedQuintilesRatio', 'intubatedByAge_0', 'intubatedByAge_1', 'intubatedByAge_2', 'intubatedByAge_3', 'intubatedByAge_4',
-                        'intubatedByAge_5', 'intubatedByAge_6', 'intubatedByAge_7', 'intubatedByAge_8',
-                        'symptomaticByClass_0', 'symptomaticByClass_1', 'symptomaticByClass_2', 'symptomaticByClass_3', 'symptomaticByClass_4',
-                        'symptomaticByAge_0', 'symptomaticByAge_1', 'symptomaticByAge_2', 'symptomaticByAge_3', 'symptomaticByAge_4',
-                        'symptomaticByAge_5', 'symptomaticByAge_6', 'symptomaticByAge_7', 'symptomaticByAge_8',
-                        'deathsByClass_0', 'deathsByClass_1', 'deathsByClass_2', 'deathsByClass_3', 'deathsByClass_4',
-                        'deathsQuintilesRatio', 'deathsByAge_0', 'deathsByAge_1', 'deathsByAge_2', 'deathsByAge_3', 'deathsByAge_4',
-                        'deathsByAge_5', 'deathsByAge_6', 'deathsByAge_7', 'deathsByAge_8',
-                        'unmetSocialCareNeed_Q1', 'unmetSocialCareNeed_Q2', 'unmetSocialCareNeed_Q3', 'unmetSocialCareNeed_Q4', 
-                        'unmetSocialCareNeed_Q5', 'mostLeastDeprivedRatio', 'totalInformalSocialCare_Q1', 'totalInformalSocialCare_Q2', 
-                        'totalInformalSocialCare_Q3', 'totalInformalSocialCare_Q4', 'totalInformalSocialCare_Q5', 'totalSocialCareNeed_Q1', 
-                        'totalSocialCareNeed_Q2', 'totalSocialCareNeed_Q3', 'totalSocialCareNeed_Q4', 'totalSocialCareNeed_Q5', 
-                        'informalCareRatio', 'careNeedRatio', 'medianIsolationRate', 'meanIsolationRate',
-                        'mobilityReduction_Q1', 'mobilityReduction_Q2', 'mobilityReduction_Q3', 'mobilityReduction_Q4', 'mobilityReduction_Q5',
-                        'mobilityReduction_A1', 'mobilityReduction_A2', 'mobilityReduction_A3', 'mobilityReduction_A4', 'mobilityReduction_A5',
-                        'mobilityReduction_A6', 'mobilityReduction_A7', 'mobilityReduction_A8', 'mobilityReduction_A9', 
-                        'totalAttendances', 'cumulatedAbsences', 'periodTests']
-#                        'shareHospitalized1To11', 'shareHospitalized12To18', 'shareHospitalized19To39', 'shareHospitalized40To64',
-#                        'shareHospitalizedOver65', 'shareIntubated1To11', 'shareIntubated12To18', 'shareIntubated19To39',
-#                        'shareIntubated40To64', 'shareIntubatedOver65', 'shareDeaths1To11', 'shareDeaths12To18', 'shareDeaths19To39',
-#                        'shareDeaths40To64', 'shareDeathsOver65', 'Age1To11Share_H', 'Age12To18Share_H', 'Age19To39Share_H',
-#                        'Age40To64Share_H', 'Over65Share_H', 'Age1To11Share_I', 'Age12To18Share_I', 'Age19To39Share_I',
-#                        'Age40To64Share_I', 'Over65Share_I', 
-#        
-        
-        self.outputData = pd.DataFrame()
-        # Save initial parametrs into Scenario folder
-        self.folder = folder + '/Scenario_' + str(scenario)
-        if not os.path.exists(self.folder):
-            os.makedirs(self.folder)
-        filePath = self.folder + '/scenarioParameters.csv'
-        c = params.copy()
-        for key, value in c.iteritems():
-            if not isinstance(value, list):
-                c[key] = [value]
-        with open(filePath, "wb") as f:
-            csv.writer(f).writerow(c.keys())
-            csv.writer(f).writerows(itertools.izip_longest(*c.values()))
-        
-        
-        ####  SES variables   #####
+         ####  SES variables   #####
         self.socialClassShares = []
         self.careNeedShares = []
         self.householdIncomes = []
@@ -219,11 +95,780 @@ class Sim:
         self.statePensionExpenditure = []
         self.pensionExpenditure = 0
         
+    def load_Data(self):
+
+        self.fert_data = np.genfromtxt('babyrate.txt.csv', skip_header=0, delimiter=',')
+        self.death_female = np.genfromtxt('deathrate.fem.csv', skip_header=0, delimiter=',')
+        self.death_male = np.genfromtxt('deathrate.male.csv', skip_header=0, delimiter=',')
+        self.contacts = pd.read_csv('contactMatrix.csv', header=None)
+        self.incomeDistribution = np.genfromtxt('incomeDistribution.csv', skip_header=0, delimiter=',')
+        self.incomesPercentiles = np.genfromtxt('incomesPercentiles.csv', skip_header=0, delimiter=',')
+        self.wealthPercentiles = np.genfromtxt('wealthDistribution.csv', skip_header=0, delimiter=',')
+        
+    def run(self, seed): # policy, policyParams, 
+        
+        self.randSeed = seed
+        random.seed(self.randSeed)
+        np.random.seed(self.randSeed)
+        
+        self.load_Data()
+        
+        if self.p['loadSim'] == False:
+            self.initializePop()
+            self.updateWealth()
+     
+        
+        fromAgentsToIDs = False
+        if self.p['loadSim'] == False:
+            for self.year in range(int(self.p['startYear']), int(self.p['endYear'])):
+               
+                self.doOneYear(self.year)
+                
+            self.createInfoNetworks_R()
+            
+            self.createVenues()
+            
+            if self.p['saveSim'] == True:  # If the simualtion needs to be saved at the end of the yearly-cicle sim
+                fromAgentsToIDs = True
+                self.from_Agents_to_IDs()
+                pickle.dump(self.pop, open('save.p', 'wb'))
+                pickle.dump(self.map, open('save.m', 'wb'))
+                pickle.dump(self.classContactsMatrix, open('save.cm', 'wb'))
+                pickle.dump(self.totalInteractions, open('save.tin', 'wb'))
+                pickle.dump(self.classesContacts, open('save.ct', 'wb'))
+                pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
+                pickle.dump(self.housesNotMoreOccupied, open('save.hno', 'wb'))
+                
+        else:  # In this case, a saved simulation is uploaded
+            print 'Loading base simulation.....'
+            self.pop = pickle.load(open('save.p', 'rb'))
+            self.map = pickle.load(open('save.m', 'rb'))
+            self.classContactsMatrix = pickle.load(open('save.cm', 'rb'))
+            self.totalInteractions = pickle.load(open('save.tin', 'rb'))
+            self.classesContacts = pickle.load(open('save.ct', 'rb'))
+            self.householdIndexes = pickle.load(open('save.hi', 'rb'))
+            self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
+            # self.totalAge1Age2Income1Contacts = pickle.load(open('save.tc', 'rb'))
+            
+        if fromAgentsToIDs == True or self.p['loadSim'] == True:
+            
+            self.from_IDs_to_Agents()   
+            fromAgentsToIDs = False
+        
+        if self.p['loadSim'] == True:
+            if self.p['loadNetwork'] == False:
+                self.createInfoNetworks_R()
+                if self.p['saveNetwork'] == True:
+                    self.from_Agents_to_IDs()
+                    pickle.dump(self.pop, open('save.p', 'wb'))
+                    pickle.dump(self.map, open('save.m', 'wb'))
+                    pickle.dump(self.classContactsMatrix, open('save.cm', 'wb'))
+                    pickle.dump(self.totalInteractions, open('save.tin', 'wb'))
+                    pickle.dump(self.classesContacts, open('save.ct', 'wb'))
+                    pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
+                    pickle.dump(self.housesNotMoreOccupied, open('save.hno', 'wb'))
+                    self.from_IDs_to_Agents()
+            else:
+                self.pop = pickle.load(open('save.p', 'rb'))
+                self.map = pickle.load(open('save.m', 'rb'))
+                self.classContactsMatrix = pickle.load(open('save.cm', 'rb'))
+                self.totalInteractions = pickle.load(open('save.tin', 'rb'))
+                self.classesContacts = pickle.load(open('save.ct', 'rb'))
+                self.householdIndexes = pickle.load(open('save.hi', 'rb'))
+                self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
+                self.from_IDs_to_Agents()
+                
+    def from_Agents_to_IDs(self):
+        
+        for person in self.pop.allPeople:
+            
+            if person.mother != None:
+                person.motherID = person.mother.id
+            else:
+                person.motherID = -1
+            if person.father != None:
+                person.fatherID = person.father.id
+            else:
+                person.fatherID = -1
+            person.childrenID = [x.id for x in person.children]
+            person.houseID = person.house.id
+            person.mother = None
+            person.father = None
+            person.children = []
+            person.house = None
+            
+            person.socialContacIDs = []
+            person.contactWeights = []
+            for agent in [x for x in person.socialContacts.nodes() if x != person]:
+                person.socialContacIDs.append(agent.id)
+                person.contactWeights.append(person.socialContacts[person][agent]['weight'])
+            person.socialContacts.clear()
+        
+        for house in self.map.allHouses:
+            house.infoContacIDs = []
+            house.contactWeights = []
+            for neighbor in [x for x in house.infoNetwork.nodes() if x != house]:
+                house.infoContacIDs.append(neighbor.id)
+                house.contactWeights.append(house.infoNetwork[house][neighbor]['weight'])
+            house.infoNetwork.clear()
+            house.occupantsID = [x.id for x in house.occupants]
+            house.occupants = []
+      
+        for town in self.map.towns:
+            town.peopleIDs = [x.id for x in town.people]
+            town.people = []
+        
+    def from_IDs_to_Agents(self):
+       
+        for person in self.pop.allPeople:
+            
+            if person.motherID != -1:
+                person.mother = [x for x in self.pop.allPeople if x.id == person.motherID][0]
+            else:
+                person.mother = None
+            if person.fatherID != -1:
+                person.father = [x for x in self.pop.allPeople if x.id == person.fatherID][0]
+            else:
+                person.father = None
+                
+            person.children = [x for x in self.pop.allPeople if x.id in person.childrenID]
+            person.socialContacts.clear()
+            person.socialContacts.add_node(person)
+            
+            for index in range(len(person.socialContacIDs)):
+                contact = [x for x in self.pop.allPeople if x.id == person.socialContacIDs[index]][0]
+                contactWeight = person.contactWeights[index]
+                person.socialContacts.add_edge(person, contact, weight = contactWeight)
+            
+        for person in self.pop.allPeople:
+            person.house = [x for x in self.map.allHouses if x.id == person.houseID][0]
+            if person in self.pop.livingPeople:
+                person.house.occupants.append(person)
+                
+        for house in self.map.allHouses:
+            house.infoNetwork.clear()
+            house.infoNetwork.add_node(house)
+            for index in range(len(house.infoContacIDs)):
+                contact = [x for x in self.map.allHouses if x.id == house.infoContacIDs[index]][0]
+                contactWeight = house.contactWeights[index]
+                
+                # print 'Contact weights: ' + str(contactWeight)
+                
+                house.infoNetwork.add_edge(house, contact, weight = contactWeight)
+        
+        for town in self.map.towns:
+            town.people = [x for x in self.pop.livingPeople if x.id in town.peopleIDs]
+                
+    def initializePop(self):
+        """
+        Set up the initial population and the map.
+        We may want to do this from scratch, and we may want to do it
+        by loading things from a pre-generated file.
+        """
+        ## First the map, towns, and houses
+
+        if self.p['loadFromFile'] == False:
+            self.map = Map(self.p['mapGridXDimension'],
+                           self.p['mapGridYDimension'],
+                           self.p['townGridDimension'],
+                           self.p['cdfHouseClasses'],
+                           self.p['ukMap'],
+                           self.p['ukClassBias'],
+                           self.p['mapDensityModifier'],
+                           self.p['lha_1'], self.p['lha_2'], self.p['lha_3'], self.p['lha_4'])
+            
+            
+        else:
+            self.map = pickle.load(open("initMap.txt","rb"))
+            
+
+        ## Now the people who will live on it
+
+        if self.p['loadFromFile'] == False:
+            self.pop = Population(self.p['initialPop'],
+                                  self.p['startYear'],
+                                  self.p['minStartAge'],
+                                  self.p['maxStartAge'],
+                                  self.p['workingAge'],
+                                  self.p['incomeInitialLevels'],
+                                  self.p['incomeFinalLevels'],
+                                  self.p['incomeGrowthRate'],
+                                  self.p['workDiscountingTime'],
+                                  self.p['wageVar'],
+                                  self.p['dailyHours'][0])
+            ## Now put the people into some houses
+            ## They've already been partnered up so put the men in first, then women to follow
+            men = [x for x in self.pop.allPeople if x.sex == 'male']
+
+            remainingHouses = []
+            remainingHouses.extend(self.map.allHouses)
+        
+            for man in men:
+                # Assign to each men a house close to people with his own SES
+                # Assign to each remaining house a desirability index, based on the difference between the 
+                # SES of the man and of the SES of nearby houses
+                houseDesirabilityIndex = []
+                rearrangedAvailableHouses = []
+                for town in self.map.towns:
+                    availableHouses = [x for x in remainingHouses if x.town == town]
+                    occupiedHouses = [x for x in self.map.occupiedHouses if x.town == town]
+                    if len(occupiedHouses) > 0:
+                        for house in availableHouses:
+                            rearrangedAvailableHouses.append(house)
+                            affinityIndexes = []
+                            for unit in occupiedHouses:
+                                distance = self.geoDistance(house, unit)
+                                affinity = 1.0/math.exp(self.p['classAffinityExp']*float(abs(unit.occupants[0].classRank-man.classRank)))
+                                affinityIndexes.append(affinity/math.pow(distance, self.p['distanceAffinityExp']))
+                            # Compute rent factor
+                            house.sizeIndex = 2
+                            relRent = house.town.LHA[house.sizeIndex]/math.pow((man.classRank+1), self.p['classRentExp'])
+                            rentFactor = 1/math.exp(self.p['rentExp']*relRent)
+                            houseDesirabilityIndex.append(np.mean(affinityIndexes)*rentFactor)
+                            ## Add cost of houses: low SES agents tend to go in low-cost towns
+                            
+                            
+                if sum(houseDesirabilityIndex) > 0:
+                    probs = [x/sum(houseDesirabilityIndex) for x in houseDesirabilityIndex]
+                    man.house = np.random.choice(rearrangedAvailableHouses, p = probs)
+                else:
+                    man.house = np.random.choice(remainingHouses)
+                man.currentTown = man.house.town
+                man.sec = man.house.size  ## This may not always work, assumes house classes = SEC classes!
+                self.map.occupiedHouses.append(man.house)            
+                remainingHouses.remove(man.house)
+                woman = man.partner
+                woman.house = man.house
+                woman.currentTown = woman.house.town
+                woman.sec = man.sec
+                man.yearMarried.append(int(self.p['startYear']))
+                woman.yearMarried.append(int(self.p['startYear']))
+                man.house.occupants.append(man)
+                man.house.occupants.append(woman)
+
+        else:
+            self.pop = pickle.load(open("initPop.txt","rb"))
+                
+    def doOneYear(self, year):
+        """Run one year of simulated time."""
+        
+        self.computeClassShares()
+        
+        self.doDeaths()
+        
+        self.doCareTransitions_UCN()
+        
+        self.resetCareVariables_KN()
+        
+        ### Care needs, supplies and netwworks  ####
+        
+        # self.computeSocialCareNeeds_W()
+    
+        # self.computeChildCareNeeds()
+        
+        self.householdCareSupply()
+        
+        # self.householdCareNetwork()
+        
+        ##### For relocation ####
+        # self.computeNetCareDemand()
+        
+        ############################################
+            
+        self.doAgeTransitions()
+        
+        self.doBirths()
+        
+        self.updateIncome()
+        
+        self.updateWealth_Ind()
+      
+        self.doSocialTransition()
+        
+        self.doDivorces()
+        
+        self.doMarriages()
+        
+        self.doMovingAround()
+        
+        self.checkHouseholdsRelocations()
+    
+    def createInfoNetworks_R(self):
+        
+        # First, the initial beta is assigned to each household.
+        for house in self.map.occupiedHouses:
+            house.infoNetwork.clear()
+            # house.beta = self.p['initialBeta']
+
+        self.kinshipNetwork()
+        
+        # Assign income quintiles to agents
+        households = [x for x in self.map.occupiedHouses]
+        # households.sort(key=operator.attrgetter("incomePerCapita"))
+        households.sort(key=operator.attrgetter("householdIncome"))
+        for i in range(int(self.p['incomeClasses'])):
+            number = int(round(len(households)/(self.p['incomeClasses']-float(i))))
+            quintile = households[:number]
+            for j in quintile:
+                j.incomeQuintile = i
+                for agent in j.occupants:
+                    agent.incomeQuintile = i
+            households = [x for x in households if x not in quintile]
+        
+        for person in self.pop.livingPeople:
+            person.socialContacts.clear()
+            person.socialContacts.add_node(person)
+        
+        # Increase contacts for over-70 people
+        for i in range(int(self.p['interactionAgeClasses'])):
+            if i <= 12:
+                for j in range(int(self.p['interactionAgeClasses'])):
+                    if j > 12:
+                        self.contacts[i][j] *= self.p['Over65ContactIncrement']
+            else:
+                for j in range(int(self.p['interactionAgeClasses'])):
+                    self.contacts[i][j] *= self.p['Over65ContactIncrement']
+        
+        # Compute total contacts (for venues' interaction)
+        self.totalInteractions = 0
+        denContacts = 0
+        for z in range(int(self.p['incomeClasses'])):
+            denContacts += (1.0/float(self.p['incomeClasses']))*math.pow(self.p['classContactBias'], z)
+        self.classesContacts = []
+        for i in range(int(self.p['interactionAgeClasses'])): # 
+            print 'Empirical contacts total: ' + str(sum(self.contacts[i]))
+            totalContacts = sum(self.contacts[i])*self.p['contactCompoundFactor']
+            print 'Total contacts: ' + str(totalContacts)
+            # Given these total contacts for the class has a whole, find the contacts fro this age group for each income quintile class
+            lowClassContacts = totalContacts/denContacts
+            for j in range(int(self.p['incomeClasses'])):
+                # Given total contact for age class, determine total contact for each SES class in that age class.
+                classContacts = float(lowClassContacts*math.pow(self.p['classContactBias'], j))
+                # classContacts *= self.p['networkContactsRatio'] # 3.0
+                group = [x for x in self.pop.livingPeople if x.interactionAgeClass == i and x.incomeQuintile == j]
+                # Total contacts for that age/income group
+                classContacts *= len(group)
+                self.totalInteractions += int(round(classContacts))
+                totAgeContacts = []
+                for z in range(int(self.p['interactionAgeClasses'])):
+                    # Determine number of contacts WITH each age group
+                    ageContacts = int(np.math.ceil(self.contacts[i][z]*int(round(classContacts))))
+                    totAgeContacts.append(ageContacts)
+                # The interaction info for the age/SES group (i, j) is stored in the ClassContact class.
+                newClass = ClassContact(i, j, len(group), int(round(classContacts)), self.contacts[i], totAgeContacts)
+                # List of contacts' info for each age/SES group
+                self.classesContacts.append(newClass)
+        
+        # Here, the size of individual social network is determined.
+        # It depends on the age and SES of the agents.
+        # The effect of age is based on empirical data (age/age contact matrix)
+        # The effect of SES is an assumption of the model, represented by the parameter classContactBias
+        numFriends = []
+        for i in range(int(self.p['interactionAgeClasses'])): # 
+            meanFriends = 0
+            for j in range(int(self.p['interactionAgeClasses'])):
+                deltaAge = abs(i-j)
+                meanFriends += (self.contacts[i][j]/np.exp(self.p['ageFriendsBeta']*deltaAge))*self.p['friendsContactsRatio']
+           
+            # Given these total contacts for the class has a whole, find the contacts fro this age group for each income quintile class
+            lowClassContacts = meanFriends/denContacts
+            friendsByIncome = []
+            for j in range(int(self.p['incomeClasses'])):
+                classFriends = int(math.ceil(lowClassContacts*math.pow(self.p['classContactBias'], j)))
+                friendsByIncome.append(classFriends)
+            numFriends.append(friendsByIncome)
+        # Once the average social network size for each age/SES class is determined, the social network size of each agent
+        # is determined through a draw from a Poisson distribution
+        totFriends = 0
+        for agent in self.pop.livingPeople:
+            agent.actualFriends = 0
+            agent.numFriends = np.random.poisson(numFriends[agent.interactionAgeClass][agent.incomeQuintile])
+            totFriends += agent.numFriends
+            
+        agentsToLink = [x for x in self.pop.livingPeople if x.actualFriends < x.numFriends]
+        agentsWithPotentialFriends = [x for x in agentsToLink if len([y for y in agentsToLink if y not in x.socialContacts.nodes()]) > 0]
+        
+        # Now, the social netwrok of each agent is computed
+        while len(agentsWithPotentialFriends) > 1:
+            weights = [float(x.numFriends-x.actualFriends) for x in agentsWithPotentialFriends]
+            probs = [x/sum(weights) for x in weights]
+            if sum(probs) == 0.0:
+                print 'Weights: ' + str(weights)
+            agent = np.random.choice(agentsWithPotentialFriends, p = probs)
+           
+            contactsGroup = [x for x in agentsWithPotentialFriends if x not in agent.socialContacts.nodes() and x not in agent.house.occupants]
+            if len(contactsGroup) > 0:
+                # Age weight: is given from the empirical age/age contact matrix
+                # ageWeight = [self.contacts[agent.interactionAgeClass][x.interactionAgeClass] for x in contactsGroup]
+                ageDistances = [abs(agent.age-x.age) for x in contactsGroup]
+                ageExps = [self.p['ageInteractionBeta']*math.pow(x, self.p['ageInteractionExp']) for x in ageDistances]
+                
+                # Agents which are already friend
+                friends = [x for x in agent.socialContacts.nodes()]
+                # Number of friends of potential agents who are also friend of the agent
+                commonFriends = [len([y for y in x.socialContacts.nodes() if y in friends]) for x in contactsGroup]
+                friendsExp = [self.p['friendsInteractionBeta']*math.pow(float(x), self.p['friendsInteractionExp']) for x in commonFriends]
+                
+                # Class factor
+                classDistances = [abs(x.incomeQuintile-agent.incomeQuintile) for x in contactsGroup]
+                classExps = [self.p['classInteractionBeta']*math.pow(x, self.p['classInteractionExp']) for x in classDistances]
+                
+                # Geographical distance factor
+                geoDistances = [self.manhattanDistance(agent.house.town, x.house.town) for x in contactsGroup]
+                distanceExps = [self.p['locationInteractionBeta']*math.pow(x, self.p['locationInteractionExp']) for x in geoDistances]
+                
+                totalExps = [(a+c+d-f) for a, c, d, f in zip(ageExps, classExps, distanceExps, friendsExp)]
+                weightsFullMobility = [1.0/math.exp(x) for x in totalExps]
+                # interactionRates = [x.contactReductionRate for x in contactsGroup]
+                # weights = [w*r for w, r in zip(weightsFullMobility, interactionRates)]
+                contactsProbs = [x/sum(weightsFullMobility) for x in weightsFullMobility]
+                potentialContact = np.random.choice(contactsGroup, p = contactsProbs)
+                
+                quintile = potentialContact.incomeQuintile
+                contactIndex = contactsGroup.index(potentialContact)
+                contactWeight = weightsFullMobility[contactIndex]
+                # The weight of the link is given by the probability of the link creation
+                agent.socialContacts.add_edge(agent, potentialContact, weight = contactWeight)
+                potentialContact.socialContacts.add_edge(potentialContact, agent, weight = contactWeight)
+                # Update number of friends
+                agent.actualFriends += 1
+                potentialContact.actualFriends += 1
+                
+                if agent.actualFriends >= agent.numFriends or len([x for x in agentsWithPotentialFriends if x not in agent.socialContacts.nodes()]) == 0:
+                    agentsWithPotentialFriends.remove(agent)
+                if potentialContact.actualFriends >= potentialContact.numFriends or len([x for x in agentsWithPotentialFriends if x not in potentialContact.socialContacts.nodes()]) == 0:
+                    agentsWithPotentialFriends.remove(potentialContact)
+                
+                totFriends -= 2
+              
+                # The hiusehold info network is also created, with likns' weights which depend on geographical distance between houses
+                if potentialContact.house not in agent.house.infoNetwork.nodes():
+                    distance = self.manhattanDistance(agent.house.town, potentialContact.house.town)
+                    agent.house.infoNetwork.add_edge(agent.house, potentialContact.house, weight = distance)
+                    potentialContact.house.infoNetwork.add_edge(potentialContact.house, agent.house, weight = distance)
+            else:
+                agentsWithPotentialFriends.remove(agent)  
+                
+    def kinshipNetwork(self):
+        
+        for house in self.map.occupiedHouses:
+            vfNum = 0
+            vfDen = 0
+            if nx.is_empty(house.infoNetwork) == True:
+                house.infoNetwork.add_node(house)
+                existingNodes = [house]
+            else:
+                existingNodes = [x for x in house.infoNetwork.nodes()]
+            
+            visited = []
+            visited.append(house)
+            
+            household = list(house.occupants)
+            
+            if self.lockdown == False or self.p['careLockdown'] == False:
+            # Distance 1
+                for member in household:
+                    kinshipDistance = 1
+                    if member.father != None:
+                        nok = member.father
+                        if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                            distance = self.manhattanDistance(house.town, nok.house.town)
+                            house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                            nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                            # To compute the vulnerability Index
+                            deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                            vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                            vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                            existingNodes.append(nok.house)
+                        nok = member.mother
+                        if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                            distance = self.manhattanDistance(house.town, nok.house.town)
+                            house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                            nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                            
+                            deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                            vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                            vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                            existingNodes.append(nok.house)
+                    for child in member.children:
+                        nok = child
+                        if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                            distance = self.manhattanDistance(house.town, nok.house.town)
+                            house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                            nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                            deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                            vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                            vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                            existingNodes.append(nok.house)
+                            
+                # Distance 2
+                for member in household:
+                    kinshipDistance = 2
+                    if member.father != None:
+                        if member.father.father != None:
+                            nok = member.father.father
+                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                            nok = member.father.mother
+                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                        if member.mother.father != None:
+                            nok = member.mother.father
+                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                            nok = member.mother.mother
+                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                        brothers = list(set(member.father.children + member.mother.children))
+                        brothers.remove(member)
+                        for brother in brothers:
+                            nok = brother
+                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                    for child in member.children:
+                        for grandchild in child.children:
+                            nok = grandchild
+                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                                
+                # Distance 3
+                for member in household:
+                    kinshipDistance = 3
+                    uncles = []
+                    if member.father != None:
+                        if member.father.father != None:
+                            uncles = list(set(member.father.father.children + member.father.mother.children))
+                            uncles.remove(member.father)
+                        if member.mother.father != None:
+                            uncles.extend(list(set(member.mother.father.children + member.mother.mother.children)))
+                            uncles.remove(member.mother)
+                        for uncle in uncles:
+                            nok = uncle
+                            if nok.dead == False and nok not in household and nok.house not in visited:
+                                distance = self.manhattanDistance(house.town, nok.house.town)
+                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                existingNodes.append(nok.house)
+                        brothers = list(set(member.father.children + member.mother.children))
+                        brothers.remove(member)
+                        for brother in brothers:
+                            for child in brother.children:
+                                nok = child
+                                if nok.dead == False and nok not in household and nok.house not in visited:
+                                    distance = self.manhattanDistance(house.town, nok.house.town)
+                                    house.infoNetwork.add_edge(house, nok.house, weight = distance)
+                                    nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
+                                    deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
+                                    vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                    vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
+                                    existingNodes.append(nok.house)
+                                    
+            house.vulnerabilityIndex = 0
+            if vfDen > 0:
+                house.vulnerabilityIndex = vfNum/vfDen
+                
+    def createVenues(self):
+        
+        self.householdIndexes = np.random.choice([x.id for x in self.map.occupiedHouses], 20, replace=False)
+        
+        print 'Occupied houses index: ' + str(self.householdIndexes)
+        # pdb.set_trace()
+        self.housesNotMoreOccupied = []
+        
+        for town in self.map.towns:
+            town.people = []
+            for house in town.houses:
+                town.people.extend(house.occupants)
+            sizeTown = len(town.people)
+            numVenues = int(math.ceil(float(sizeTown)/float(self.p['agentsPerLocation'])))
+            
+            print 'Town id: ' + str(town.id)
+            print 'Town size: ' + str(sizeTown)
+            print 'Town venues: ' + str(numVenues)
+            
+            occupiedSpots = [[i.x, i.y] for i in town.houses]
+            for i in range(numVenues):
+                newVenue = Venue(town)
+                # Determine venue's location
+                randomX = random.randint(0, int(self.p['townGridDimension']))
+                randomY = random.randint(0, int(self.p['townGridDimension']))
+                while [randomX, randomY] in occupiedSpots:
+                    randomX = random.randint(0, int(self.p['townGridDimension']))
+                    randomY = random.randint(0, int(self.p['townGridDimension']))
+                newVenue.x = randomX
+                newVenue.y = randomY
+                occupiedSpots.append([randomX, randomY])
+                town.venues.append(newVenue)
+                self.map.allVenues.append(newVenue)
+                
+    
+        
+class SimCov:
+    """Instantiates a single run of the simulation."""    
+    def __init__ (self, scenario, params, folder):
+        
+        self.p = OrderedDict(params)
+        
+        self.dataMap = ['town_x', 'town_y', 'x', 'y', 'size', 'unmetNeed'] 
+        
+        self.dataPyramid = ['year', 'Class Age 0', 'Class Age 1', 'Class Age 2', 'Class Age 3', 'Class Age 4', 'Class Age 5', 'Class Age 6', 'Class Age 7',
+                            'Class Age 8', 'Class Age 9', 'Class Age 10', 'Class Age 11', 'Class Age 12', 'Class Age 13', 'Class Age 14', 'Class Age 15',
+                            'Class Age 16', 'Class Age 17', 'Class Age 18', 'Class Age 19', 'Class Age 20', 'Class Age 21', 'Class Age 22', 'Class Age 23', 
+                            'Class Age 24']
+        
+        self.houseData = ['year', 'House name', 'size']
+        
+        self.householdData = ['ID', 'Sex', 'Age', 'Health']
+        
+        self.log = ['year', 'message']
+        
+        self.housesOutputs = ['experiencedEvents[0]', 'kindOfEvents[0]', 'infectionEvents[0]', 'betas[0]', 'contactReductionRates[0]', 
+                         'isolationFactors[0]', 'individualIsolations[0]', 'neighborIsolations[0]', 'experiencedEvents[1]', 'kindOfEvents[1]', 
+                         'infectionEvents[1]', 'betas[1]', 'contactReductionRates[1]', 'isolationFactors[1]', 'individualIsolations[1]', 
+                         'neighborIsolations[1]', 'experiencedEvents[2]', 'kindOfEvents[2]', 'infectionEvents[2]', 'betas[2]', 
+                         'contactReductionRates[2]', 'isolationFactors[2]', 'individualIsolations[2]', 'neighborIsolations[2]',
+                         'experiencedEvents[3]', 'kindOfEvents[3]', 'infectionEvents[3]', 'betas[3]', 'contactReductionRates[3]', 
+                         'isolationFactors[3]', 'individualIsolations[3]', 'neighborIsolations[3]',
+                         'experiencedEvents[4]', 'kindOfEvents[4]', 'infectionEvents[4]', 'betas[4]', 'contactReductionRates[4]', 
+                         'isolationFactors[4]', 'individualIsolations[4]', 'neighborIsolations[4]', 'experiencedEvents[5]', 'kindOfEvents[5]', 
+                         'infectionEvents[5]', 'betas[5]', 'contactReductionRates[5]', 'isolationFactors[5]', 'individualIsolations[5]', 
+                         'neighborIsolations[5]', 'experiencedEvents[6]', 'kindOfEvents[6]', 'infectionEvents[6]', 'betas[6]', 
+                         'contactReductionRates[6]', 'isolationFactors[6]', 'individualIsolations[6]', 'neighborIsolations[6]',
+                         'experiencedEvents[7]', 'kindOfEvents[7]', 'infectionEvents[7]', 'betas[7]', 'contactReductionRates[7]', 
+                         'isolationFactors[7]', 'individualIsolations[7]', 'neighborIsolations[7]',
+                         'experiencedEvents[8]', 'kindOfEvents[8]', 'infectionEvents[8]', 'betas[8]', 'contactReductionRates[8]', 
+                         'isolationFactors[8]', 'individualIsolations[8]', 'neighborIsolations[8]', 'experiencedEvents[9]', 'kindOfEvents[9]', 
+                         'infectionEvents[9]', 'betas[9]', 'contactReductionRates[9]', 'isolationFactors[9]', 'individualIsolations[9]', 
+                         'neighborIsolations[9]', 'experiencedEvents[10]', 'kindOfEvents[10]', 'infectionEvents[10]', 'betas[10]', 
+                         'contactReductionRates[10]', 'isolationFactors[10]', 'individualIsolations[10]', 'neighborIsolations[10]',
+                         'experiencedEvents[11]', 'kindOfEvents[11]', 'infectionEvents[11]', 'betas[11]', 'contactReductionRates[11]', 
+                         'isolationFactors[11]', 'individualIsolations[11]', 'neighborIsolations[11]',
+                         'experiencedEvents[12]', 'kindOfEvents[12]', 'infectionEvents[12]', 'betas[12]', 'contactReductionRates[12]', 
+                         'isolationFactors[12]', 'individualIsolations[12]', 'neighborIsolations[12]', 'experiencedEvents[13]', 'kindOfEvents[13]', 
+                         'infectionEvents[13]', 'betas[13]', 'contactReductionRates[13]', 'isolationFactors[13]', 'individualIsolations[13]', 
+                         'neighborIsolations[13]', 'experiencedEvents[14]', 'kindOfEvents[14]', 'infectionEvents[14]', 'betas[14]', 
+                         'contactReductionRates[14]', 'isolationFactors[14]', 'individualIsolations[14]', 'neighborIsolations[14]',
+                         'experiencedEvents[15]', 'kindOfEvents[15]', 'infectionEvents[15]', 'betas[15]', 'contactReductionRates[15]', 
+                         'isolationFactors[15]', 'individualIsolations[15]', 'neighborIsolations[15]',
+                         'experiencedEvents[16]', 'kindOfEvents[16]', 'infectionEvents[16]', 'betas[16]', 'contactReductionRates[16]', 
+                         'isolationFactors[16]', 'individualIsolations[16]', 'neighborIsolations[16]', 'experiencedEvents[17]', 'kindOfEvents[17]', 
+                         'infectionEvents[17]', 'betas[17]', 'contactReductionRates[17]', 'isolationFactors[17]', 'individualIsolations[17]', 
+                         'neighborIsolations[17]', 'experiencedEvents[18]', 'kindOfEvents[18]', 'infectionEvents[18]', 'betas[18]', 
+                         'contactReductionRates[18]', 'isolationFactors[18]', 'individualIsolations[18]', 'neighborIsolations[18]',
+                         'experiencedEvents[19]', 'kindOfEvents[19]', 'infectionEvents[19]', 'betas[19]', 'contactReductionRates[19]', 
+                         'isolationFactors[19]', 'individualIsolations[19]', 'neighborIsolations[19]']
+        
+        self.Outputs = ['day', 'susceptibles', 'exposed', 'infectious', 'recovered', 'totalDeaths', 
+                        'hospitalized', 'intubated', 'deaths', 'asymptomatic', 'mildCondition', 'newCases', 'newExposed', 'over70Hospitalized', 
+                        'over70Intubated', 
+                        'lockdownState', 'q1_infected', 'q1_hospitalized', 'q1_intubated', 'q2_infected', 'q2_hospitalized', 'q2_intubated',
+                        'q3_infected', 'q3_hospitalized', 'q3_intubated', 'q4_infected', 'q4_hospitalized', 'q4_intubated', 'q5_infected', 
+                        'q5_hospitalized', 'q5_intubated', 'totalHospitalized', 'cumulatedHospitalizations', 
+                        'cumulatedICUs', 'hospitalPopulation', 'icuPopulation',
+                        'infectedByClass_0', 'infectedByClass_1', 'infectedByClass_2', 'infectedByClass_3', 'infectedByClass_4',
+                        'infectedByAge_0', 'infectedByAge_1', 'infectedByAge_2', 'infectedByAge_3', 'infectedByAge_4',
+                        'infectedByAge_5', 'infectedByAge_6', 'infectedByAge_7', 'infectedByAge_8',
+                        'hospitalizedByClass_0', 'hospitalizedByClass_1', 'hospitalizedByClass_2', 'hospitalizedByClass_3', 'hospitalizedByClass_4',
+                        'hospitalizedQuintilesRatio', 'hospitalizedByAge_0', 'hospitalizedByAge_1', 'hospitalizedByAge_2', 'hospitalizedByAge_3', 
+                        'hospitalizedByAge_4', 'hospitalizedByAge_5', 'hospitalizedByAge_6', 'hospitalizedByAge_7', 'hospitalizedByAge_8',
+                        'intubatedByClass_0', 'intubatedByClass_1', 'intubatedByClass_2', 'intubatedByClass_3', 'intubatedByClass_4',
+                        'intubatedQuintilesRatio', 'intubatedByAge_0', 'intubatedByAge_1', 'intubatedByAge_2', 'intubatedByAge_3', 'intubatedByAge_4',
+                        'intubatedByAge_5', 'intubatedByAge_6', 'intubatedByAge_7', 'intubatedByAge_8',
+                        'symptomaticByClass_0', 'symptomaticByClass_1', 'symptomaticByClass_2', 'symptomaticByClass_3', 'symptomaticByClass_4',
+                        'symptomaticByAge_0', 'symptomaticByAge_1', 'symptomaticByAge_2', 'symptomaticByAge_3', 'symptomaticByAge_4',
+                        'symptomaticByAge_5', 'symptomaticByAge_6', 'symptomaticByAge_7', 'symptomaticByAge_8',
+                        'deathsByClass_0', 'deathsByClass_1', 'deathsByClass_2', 'deathsByClass_3', 'deathsByClass_4',
+                        'deathsQuintilesRatio', 'deathsByAge_0', 'deathsByAge_1', 'deathsByAge_2', 'deathsByAge_3', 'deathsByAge_4',
+                        'deathsByAge_5', 'deathsByAge_6', 'deathsByAge_7', 'deathsByAge_8',
+                        'unmetSocialCareNeed_Q1', 'unmetSocialCareNeed_Q2', 'unmetSocialCareNeed_Q3', 'unmetSocialCareNeed_Q4', 
+                        'unmetSocialCareNeed_Q5', 'mostLeastDeprivedRatio', 'totalInformalSocialCare_Q1', 'totalInformalSocialCare_Q2', 
+                        'totalInformalSocialCare_Q3', 'totalInformalSocialCare_Q4', 'totalInformalSocialCare_Q5', 'totalSocialCareNeed_Q1', 
+                        'totalSocialCareNeed_Q2', 'totalSocialCareNeed_Q3', 'totalSocialCareNeed_Q4', 'totalSocialCareNeed_Q5', 
+                        'informalCareRatio', 'careNeedRatio', 'medianIsolationRate', 'meanIsolationRate',
+                        'mobilityReduction_Q1', 'mobilityReduction_Q2', 'mobilityReduction_Q3', 'mobilityReduction_Q4', 'mobilityReduction_Q5',
+                        'mobilityReduction_A1', 'mobilityReduction_A2', 'mobilityReduction_A3', 'mobilityReduction_A4', 'mobilityReduction_A5',
+                        'mobilityReduction_A6', 'mobilityReduction_A7', 'mobilityReduction_A8', 'mobilityReduction_A9', 
+                        'totalAttendances', 'cumulatedAbsences', 'periodTests']
+#                        'shareHospitalized1To11', 'shareHospitalized12To18', 'shareHospitalized19To39', 'shareHospitalized40To64',
+#                        'shareHospitalizedOver65', 'shareIntubated1To11', 'shareIntubated12To18', 'shareIntubated19To39',
+#                        'shareIntubated40To64', 'shareIntubatedOver65', 'shareDeaths1To11', 'shareDeaths12To18', 'shareDeaths19To39',
+#                        'shareDeaths40To64', 'shareDeathsOver65', 'Age1To11Share_H', 'Age12To18Share_H', 'Age19To39Share_H',
+#                        'Age40To64Share_H', 'Over65Share_H', 'Age1To11Share_I', 'Age12To18Share_I', 'Age19To39Share_I',
+#                        'Age40To64Share_I', 'Over65Share_I', 
+#        
+        
+        self.outputData = pd.DataFrame()
+        # Save initial parametrs into Scenario folder
+        self.folder = folder + '/Scenario_' + str(scenario)
+        if not os.path.exists(self.folder):
+            os.makedirs(self.folder)
+        filePath = self.folder + '/scenarioParameters.csv'
+        c = params.copy()
+        for key, value in c.iteritems():
+            if not isinstance(value, list):
+                c[key] = [value]
+        with open(filePath, "wb") as f:
+            csv.writer(f).writerow(c.keys())
+            csv.writer(f).writerows(itertools.izip_longest(*c.values()))
+        
+        ## Upload the simulation
+        print 'Uploading the simulation....'
+                
+        self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
+        self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
+        self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
+        self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
+        self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
+        self.classContactsMatrix = pickle.load(open(self.folder + '/Policy_0/save.cm', 'rb'))
+        self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
+        self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
+        self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
+        self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
+        
+    
         self.probSymptomatic = []
         self.probsHospitalization = []
         self.probsIntensiveCare = []
         self.intubatedFatalityRatio = []
-        self.infectionFatalityRatio = []
         
         ## Pandemic variables  #####
         self.susceptibles = 0
@@ -307,8 +952,6 @@ class Sim:
         self.periodFirstHospitalized = -1
         self.periodFirstIntubated = -1
         self.periodFirstDeath = -1
-        self.maxNewCases = 0
-        self.newCasesRatios = []
         self.lockdownMaxCases = 0
         self.lockdownDay = -1
         self.lockdown = False
@@ -316,11 +959,6 @@ class Sim:
         self.lockdownEnd = -1
         self.recoveryPeriods = []
         self.contactsMatrix = []
-        self.classContactsMatrix = []
-        self.totalInteractions = 0
-        self.classesContacts = []
-        self.householdIndexes = []
-        self.housesNotMoreOccupied = []
         self.ifr = []
         self.probsDeathIntubated = []
         # Statistics
@@ -433,12 +1071,8 @@ class Sim:
 #                                height=self.p['screenHeight'],
 #                                background=self.p['bgColour'])
 
-    def setFolders(self, scenario, folder):
-        self.folder = folder + '/Scenario_' + str(scenario)
-        
-        
-        
-    def runYears(self, policy, policyParams, seed):
+
+    def run(self, policy, policyParams, seed):
         """Run the simulation from year start to year end."""
         
         
@@ -448,14 +1082,7 @@ class Sim:
         random.seed(self.randSeed)
         np.random.seed(self.randSeed)
         
-        
-        if self.p['loadSim'] == False:
-            self.initializePop()
-        
-        print 'Loading data...'
-        
-        self.load_Data()
-        
+    
         if self.p['interactiveGraphics']:
             self.initializeCanvas()     
             
@@ -472,7 +1099,7 @@ class Sim:
             csv.writer(f).writerow(c.keys())
             csv.writer(f).writerows(itertools.izip_longest(*c.values()))
 
-        
+        startDay = 0
         
         startSim = time.time()
         
@@ -556,261 +1183,16 @@ class Sim:
             writer = csv.writer(file, delimiter = ",", lineterminator='\r')
             writer.writerow((self.dataPyramid))
         
-        if self.p['loadSim'] == False:
-            self.updateWealth()
-            self.displayHouse = self.pop.allPeople[0].house
-            self.displayHouse.display = True
-            self.nextDisplayHouse = None
         
         if policy == 0:
-            fromAgentsToIDs = False
-            if self.p['loadSim'] == False:
-                
-                for self.year in range(int(self.p['startYear']), int(self.p['endYear'])):
-                    
-                    print 'Policy: ' + str(policy)
-                    print self.year
-              
-                    self.doOneYear(policyFolder, dataMapFolder, dataHouseholdFolder, self.year)
-                    
-                self.createInfoNetworks_R()
-                
-                self.createVenues()
-                
-                if self.p['saveSim'] == True:  # If the simualtion needs to be saved at the end of the yearly-cicle sim
-                    fromAgentsToIDs = True
-                    self.from_Agents_to_IDs()
-                    pickle.dump(self.pop, open('save.p', 'wb'))
-                    pickle.dump(self.map, open('save.m', 'wb'))
-                    
-                    pickle.dump(self.classContactsMatrix, open('save.cm', 'wb'))
-                    pickle.dump(self.totalInteractions, open('save.tin', 'wb'))
-                    pickle.dump(self.classesContacts, open('save.ct', 'wb'))
-                    pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
-                    pickle.dump(self.housesNotMoreOccupied, open('save.hno', 'wb'))
-                    # pickle.dump(self.totalAge1Age2Income1Contacts, open('save.tc', 'wb'))
-                    
-            else:  # In this case, a saved simulation is uploaded
-                print 'Loading base simulation.....'
-                self.pop = pickle.load(open('save.p', 'rb'))
-                self.map = pickle.load(open('save.m', 'rb'))
-                self.classContactsMatrix = pickle.load(open('save.cm', 'rb'))
-                self.totalInteractions = pickle.load(open('save.tin', 'rb'))
-                self.classesContacts = pickle.load(open('save.ct', 'rb'))
-                self.householdIndexes = pickle.load(open('save.hi', 'rb'))
-                self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
-                # self.totalAge1Age2Income1Contacts = pickle.load(open('save.tc', 'rb'))
-                
-            if fromAgentsToIDs == True or self.p['loadSim'] == True:
-                
-                print 'Performing from ID to agents 1'
-                
-                self.from_IDs_to_Agents()   
-                fromAgentsToIDs = False
-            
-            if self.p['loadSim'] == True:
-                if self.p['loadNetwork'] == False:
-                    self.createInfoNetworks_R()
-                    if self.p['saveNetwork'] == True:
-                        self.from_Agents_to_IDs()
-                        pickle.dump(self.pop, open('save.p', 'wb'))
-                        pickle.dump(self.map, open('save.m', 'wb'))
-                        pickle.dump(self.classContactsMatrix, open('save.cm', 'wb'))
-                        pickle.dump(self.totalInteractions, open('save.tin', 'wb'))
-                        pickle.dump(self.classesContacts, open('save.ct', 'wb'))
-                        pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
-                        pickle.dump(self.housesNotMoreOccupied, open('save.hno', 'wb'))
-                        self.from_IDs_to_Agents()
-                        
-                        # pickle.dump(self.totalAge1Age2Income1Contacts, open('save.tc', 'wb'))
-                else:
-                    print 'Loading network data.....'
-                    self.pop = pickle.load(open('save.p', 'rb'))
-                    self.map = pickle.load(open('save.m', 'rb'))
-                    self.classContactsMatrix = pickle.load(open('save.cm', 'rb'))
-                    self.totalInteractions = pickle.load(open('save.tin', 'rb'))
-                    self.classesContacts = pickle.load(open('save.ct', 'rb'))
-                    self.householdIndexes = pickle.load(open('save.hi', 'rb'))
-                    self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
-                        
-                    print 'Performing from ID to agents 2'
-                    self.from_IDs_to_Agents()
-                    
-          
-            # Display
-            self.displayHouse = self.pop.allPeople[0].house
-            self.displayHouse.display = True
-            self.nextDisplayHouse = None
-           
-            print 'Saving the simulation....'
-                    
-            self.from_Agents_to_IDs()
-            # self.policyStartDeaths = self.totalDeaths
-            # self.lockdownMaxCases = self.maxNewCases
-            # Save outputs
-#            self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
-#            self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
-            # Save simulation
-            pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
-            pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
-            pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
-            pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
-            pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
-            pickle.dump(self.classContactsMatrix, open(policyFolder + '/save.cm', 'wb'))
-            pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
-            pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
-            pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
-            pickle.dump(self.housesNotMoreOccupied, open(policyFolder + '/save.hno', 'wb'))
-            # pickle.dump(self.totalAge1Age2Income1Contacts, open(policyFolder + '/save.tc', 'wb'))
-            pickle.dump(self.totalDeaths, open(policyFolder + '/save.d', 'wb'))
-            pickle.dump(self.lockdownDay, open(policyFolder + '/save.l', 'wb'))
-            
-            pickle.dump(self.probsDeathIntubated, open(policyFolder + '/save.di', 'wb'))
-            pickle.dump(self.probSymptomatic, open(policyFolder + '/save.sy', 'wb'))
-            pickle.dump(self.probsHospitalization, open(policyFolder + '/save.ho', 'wb'))
-            pickle.dump(self.probsIntensiveCare, open(policyFolder + '/save.ic', 'wb'))
-            pickle.dump(self.intubatedFatalityRatio, open(policyFolder + '/save.vf', 'wb'))
-            pickle.dump(self.recoveryPeriods, open(policyFolder + '/save.rp', 'wb'))
-            
-            # Save the data
-            pickle.dump(self.cumulatedHospitalizations, open(policyFolder + '/save.ch', 'wb'))
-            pickle.dump(self.cumulatedICUs, open(policyFolder + '/save.cv', 'wb'))
-            pickle.dump(self.hospitalPopulation, open(policyFolder + '/save.hp', 'wb'))
-            pickle.dump(self.icuPopulation, open(policyFolder + '/save.vp', 'wb'))
-            pickle.dump(self.totalDeaths, open(policyFolder + '/save.td', 'wb'))
-            pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
-            pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
-            pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
-            pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
-            
-            
-            pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
-            pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
-            pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
-            pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
-            pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
-            
-            pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
-            pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
-            pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
-            pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
-            pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
-        
-            pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
-            pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
-            pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
-            pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
-            pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
-            
-            pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
-            pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
-            pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
-            pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
-            pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
-            
-            pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
-            
-        endSim = time.time()
-        simulationTime = endSim - startSim
-        
-        print ''
-        print 'Simulation time: ' + str(simulationTime)
-        
-    def loadSim(self):
-        print 'Uploading the simulation....'
-                
-        self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
-        self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
-        self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
-        self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
-        self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
-        self.classContactsMatrix = pickle.load(open(self.folder + '/Policy_0/save.cm', 'rb'))
-        self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
-        self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
-        self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
-        self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
-        # self.totalAge1Age2Income1Contacts = pickle.load(open(self.folder + '/Policy_0/save.tc', 'rb'))
-        self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.d', 'rb'))
-        # self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
-        
-        self.probsDeathIntubated = pickle.load(open(self.folder + '/Policy_0/save.di', 'rb'))
-        self.probSymptomatic = pickle.load(open(self.folder + '/Policy_0/save.sy', 'rb'))
-        self.probsHospitalization = pickle.load(open(self.folder + '/Policy_0/save.ho', 'rb'))
-        self.probsIntensiveCare = pickle.load(open(self.folder + '/Policy_0/save.ic', 'rb'))
-        self.intubatedFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.vf', 'rb'))
-        self.recoveryPeriods = pickle.load(open(self.folder + '/Policy_0/save.rp', 'rb'))
-        
-        self.cumulatedHospitalizations = pickle.load(open(self.folder + '/Policy_0/save.ch', 'rb'))
-        self.cumulatedICUs = pickle.load(open(self.folder + '/Policy_0/save.cv', 'rb'))
-        self.hospitalPopulation = pickle.load(open(self.folder + '/Policy_0/save.hp', 'rb'))
-        self.icuPopulation = pickle.load(open(self.folder + '/Policy_0/save.vp', 'rb'))
-        self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.td', 'rb'))
-        self.totalInfected = pickle.load(open(self.folder + '/Policy_0/save.ti', 'rb'))
-        self.totalHospitalizedByClass = pickle.load(open(self.folder + '/Policy_0/save.hc', 'rb'))
-        self.totalIntubatedByClass = pickle.load(open(self.folder + '/Policy_0/save.vc', 'rb'))
-        self.totDeathsByClass = pickle.load(open(self.folder + '/Policy_0/save.dc', 'rb'))
-        
-        self.infected1To18 = pickle.load(open(self.folder + '/Policy_0/save.fa1', 'rb'))
-        self.infected19To39 = pickle.load(open(self.folder + '/Policy_0/save.fa2', 'rb'))
-        self.infected40To59 = pickle.load(open(self.folder + '/Policy_0/save.fa3', 'rb'))
-        self.infected60To79 = pickle.load(open(self.folder + '/Policy_0/save.fa4', 'rb'))
-        self.infected80Over = pickle.load(open(self.folder + '/Policy_0/save.fa5', 'rb'))
-        
-        self.hospitalized1To18 = pickle.load(open(self.folder + '/Policy_0/save.ha1', 'rb'))
-        self.hospitalized19To39 = pickle.load(open(self.folder + '/Policy_0/save.ha2', 'rb'))
-        self.hospitalized40To59 = pickle.load(open(self.folder + '/Policy_0/save.ha3', 'rb'))
-        self.hospitalized60To79 = pickle.load(open(self.folder + '/Policy_0/save.ha4', 'rb'))
-        self.hospitalized80Over = pickle.load(open(self.folder + '/Policy_0/save.ha5', 'rb'))
-    
-        self.icu1To18 = pickle.load(open(self.folder + '/Policy_0/save.ia1', 'rb'))
-        self.icu19To39 = pickle.load(open(self.folder + '/Policy_0/save.ia2', 'rb'))
-        self.icu40To59 = pickle.load(open(self.folder + '/Policy_0/save.ia3', 'rb'))
-        self.icu60To79 = pickle.load(open(self.folder + '/Policy_0/save.ia4', 'rb'))
-        self.icu80Over = pickle.load(open(self.folder + '/Policy_0/save.ia5', 'rb'))
-        
-        self.dead1To18 = pickle.load(open(self.folder + '/Policy_0/save.da1', 'rb'))
-        self.dead19To39 = pickle.load(open(self.folder + '/Policy_0/save.da2', 'rb'))
-        self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
-        self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
-        self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
-    
-        self.infectionsNetwork = pickle.load(open(self.folder + '/Policy_0/save.if_nw', 'rb'))
-    
-    def runDays(self, policy, policyParams, seed):
-        
-        policyFolder = self.folder + '/Policy_' + str(policy)
-        if not os.path.exists(policyFolder):
-            os.makedirs(policyFolder)
-            
-        
-        
-        print 'Performing from ID to agents 3'
-        
-        self.from_IDs_to_Agents()
-            
-        startDay = 0
-        
-        if policy == 0:
-            
             self.setPandemicWeights()
-#                self.outputData = pd.read_csv('baseOutputs.csv')
-#                self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
-#            self.from_Agents_to_IDs()
-#            pickle.dump(self.pop, open('Canvas_Pop/save.p_'+str(self.year), 'wb'))
-#            pickle.dump(self.map, open('Canvas_Map/save.m_'+str(self.year), 'wb'))
-#            self.from_IDs_to_Agents()
-            
-    
           
         if policy != 0:
             self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
             startDay = self.lockdownDay
             
         for self.pandemicDay in range(int(startDay), int(self.p['pandemicPeriod']+1)):
-            
-            print 'Lockdown day: ' + str(self.lockdownDay)
-            print 'Current day: ' + str(self.pandemicDay)
-            
+           
             if self.pandemicDay == self.lockdownDay:
                 print 'Lockdown started in day: ' + str(self.pandemicDay)
             
@@ -820,6 +1202,78 @@ class Sim:
                 for k in keys[1:]:
                     self.p[k] = policyParams[k]
                 
+                if policy == 0:
+                    
+                    
+                    print 'Saving the simulation....'
+                    
+                    self.from_Agents_to_IDs()
+                    # self.policyStartDeaths = self.totalDeaths
+                    # self.lockdownMaxCases = self.maxNewCases
+                    # Save outputs
+                    self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
+                    self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
+                    # Save simulation
+                    pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
+                    pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
+                    pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
+                    pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
+                    pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
+                    pickle.dump(self.classContactsMatrix, open(policyFolder + '/save.cm', 'wb'))
+                    pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
+                    pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
+                    pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
+                    pickle.dump(self.housesNotMoreOccupied, open(policyFolder + '/save.hno', 'wb'))
+                    # pickle.dump(self.totalAge1Age2Income1Contacts, open(policyFolder + '/save.tc', 'wb'))
+                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.d', 'wb'))
+                    pickle.dump(self.lockdownDay, open(policyFolder + '/save.l', 'wb'))
+                    
+                    pickle.dump(self.probsDeathIntubated, open(policyFolder + '/save.di', 'wb'))
+                    pickle.dump(self.probSymptomatic, open(policyFolder + '/save.sy', 'wb'))
+                    pickle.dump(self.probsHospitalization, open(policyFolder + '/save.ho', 'wb'))
+                    pickle.dump(self.probsIntensiveCare, open(policyFolder + '/save.ic', 'wb'))
+                    pickle.dump(self.intubatedFatalityRatio, open(policyFolder + '/save.vf', 'wb'))
+                    pickle.dump(self.recoveryPeriods, open(policyFolder + '/save.rp', 'wb'))
+                    
+                    # Save the data
+                    pickle.dump(self.cumulatedHospitalizations, open(policyFolder + '/save.ch', 'wb'))
+                    pickle.dump(self.cumulatedICUs, open(policyFolder + '/save.cv', 'wb'))
+                    pickle.dump(self.hospitalPopulation, open(policyFolder + '/save.hp', 'wb'))
+                    pickle.dump(self.icuPopulation, open(policyFolder + '/save.vp', 'wb'))
+                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.td', 'wb'))
+                    pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
+                    pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
+                    pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
+                    pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
+                    
+                    
+                    pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
+                    pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
+                    pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
+                    pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
+                    pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
+                    
+                    pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
+                    pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
+                    pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
+                    pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
+                    pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
+                
+                    pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
+                    pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
+                    pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
+                    pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
+                    pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
+                    
+                    pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
+                    pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
+                    pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
+                    pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
+                    pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
+                    
+                    pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
+                
+                # Upload simulation
                 print 'Uploading the simulation....'
                 
                 self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
@@ -832,6 +1286,8 @@ class Sim:
                 self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
                 self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
                 self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
+                
+                
                 # self.totalAge1Age2Income1Contacts = pickle.load(open(self.folder + '/Policy_0/save.tc', 'rb'))
                 self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.d', 'rb'))
                 # self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
@@ -886,10 +1342,6 @@ class Sim:
                 # Upload outputs
                 if policy != 0:
                     self.lockdown = self.p['lockdown']
-                    
-                    # self.maxNewCases = self.lockdownMaxCases
-                    # self.totalDeaths = self.policyStartDeaths
-                    
                     self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
                     self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
                     
@@ -901,135 +1353,21 @@ class Sim:
             print 'Care lockdown state: ' + str(self.p['careLockdown'])
             print 'Max Cases: ' + str(self.maxNewCases)
             print 'Cases at lockdown: ' + str(self.lockdownMaxCases)
-            
-            
-            
             self.doOneDay(self.pandemicDay, policyFolder, dataMapFolder, dataHouseholdFolder)
             
-        
+        endSim = time.time()
         
         self.saveInfectionNetwork(policyFolder)
-    
+        
+        simulationTime = endSim - startSim
+        
+        print ''
+        print 'Simulation time: ' + str(simulationTime)
         
         if self.p['interactiveGraphics']:
             print "Entering main loop to hold graphics up there."
             self.window.mainloop()
 
-        return self.totalTaxBurden[-1]
-
-
-    def initializePop(self):
-        """
-        Set up the initial population and the map.
-        We may want to do this from scratch, and we may want to do it
-        by loading things from a pre-generated file.
-        """
-        ## First the map, towns, and houses
-
-        if self.p['loadFromFile'] == False:
-            self.map = Map(self.p['mapGridXDimension'],
-                           self.p['mapGridYDimension'],
-                           self.p['townGridDimension'],
-                           self.p['cdfHouseClasses'],
-                           self.p['ukMap'],
-                           self.p['ukClassBias'],
-                           self.p['mapDensityModifier'],
-                           self.p['lha_1'], self.p['lha_2'], self.p['lha_3'], self.p['lha_4'])
-            
-            
-        else:
-            self.map = pickle.load(open("initMap.txt","rb"))
-            
-
-        ## Now the people who will live on it
-
-        if self.p['loadFromFile'] == False:
-            self.pop = Population(self.p['initialPop'],
-                                  self.p['startYear'],
-                                  self.p['minStartAge'],
-                                  self.p['maxStartAge'],
-                                  self.p['workingAge'],
-                                  self.p['incomeInitialLevels'],
-                                  self.p['incomeFinalLevels'],
-                                  self.p['incomeGrowthRate'],
-                                  self.p['workDiscountingTime'],
-                                  self.p['wageVar'],
-                                  self.p['dailyHours'][0])
-            ## Now put the people into some houses
-            ## They've already been partnered up so put the men in first, then women to follow
-            men = [x for x in self.pop.allPeople if x.sex == 'male']
-
-            remainingHouses = []
-            remainingHouses.extend(self.map.allHouses)
-        
-            for man in men:
-                # Assign to each men a house close to people with his own SES
-                # Assign to each remaining house a desirability index, based on the difference between the 
-                # SES of the man and of the SES of nearby houses
-                houseDesirabilityIndex = []
-                rearrangedAvailableHouses = []
-                for town in self.map.towns:
-                    availableHouses = [x for x in remainingHouses if x.town == town]
-                    occupiedHouses = [x for x in self.map.occupiedHouses if x.town == town]
-                    if len(occupiedHouses) > 0:
-                        for house in availableHouses:
-                            rearrangedAvailableHouses.append(house)
-                            affinityIndexes = []
-                            for unit in occupiedHouses:
-                                distance = self.geoDistance(house, unit)
-                                affinity = 1.0/math.exp(self.p['classAffinityExp']*float(abs(unit.occupants[0].classRank-man.classRank)))
-                                affinityIndexes.append(affinity/math.pow(distance, self.p['distanceAffinityExp']))
-                            # Compute rent factor
-                            house.sizeIndex = 2
-                            relRent = house.town.LHA[house.sizeIndex]/math.pow((man.classRank+1), self.p['classRentExp'])
-                            rentFactor = 1/math.exp(self.p['rentExp']*relRent)
-                            houseDesirabilityIndex.append(np.mean(affinityIndexes)*rentFactor)
-                            ## Add cost of houses: low SES agents tend to go in low-cost towns
-                            
-                            
-                if sum(houseDesirabilityIndex) > 0:
-                    probs = [x/sum(houseDesirabilityIndex) for x in houseDesirabilityIndex]
-                    man.house = np.random.choice(rearrangedAvailableHouses, p = probs)
-                else:
-                    man.house = np.random.choice(remainingHouses)
-                man.currentTown = man.house.town
-                man.sec = man.house.size  ## This may not always work, assumes house classes = SEC classes!
-                self.map.occupiedHouses.append(man.house)            
-                remainingHouses.remove(man.house)
-                woman = man.partner
-                woman.house = man.house
-                woman.currentTown = woman.house.town
-                woman.sec = man.sec
-                man.yearMarried.append(int(self.p['startYear']))
-                woman.yearMarried.append(int(self.p['startYear']))
-                man.house.occupants.append(man)
-                man.house.occupants.append(woman)
-
-        else:
-            self.pop = pickle.load(open("initPop.txt","rb"))
-
-
-    def load_Data(self):
-        ## Choose one house to be the display house
-        
-
-        #reading JH's fertility projections from a CSV into a numpy array
-        self.fert_data = np.genfromtxt('babyrate.txt.csv', skip_header=0, delimiter=',')
-
-        #reading JH's fertility projections from two CSVs into two numpy arrays
-        self.death_female = np.genfromtxt('deathrate.fem.csv', skip_header=0, delimiter=',')
-        self.death_male = np.genfromtxt('deathrate.male.csv', skip_header=0, delimiter=',')
-        self.contacts = pd.read_csv('contactMatrix.csv', header=None)
-        
-        self.incomeDistribution = np.genfromtxt('incomeDistribution.csv', skip_header=0, delimiter=',')
-        
-        self.incomesPercentiles = np.genfromtxt('incomesPercentiles.csv', skip_header=0, delimiter=',')
-        
-        self.wealthPercentiles = np.genfromtxt('wealthDistribution.csv', skip_header=0, delimiter=',')
-        
-        # Assign wealth
-        
-        
     def from_Agents_to_IDs(self):
         
         for person in self.pop.allPeople:
@@ -1403,266 +1741,7 @@ class Sim:
             else:
                 person.domesticRiskFactor = 0
     
-    def createVenues(self):
-        
-        self.householdIndexes = np.random.choice([x.id for x in self.map.occupiedHouses], 20, replace=False)
-        
-        print 'Occupied houses index: ' + str(self.householdIndexes)
-        # pdb.set_trace()
-        self.housesNotMoreOccupied = []
-        
-        for town in self.map.towns:
-            town.people = []
-            for house in town.houses:
-                town.people.extend(house.occupants)
-            sizeTown = len(town.people)
-            numVenues = int(math.ceil(float(sizeTown)/float(self.p['agentsPerLocation'])))
-            
-            print 'Town id: ' + str(town.id)
-            print 'Town size: ' + str(sizeTown)
-            print 'Town venues: ' + str(numVenues)
-            
-            occupiedSpots = [[i.x, i.y] for i in town.houses]
-            for i in range(numVenues):
-                newVenue = Venue(town)
-                # Determine venue's location
-                randomX = random.randint(0, int(self.p['townGridDimension']))
-                randomY = random.randint(0, int(self.p['townGridDimension']))
-                while [randomX, randomY] in occupiedSpots:
-                    randomX = random.randint(0, int(self.p['townGridDimension']))
-                    randomY = random.randint(0, int(self.p['townGridDimension']))
-                newVenue.x = randomX
-                newVenue.y = randomY
-                occupiedSpots.append([randomX, randomY])
-                town.venues.append(newVenue)
-                self.map.allVenues.append(newVenue)
-        
-        # pdb.set_trace()
-    def createInfoNetworks_R(self):
-        
-        # First, the initial beta is assigned to each household.
-        for house in self.map.occupiedHouses:
-            house.infoNetwork.clear()
-            # house.beta = self.p['initialBeta']
-            
-        # Create kinship network
-        self.kinshipNetwork()
-        
-        # Assign income quintiles to agents
-        households = [x for x in self.map.occupiedHouses]
-        # households.sort(key=operator.attrgetter("incomePerCapita"))
-        households.sort(key=operator.attrgetter("householdIncome"))
-        for i in range(int(self.p['incomeClasses'])):
-            number = int(round(len(households)/(self.p['incomeClasses']-float(i))))
-            quintile = households[:number]
-            for j in quintile:
-                j.incomeQuintile = i
-                for agent in j.occupants:
-                    agent.incomeQuintile = i
-            households = [x for x in households if x not in quintile]
-        
-        for person in self.pop.livingPeople:
-            person.socialContacts.clear()
-            person.socialContacts.add_node(person)
-        
-        # Increase contacts for over-70 people
-        for i in range(int(self.p['interactionAgeClasses'])):
-            if i <= 12:
-                for j in range(int(self.p['interactionAgeClasses'])):
-                    if j > 12:
-                        self.contacts[i][j] *= self.p['Over65ContactIncrement']
-            else:
-                for j in range(int(self.p['interactionAgeClasses'])):
-                    self.contacts[i][j] *= self.p['Over65ContactIncrement']
-        
-        
-        # Compute total contacts (for venues' interaction)
-        self.totalInteractions = 0
-        denContacts = 0
-        for z in range(int(self.p['incomeClasses'])):
-            denContacts += (1.0/float(self.p['incomeClasses']))*math.pow(self.p['classContactBias'], z)
-        self.classesContacts = []
-        for i in range(int(self.p['interactionAgeClasses'])): # 
-            print 'Empirical contacts total: ' + str(sum(self.contacts[i]))
-            totalContacts = sum(self.contacts[i])*self.p['contactCompoundFactor']
-            print 'Total contacts: ' + str(totalContacts)
-            # Given these total contacts for the class has a whole, find the contacts fro this age group for each income quintile class
-            lowClassContacts = totalContacts/denContacts
-            for j in range(int(self.p['incomeClasses'])):
-                # Given total contact for age class, determine total contact for each SES class in that age class.
-                classContacts = float(lowClassContacts*math.pow(self.p['classContactBias'], j))
-                # classContacts *= self.p['networkContactsRatio'] # 3.0
-                group = [x for x in self.pop.livingPeople if x.interactionAgeClass == i and x.incomeQuintile == j]
-                # Total contacts for that age/income group
-                classContacts *= len(group)
-                self.totalInteractions += int(round(classContacts))
-                totAgeContacts = []
-                for z in range(int(self.p['interactionAgeClasses'])):
-                    # Determine number of contacts WITH each age group
-                    ageContacts = int(np.math.ceil(self.contacts[i][z]*int(round(classContacts))))
-                    totAgeContacts.append(ageContacts)
-                # The interaction info for the age/SES group (i, j) is stored in the ClassContact class.
-                newClass = ClassContact(i, j, len(group), int(round(classContacts)), self.contacts[i], totAgeContacts)
-                # List of contacts' info for each age/SES group
-                self.classesContacts.append(newClass)
-        
-        # Here, the size of individual social network is determined.
-        # It depends on the age and SES of the agents.
-        # The effect of age is based on empirical data (age/age contact matrix)
-        # The effect of SES is an assumption of the model, represented by the parameter classContactBias
-        numFriends = []
-        for i in range(int(self.p['interactionAgeClasses'])): # 
-            meanFriends = 0
-            for j in range(int(self.p['interactionAgeClasses'])):
-                deltaAge = abs(i-j)
-                meanFriends += (self.contacts[i][j]/np.exp(self.p['ageFriendsBeta']*deltaAge))*self.p['friendsContactsRatio']
-           
-            # Given these total contacts for the class has a whole, find the contacts fro this age group for each income quintile class
-            lowClassContacts = meanFriends/denContacts
-            friendsByIncome = []
-            for j in range(int(self.p['incomeClasses'])):
-                classFriends = int(math.ceil(lowClassContacts*math.pow(self.p['classContactBias'], j)))
-                friendsByIncome.append(classFriends)
-            numFriends.append(friendsByIncome)
-        
-        
-        print 'Number of friends by age and income: ' + str(numFriends)
-        
-        # pdb.set_trace()
-        # Once the average social network size for each age/SES class is determined, the social network size of each agent
-        # is determined through a draw from a Poisson distribution
-        totFriends = 0
-        for agent in self.pop.livingPeople:
-            agent.actualFriends = 0
-            agent.numFriends = np.random.poisson(numFriends[agent.interactionAgeClass][agent.incomeQuintile])
-            totFriends += agent.numFriends
-            
-        agentsToLink = [x for x in self.pop.livingPeople if x.actualFriends < x.numFriends]
-        agentsWithPotentialFriends = [x for x in agentsToLink if len([y for y in agentsToLink if y not in x.socialContacts.nodes()]) > 0]
-        
-        # Now, the social netwrok of each agent is computed
-        while len(agentsWithPotentialFriends) > 1:
-            weights = [float(x.numFriends-x.actualFriends) for x in agentsWithPotentialFriends]
-            probs = [x/sum(weights) for x in weights]
-            if sum(probs) == 0.0:
-                print 'Weights: ' + str(weights)
-            agent = np.random.choice(agentsWithPotentialFriends, p = probs)
-            
-            print 'Agent additional friends: ' + str(agent.numFriends-agent.actualFriends)
-            
-            contactsGroup = [x for x in agentsWithPotentialFriends if x not in agent.socialContacts.nodes() and x not in agent.house.occupants]
-            if len(contactsGroup) > 0:
-                # Age weight: is given from the empirical age/age contact matrix
-                # ageWeight = [self.contacts[agent.interactionAgeClass][x.interactionAgeClass] for x in contactsGroup]
-                ageDistances = [abs(agent.age-x.age) for x in contactsGroup]
-                ageExps = [self.p['ageInteractionBeta']*math.pow(x, self.p['ageInteractionExp']) for x in ageDistances]
-                
-                # Agents which are already friend
-                friends = [x for x in agent.socialContacts.nodes()]
-                # Number of friends of potential agents who are also friend of the agent
-                commonFriends = [len([y for y in x.socialContacts.nodes() if y in friends]) for x in contactsGroup]
-                friendsExp = [self.p['friendsInteractionBeta']*math.pow(float(x), self.p['friendsInteractionExp']) for x in commonFriends]
-                
-                # Class factor
-                classDistances = [abs(x.incomeQuintile-agent.incomeQuintile) for x in contactsGroup]
-                classExps = [self.p['classInteractionBeta']*math.pow(x, self.p['classInteractionExp']) for x in classDistances]
-                
-                # Geographical distance factor
-                geoDistances = [self.manhattanDistance(agent.house.town, x.house.town) for x in contactsGroup]
-                distanceExps = [self.p['locationInteractionBeta']*math.pow(x, self.p['locationInteractionExp']) for x in geoDistances]
-                
-                totalExps = [(a+c+d-f) for a, c, d, f in zip(ageExps, classExps, distanceExps, friendsExp)]
-                weightsFullMobility = [1.0/math.exp(x) for x in totalExps]
-                # interactionRates = [x.contactReductionRate for x in contactsGroup]
-                # weights = [w*r for w, r in zip(weightsFullMobility, interactionRates)]
-                contactsProbs = [x/sum(weightsFullMobility) for x in weightsFullMobility]
-                potentialContact = np.random.choice(contactsGroup, p = contactsProbs)
-                
-                quintile = potentialContact.incomeQuintile
-                contactIndex = contactsGroup.index(potentialContact)
-                contactWeight = weightsFullMobility[contactIndex]
-                # The weight of the link is given by the probability of the link creation
-                agent.socialContacts.add_edge(agent, potentialContact, weight = contactWeight)
-                potentialContact.socialContacts.add_edge(potentialContact, agent, weight = contactWeight)
-                # Update number of friends
-                agent.actualFriends += 1
-                potentialContact.actualFriends += 1
-                
-                if agent.actualFriends >= agent.numFriends or len([x for x in agentsWithPotentialFriends if x not in agent.socialContacts.nodes()]) == 0:
-                    agentsWithPotentialFriends.remove(agent)
-                if potentialContact.actualFriends >= potentialContact.numFriends or len([x for x in agentsWithPotentialFriends if x not in potentialContact.socialContacts.nodes()]) == 0:
-                    agentsWithPotentialFriends.remove(potentialContact)
-                
-                totFriends -= 2
-                
-                print 'Remaining friends to match: ' + str(totFriends)
-                
-    #            agentsToLink = [x for x in agentsWithPotentialFriends if x.actualFriends < x.numFriends]
-    #            agentsWithPotentialFriends = [x for x in agentsToLink if len([y for y in agentsToLink if y not in x.socialContacts.nodes()]) > 0]
-                
-                print 'Remaining agents: ' + str(len(agentsWithPotentialFriends))
-                
-                # The hiusehold info network is also created, with likns' weights which depend on geographical distance between houses
-                if potentialContact.house not in agent.house.infoNetwork.nodes():
-                    distance = self.manhattanDistance(agent.house.town, potentialContact.house.town)
-                    agent.house.infoNetwork.add_edge(agent.house, potentialContact.house, weight = distance)
-                    potentialContact.house.infoNetwork.add_edge(potentialContact.house, agent.house, weight = distance)
-            else:
-                agentsWithPotentialFriends.remove(agent)
-            
-            
-            
-            
-            
-#        for agent in self.pop.livingPeople:
-#            noMoreFriend = False
-#            while agent.actualFriends < agent.numFriends and noMoreFriend == False:
-#                contactsGroup = [x for x in self.pop.livingPeople if x not in agent.socialContacts.nodes() and x.actualFriends < x.numFriends]
-#                if len(contactsGroup) > 0:
-#                    
-#                    # Age weight: is given from the empirical age/age contact matrix
-#                    # ageWeight = [self.contacts[agent.interactionAgeClass][x.interactionAgeClass] for x in contactsGroup]
-#                    ageDistances = [abs(agent.age-x.age) for x in contactsGroup]
-#                    ageExps = [self.p['ageInteractionBeta']*math.pow(x, self.p['ageInteractionExp']) for x in ageDistances]
-#                    
-#                    # Agents which are already friend
-#                    friends = [x for x in agent.socialContacts.nodes()]
-#                    # Number of friends of potential agents who are also friend of the agent
-#                    commonFriends = [len([y for y in x.socialContacts.nodes() if y in friends]) for x in contactsGroup]
-#                    friendsExp = [self.p['friendsInteractionBeta']*math.pow(float(x), self.p['friendsInteractionExp']) for x in commonFriends]
-#                    
-#                    # Class factor
-#                    classDistances = [abs(x.incomeQuintile-agent.incomeQuintile) for x in contactsGroup]
-#                    classExps = [self.p['classInteractionBeta']*math.pow(x, self.p['classInteractionExp']) for x in classDistances]
-#                    
-#                    # Geographical distance factor
-#                    geoDistances = [self.manhattanDistance(agent.house.town, x.house.town) for x in contactsGroup]
-#                    distanceExps = [self.p['locationInteractionBeta']*math.pow(x, self.p['locationInteractionExp']) for x in geoDistances]
-#                    
-#                    totalExps = [(a+c+d-f) for a, c, d, f in zip(ageExps, classExps, distanceExps, friendsExp)]
-#                    weightsFullMobility = [1.0/math.exp(x) for x in totalExps]
-#                    # interactionRates = [x.contactReductionRate for x in contactsGroup]
-#                    # weights = [w*r for w, r in zip(weightsFullMobility, interactionRates)]
-#                    contactsProbs = [x/sum(weightsFullMobility) for x in weightsFullMobility]
-#                    potentialContact = np.random.choice(contactsGroup, p = contactsProbs)
-#                    
-#                    quintile = potentialContact.incomeQuintile
-#                    contactIndex = contactsGroup.index(potentialContact)
-#                    contactWeight = weightsFullMobility[contactIndex]
-#                    # The weight of the link is given by the probability of the link creation
-#                    agent.socialContacts.add_edge(agent, potentialContact, weight = contactWeight)
-#                    potentialContact.socialContacts.add_edge(potentialContact, agent, weight = contactWeight)
-#                    # Update number of friends
-#                    agent.actualFriends += 1
-#                    potentialContact.actualFriends += 1
-#                    
-#                    # The hiusehold info network is also created, with likns' weights which depend on geographical distance between houses
-#                    if potentialContact.house not in agent.house.infoNetwork.nodes():
-#                        agent.house.infoNetwork.add_edge(agent.house, potentialContact.house, weight = geoDistances)
-#                        potentialContact.house.infoNetwork.add_edge(potentialContact.house, agent.house, weight = geoDistances)
-#                else:
-#                    noMoreFriend = True
-        
+    
         
     def createInfoNetworks(self):
         
@@ -4102,74 +4181,7 @@ class Sim:
         
         print 'Mean prob infection (post): ' + str(np.mean(probInfectionPost))
         print 'Median prob infection (post): ' + str(np.median(probInfectionPost))
-                
         
-    def doOneYear(self, policyFolder, dataMapFolder, dataHouseholdFolder, year):
-        """Run one year of simulated time."""
-
-        startYear = time.time()
-        
-        self.computeClassShares()
-        
-        self.doDeaths(policyFolder)
-        
-        self.doCareTransitions_UCN(policyFolder)
-        
-        self.resetCareVariables_KN()
-        
-        ### Care needs, supplies and netwworks  ####
-        
-        # self.computeSocialCareNeeds_W()
-    
-        # self.computeChildCareNeeds()
-        
-        self.householdCareSupply()
-        
-        # self.householdCareNetwork()
-        
-        ##### For relocation ####
-        # self.computeNetCareDemand()
-        
-        ############################################
-            
-        self.doAgeTransitions(policyFolder)
-        
-        self.doBirths(policyFolder)
-        
-        self.updateIncome()
-        
-        self.updateWealth_Ind()
-      
-        self.doSocialTransition(policyFolder)
-        
-        self.doDivorces(policyFolder)
-        
-        self.doMarriages(policyFolder)
-        
-        self.doMovingAround(policyFolder)
-        
-        self.checkHouseholdsRelocations()
-        
-#        if year == self.p['endYear']-1:
-#            print 'Creating ego networks....'
-#            self.socialNetworks()
-            
-            # self.showProbs()
-            
-            # pdb.set_trace()
-        # self.householdRelocation(policyFolder)
-        
-        # self.doStats(policyFolder, dataMapFolder, dataHouseholdFolder)
-        
-        self.pyramid.update(self.year, self.p['num5YearAgeClasses'], self.p['numCareLevels'],
-                            self.p['pixelsInPopPyramid'], self.pop.livingPeople)
-        
-        if (self.p['interactiveGraphics']):
-            self.updateCanvas()
-            
-        endYear = time.time()
-        
-        print 'Year execution time: ' + str(endYear - startYear)
     
     def showProbs(self):
         for i in range(int(self.p['ageClasses'])):
@@ -4556,7 +4568,7 @@ class Sim:
         
         return deathProb
     
-    def doDeaths(self, policyFolder):
+    def doDeaths(self):
         
         preDeath = len(self.pop.livingPeople)
         
@@ -4589,18 +4601,9 @@ class Sim:
                     person.house.occupants.remove(person)
                     if len(person.house.occupants) == 0:
                         self.map.occupiedHouses.remove(person.house)
-                        if (self.p['interactiveGraphics']):
-                            self.canvas.itemconfig(person.house.icon, state='hidden')
                     if person.partner != None:
                         person.partner.partner = None
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " died aged " + str(age) + "." 
-                        self.textUpdateList.append(messageString)
-                        
-                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                            writer.writerow([self.year, messageString])
-                
+    
             else: 
                 #######   Death process with made-up rates  ######################
                 babyDieProb = 0.0
@@ -4627,18 +4630,8 @@ class Sim:
                     person.house.occupants.remove(person)
                     if len(person.house.occupants) == 0:
                         self.map.occupiedHouses.remove(person.house)
-                        if (self.p['interactiveGraphics']):
-                            self.canvas.itemconfig(person.house.icon, state='hidden')
                     if person.partner != None:
                         person.partner.partner = None
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " died aged " + str(age) + "." 
-                        self.textUpdateList.append(messageString)
-                        
-                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                            writer.writerow([self.year, messageString])
-                        
                   
         self.pop.livingPeople[:] = [x for x in self.pop.livingPeople if x.dead == False]
         
@@ -4646,7 +4639,7 @@ class Sim:
         
         print('the number of deaths is: ' + str(preDeath - postDeath))            
 
-    def doCareTransitions(self, policyFolder):
+    def doCareTransitions(self):
         """Consider the possibility of each person coming to require care."""
         peopleNotInCriticalCare = [x for x in self.pop.livingPeople if x.careNeedLevel < self.p['numCareLevels']-1]
         for person in peopleNotInCriticalCare:
@@ -4675,16 +4668,8 @@ class Sim:
                 if person.careNeedLevel >= self.p['numCareLevels']:
                     person.careNeedLevel = int(self.p['numCareLevels'] - 1)
                             
-                if person.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(person.id) + " now has "
-                    messageString += self.p['careLevelNames'][int(person.careNeedLevel)] + " care needs." 
-                    self.textUpdateList.append(messageString)
-                    
-                    with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                        writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                        writer.writerow([self.year, messageString])
 
-    def doCareTransitions_UCN(self, policyFolder):
+    def doCareTransitions_UCN(self):
         """Consider the possibility of each person coming to require care."""
         peopleNotInCriticalCare = [x for x in self.pop.livingPeople if x.careNeedLevel < self.p['numCareLevels']-1]
         for person in peopleNotInCriticalCare:
@@ -4709,11 +4694,6 @@ class Sim:
                 classRank = person.parentsClassRank
             
             careProb = baseProb*math.pow(self.p['careBias'], classRank)/unmetNeedFactor 
-            
-            
-            #### Alternative prob which depends on care level and unmet care need   #####################################
-            # careProb = baseProb # baseProb*math.pow(self.p['careBias'], person.classRank)/unmetNeedFactor
-            
             
             if np.random.random() < careProb:
                 baseTransition = self.baseRate(self.p['careBias'], 1.0-self.p['careTransitionRate'])
@@ -4740,15 +4720,6 @@ class Sim:
                     person.careNeedLevel = int(self.p['numCareLevels'] - 1)
                 if person.careNeedLevel > 1:
                     person.wage = 0
-                            
-                if person.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(person.id) + " now has "
-                    messageString += self.p['careLevelNames'][person.careNeedLevel] + " care needs." 
-                    self.textUpdateList.append(messageString)
-                    
-                    with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                        writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                        writer.writerow([self.year, messageString])
     
     def baseRate(self, bias, cp):
         a = 0
@@ -7672,169 +7643,6 @@ class Sim:
                 person.networkFormalSocialCareSupplies = []
                 person.suppliers = []
                 person.networkInfectionFactor = 0
-            
-    def kinshipNetwork(self):
-        
-        # Create two care netwroks:
-        # - an household care network for child care (a child care need is a household need)
-        # - a person care network for social care (as socila care is personal)
-        
-        # Add social network to kiship network
-        
-        for house in self.map.occupiedHouses:
-            vfNum = 0
-            vfDen = 0
-            if nx.is_empty(house.infoNetwork) == True:
-                house.infoNetwork.add_node(house)
-                existingNodes = [house]
-            else:
-                existingNodes = [x for x in house.infoNetwork.nodes()]
-            
-            visited = []
-            visited.append(house)
-            
-            household = list(house.occupants)
-            
-            if self.lockdown == False or self.p['careLockdown'] == False:
-            # Distance 1
-                for member in household:
-                    kinshipDistance = 1
-                    if member.father != None:
-                        nok = member.father
-                        if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                            distance = self.manhattanDistance(house.town, nok.house.town)
-                            house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                            nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                            # To compute the vulnerability Index
-                            deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                            vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                            vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                            existingNodes.append(nok.house)
-                        nok = member.mother
-                        if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                            distance = self.manhattanDistance(house.town, nok.house.town)
-                            house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                            nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                            
-                            deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                            vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                            vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                            existingNodes.append(nok.house)
-                    for child in member.children:
-                        nok = child
-                        if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                            distance = self.manhattanDistance(house.town, nok.house.town)
-                            house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                            nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                            deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                            vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                            vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                            existingNodes.append(nok.house)
-                            
-                # Distance 2
-                for member in household:
-                    kinshipDistance = 2
-                    if member.father != None:
-                        if member.father.father != None:
-                            nok = member.father.father
-                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                            nok = member.father.mother
-                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                        if member.mother.father != None:
-                            nok = member.mother.father
-                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                            nok = member.mother.mother
-                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                        brothers = list(set(member.father.children + member.mother.children))
-                        brothers.remove(member)
-                        for brother in brothers:
-                            nok = brother
-                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                    for child in member.children:
-                        for grandchild in child.children:
-                            nok = grandchild
-                            if nok.dead == False and nok not in household and nok.house not in existingNodes:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                                
-                # Distance 3
-                for member in household:
-                    kinshipDistance = 3
-                    uncles = []
-                    if member.father != None:
-                        if member.father.father != None:
-                            uncles = list(set(member.father.father.children + member.father.mother.children))
-                            uncles.remove(member.father)
-                        if member.mother.father != None:
-                            uncles.extend(list(set(member.mother.father.children + member.mother.mother.children)))
-                            uncles.remove(member.mother)
-                        for uncle in uncles:
-                            nok = uncle
-                            if nok.dead == False and nok not in household and nok.house not in visited:
-                                distance = self.manhattanDistance(house.town, nok.house.town)
-                                house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                existingNodes.append(nok.house)
-                        brothers = list(set(member.father.children + member.mother.children))
-                        brothers.remove(member)
-                        for brother in brothers:
-                            for child in brother.children:
-                                nok = child
-                                if nok.dead == False and nok not in household and nok.house not in visited:
-                                    distance = self.manhattanDistance(house.town, nok.house.town)
-                                    house.infoNetwork.add_edge(house, nok.house, weight = distance)
-                                    nok.house.infoNetwork.add_edge(nok.house, house, weight = distance)
-                                    deltaAge = np.mean([x.age for x in house.occupants])-np.mean([x.age for x in nok.house.occupants])
-                                    vfNum += deltaAge*np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                    vfDen += np.exp(-1*self.p['vulnerabilityExp']*kinshipDistance)
-                                    existingNodes.append(nok.house)
-                                    
-            house.vulnerabilityIndex = 0
-            if vfDen > 0:
-                house.vulnerabilityIndex = vfNum/vfDen
     
     def householdSocialCareNetwork(self):
         
@@ -8654,29 +8462,11 @@ class Sim:
                         messageString += " with kids"
                     messageString += "."
 
-                self.findNewHouseInNewTown(peopleToMove, newTown, policyFolder)
+                self.findNewHouseInNewTown(peopleToMove, newTown)
         
         shareRelocated = float(relocated)/float(numHouseholds)
         print shareRelocated
         
-        # Update display house
-        if len(self.displayHouse.occupants) < 1:
-            self.displayHouse.display = False
-            ## Nobody lives in the display house any more, choose another
-            if self.nextDisplayHouse != None:
-                self.displayHouse = self.nextDisplayHouse
-                self.displayHouse.display = True
-                self.nextDisplayHouse = None
-            else:
-                self.displayHouse = random.choice(self.pop.livingPeople).house
-                self.displayHouse.display = True
-                self.textUpdateList.append(str(self.year) + ": Display house empty, going to " + self.displayHouse.name + ".")
-                messageString = "Residents: "
-                for k in self.displayHouse.occupants:
-                    messageString += "#" + str(k.id) + " "
-                self.textUpdateList.append(messageString)
-                
-                
     def computeHouseholdDimension(self, house):
         # Compute number of rooms for housing benefit purposes
         adults = [x for x in house.occupants if x.age > 15]
@@ -8717,7 +8507,7 @@ class Sim:
         houseBenefitRoom -= 1
         return houseBenefitRoom
         
-    def doAgeTransitions(self, policyFolder):
+    def doAgeTransitions(self):
         
         for person in self.pop.livingPeople:
             person.age += 1
@@ -8741,29 +8531,9 @@ class Sim:
                 if np.random.random() < self.p['probOutOfTownStudent']:
                     person.outOfTownStudent = True
                 person.classRank = 0 # max(person.father.classRank, person.mother.classRank)
-                if person.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(person.id) + " is now an adult."
-                    self.textUpdateList.append(messageString)
-                        
-                    with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                        writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                        writer.writerow([self.year, messageString])
-                        
-                        
+                
             elif person.age == self.p['ageOfRetirement']:
                 person.status = 'retired'
-#                person.wage = 0
-#                dK = np.random.normal(0, self.p['wageVar'])
-#                person.income *= 0.7*math.exp(dK) #self.p['pensionWage'][person.classRank]*self.p['weeklyHours'][0]
-#                person.potentialIncome = person.income
-                
-                if person.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(person.id) + " has now retired."
-                    self.textUpdateList.append(messageString)
-                        
-                    with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                        writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                        writer.writerow([self.year, messageString])
 
             ## If somebody is still at home but their parents have died, promote them to independent adult
             if person.mother != None:
@@ -8774,17 +8544,10 @@ class Sim:
                     if person.father.dead:
                         person.independentStatus = True
                         self.startWorking(person)
-                        if person.house == self.displayHouse:
-                            messageString = str(self.year) + ": #" + str(person.id) + "'s parents are both dead."
-                            self.textUpdateList.append(messageString)
-                                
-                            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                writer.writerow([self.year, messageString])
                     else:
-                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0, policyFolder)
+                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0)
                 else:
-                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0, policyFolder)
+                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0)
                     
             ## If somebody is a *child* at home and their parents have died, they need to be adopted
             if person.status == 'retired' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
@@ -8793,14 +8556,7 @@ class Sim:
             if person.status == 'child' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
                 if person.mother.dead:
                     if person.father.dead:
-                        if person.house == self.displayHouse:
-                            messageString = str(self.year) + ": #" + str(person.id) + "will now be adopted."
-                            self.textUpdateList.append(messageString)
-                            
-                            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                writer.writerow([self.year, messageString])
-        
+                
                         while True:
                             adoptiveMother = random.choice(self.pop.livingPeople)
                             if ( adoptiveMother.status != 'child'
@@ -8812,21 +8568,12 @@ class Sim:
                         adoptiveMother.children.append(person)
                         person.father = adoptiveMother.partner
                         adoptiveMother.partner.children.append(person)                
-        
-                        if adoptiveMother.house == self.displayHouse:
-                            messageString = str(self.year) + ": #" + str(person.id) + " has been newly adopted by " + str(adoptiveMother.id) + "." 
-                            self.textUpdateList.append(messageString)
-                                
-                            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                writer.writerow([self.year, messageString])
-                            
-                            
-                        self.movePeopleIntoChosenHouse(adoptiveMother.house,person.house,[person], 0, policyFolder)   
+
+                        self.movePeopleIntoChosenHouse(adoptiveMother.house,person.house,[person], 0)   
                     else:
-                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0, policyFolder)
+                        self.movePeopleIntoChosenHouse(person.father.house, person.house,[person], 0)
                 else:
-                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0, policyFolder)
+                    self.movePeopleIntoChosenHouse(person.mother.house, person.house,[person], 0)
                     
     def startWorking(self, person):
         
@@ -8842,7 +8589,7 @@ class Sim:
         person.income = person.wage*self.p['dailyHours'][int(person.careNeedLevel)]
         person.potentialIncome = person.income
     
-    def doSocialTransition(self, policyFolder):
+    def doSocialTransition(self):
         
         for person in self.pop.livingPeople:
             if person.age == self.p['workingAge'][person.classRank] and person.status == 'student':
@@ -8855,25 +8602,10 @@ class Sim:
                 
                 if random.random() > probStudy:
                     self.startWorking(person)
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " is now looking for a job."
-                        self.textUpdateList.append(messageString)
-                        
-                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                            writer.writerow([self.year, messageString])
-                        
+                    
                 else:
                     person.classRank += 1
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " is now a student."
-                        self.textUpdateList.append(messageString)
-                        
-                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                            writer.writerow([self.year, messageString])
-                        
-            
+                    
     def transitionProb (self, person):
         household = [x for x in person.house.occupants]
         if person.father.dead + person.mother.dead != 2:
@@ -9147,7 +8879,7 @@ class Sim:
         birthProb = baseRate*math.pow(self.p['fertilityBias'], womanRank)
         return birthProb
     
-    def doBirths(self, policyFolder):
+    def doBirths(self):
         
         preBirth = len(self.pop.livingPeople)
         
@@ -9243,13 +8975,6 @@ class Sim:
                 woman.availableWorkingHours = 0
                 woman.potentialIncome = 0
                 woman.income = 0
-                if woman.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(woman.id) + " had a baby, #" + str(baby.id) + "." 
-                    self.textUpdateList.append(messageString)
-                    
-                    with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                        writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                        writer.writerow([self.year, messageString])
                     
         postBirth = len(self.pop.livingPeople)
         
@@ -9263,14 +8988,12 @@ class Sim:
         splitProb = baseRate*math.pow(self.p['divorceBias'], classRank)
         return splitProb
             
-    def doDivorces(self, policyFolder):
+    def doDivorces(self):
         menInRelationships = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner != None ]
         for man in menInRelationships:
             
             age = self.year - man.birthdate 
 
-            ## This is here to manage the sweeping through of this parameter
-            ## but only for the years after 2012
             if self.year < self.p['thePresent']:
                 rawRate = self.p['basicDivorceRate'] * self.p['divorceModifierByDecade'][int(age)/10]
             else:
@@ -9279,7 +9002,6 @@ class Sim:
             splitProb = self.computeSplitProb(rawRate, man.classRank)
                 
             if random.random() < splitProb:
-                # man.children = []
                 wife = man.partner
                 man.partner = None
                 wife.partner = None
@@ -9290,15 +9012,6 @@ class Sim:
                     self.startWorking(wife)
                 self.divorceTally += 1
                 towns = [man.house.town]
-                distance = random.choice(['near','far'])
-                if man.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(man.id) + " splits with #" + str(wife.id) + "."
-                    self.textUpdateList.append(messageString)
-                    
-                    with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                        writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                        writer.writerow([self.year, messageString])
-                    
                 # manChildren = [x for x in man.children if x.dead == False and x.house == man.house and x.father == man and x.mother != wife]
                 
                 manChildren = []
@@ -9309,17 +9022,12 @@ class Sim:
                     else:
                         if np.random.random() < self.p['probChildrenWithFather']:
                             manChildren.append(child)
-                
-#                for x in manChildren:
-#                    if x not in man.house.occupants:
-#                        print 'Error in doDivorce: man children not in house'
-#                        sys.exit()
                         
                 peopleToMove = [man]
                 peopleToMove += manChildren
-                self.findNewHouse(peopleToMove, towns, policyFolder)
+                self.findNewHouse(peopleToMove, towns)
                 
-    def doMarriages(self, policyFolder):
+    def doMarriages(self):
         
         eligibleMen = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner == None and x.status != 'child' and x.status != 'student']
         eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner == None and x.status != 'child']
@@ -9349,14 +9057,7 @@ class Sim:
                     manMarriageProb = baseRate
                 else:
                     manMarriageProb = baseRate*self.p['manWithChildrenBias']
-                
-                
-                # Adjusting for number of children
-#                numChildrenWithMan = len([x for x in man.children if x.house == man.house])
-#                childrenFactor = 1/math.exp(self.p['numChildrenExp']*numChildrenWithMan)
-#                manMarriageProb *= childrenFactor
-                
-                # Adjusting to increase rate
+
                 manMarriageProb *= self.p['maleMarriageMultiplier']
                 
                 
@@ -9416,17 +9117,7 @@ class Sim:
                         interestedWomen.remove(woman)
                         
                         self.marriageTally += 1
-    
-                        if man.house == self.displayHouse or woman.house == self.displayHouse:
-                            messageString = str(self.year) + ": #" + str(man.id) + " (age " + str(man.age) + ")"
-                            messageString += " and #" + str(woman.id) + " (age " + str(woman.age)
-                            messageString += ") marry."
-                            self.textUpdateList.append(messageString)
-                            
-                            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                writer.writerow([self.year, messageString])
-        
+ 
     def deltaAge(self, dA):
         if dA <= -10 :
             cat = 0
@@ -9443,7 +9134,7 @@ class Sim:
         return cat
 
     
-    def doMovingAround(self, policyFolder):
+    def doMovingAround(self):
         """
         Various reasons why a person or family group might want to
         move around. People who are in partnerships but not living
@@ -9468,16 +9159,7 @@ class Sim:
        
         for person in separetedSpouses:
             
-            
             if person.house != person.partner.house:
-            
-#                if len(person.yearMarried) > 0 and  person.yearMarried[-1] == self.year and person.house == person.partner.house:
-#                    print 'Error: couple already in same house!'
-#                    sys.exit()
-                
-                # if person.partner != None and person.house != person.partner.house:
-                    ## so we have someone who lives apart from their partner...
-                    ## very likely they will change that
                 if random.random() < self.p['probApartWillMoveTogether']:
                     peopleToMove = [person, person.partner]
                     personChildren = self.bringTheKids(person)
@@ -9494,33 +9176,13 @@ class Sim:
                             targetHouse = person.partner.house
                         else:
                             targetHouse = person.house
-                        if person.house == self.displayHouse:
-                            messageString = str(self.year) + ": #" + str(person.id) + " and #" + str(person.partner.id)
-                            messageString += " move to existing household."
-                            self.textUpdateList.append(messageString)
-                            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                writer.writerow([self.year, messageString])
                                 
-                        self.movePeopleIntoChosenHouse(targetHouse,person.house,peopleToMove, 0, policyFolder)                        
+                        self.movePeopleIntoChosenHouse(targetHouse,person.house,peopleToMove, 0)                        
                     else:
                         
                         towns = [person.house.town, person.partner.house.town]
-#                        if town != person.partner.house.town:
-#                            town = self.selectSpousesTown(town, person.partner.house.town)
-                        # distance = random.choice(['here','near'])
-                        if person.house == self.displayHouse:
-                            messageString = str(self.year) + ": #" + str(person.id) + " moves out to live with #" + str(person.partner.id)
-                            if len(peopleToMove) > 2:
-                                messageString += ", bringing the kids"
-                            messageString += "."
-                            self.textUpdateList.append(messageString)
-                            
-                            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                writer.writerow([self.year, messageString])
                                 
-                        self.findNewHouse(peopleToMove, towns, policyFolder)                        
+                        self.findNewHouse(peopleToMove, towns)                        
     
                     if person.independentStatus == False:
                         person.independentStatus = True
@@ -9553,15 +9215,8 @@ class Sim:
 #                        weights = [float(len(x.houses)) for x in nearbyTowns]
 #                        probs = [x/sum(weights) for x in weights]
 #                        town = np.random.choice(nearbyTowns, p = probs)
-                    
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " moves out, aged " + str(self.year-person.birthdate) + "."
-                        self.textUpdateList.append(messageString)
-                        with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                            writer.writerow([self.year, messageString])
                             
-                    self.findNewHouse(peopleToMove, towns, policyFolder)
+                    self.findNewHouse(peopleToMove, towns)
                     person.independentStatus = True
                     
 
@@ -9593,14 +9248,8 @@ class Sim:
                             mbRate = self.p['variableMoveBack']/distance
                         if random.random() < mbRate:
                             peopleToMove = [person]
-                            if person.house == self.displayHouse:
-                                messageString = str(self.year) + ": #" + str(person.id) + " is going to live with one of their children."
-                                self.textUpdateList.append(messageString)
-                                with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                                    writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                                    writer.writerow([self.year, messageString])
                                 
-                            self.movePeopleIntoChosenHouse(c.house,person.house,peopleToMove, 0, policyFolder)
+                            self.movePeopleIntoChosenHouse(c.house,person.house,peopleToMove, 0)
                             break
                         
         
@@ -9652,7 +9301,7 @@ class Sim:
                             writer = csv.writer(file, delimiter = ",", lineterminator='\r')
                             writer.writerow([self.year, messageString])
                         
-                    self.findNewHouse(peopleToMove,towns, policyFolder)
+                    self.findNewHouse(peopleToMove,towns)
                     
         
         # Update display house
@@ -9717,7 +9366,7 @@ class Sim:
                 returnList.append(i)
         return returnList
 
-    def findNewHouseInNewTown(self, personList, newTown, policyFolder):
+    def findNewHouseInNewTown(self, personList, newTown):
         """Find an appropriate empty house for the named person and put them in it."""
 
         person = personList[0]
@@ -9759,9 +9408,9 @@ class Sim:
 #            sys.exit()
 
         ## Actually make the chosen move
-        self.movePeopleIntoChosenHouse(newHouse, departureHouse, personList, 1, policyFolder)
+        self.movePeopleIntoChosenHouse(newHouse, departureHouse, personList, 1)
 
-    def findNewHouse(self, personList, towns, policyFolder):
+    def findNewHouse(self, personList, towns):
         ###  Called from:
         ###  - divorce function: husband must find a new house
         ###  - doMovingAround function
@@ -9843,10 +9492,10 @@ class Sim:
 #            sys.exit()
 
         ## Actually make the chosen move
-        self.movePeopleIntoChosenHouse(newHouse,departureHouse,personList, 1, policyFolder)
+        self.movePeopleIntoChosenHouse(newHouse,departureHouse,personList, 1)
 
 
-    def movePeopleIntoChosenHouse(self,newHouse,departureHouse,personList, case, policyFolder):
+    def movePeopleIntoChosenHouse(self,newHouse,departureHouse,personList, case):
 
         ## Put the new house onto the list of occupied houses if it was empty
         household = list(personList)
@@ -9864,17 +9513,8 @@ class Sim:
         for i in household:
             if newHouse.town != departureHouse.town:
                 i.yearInTown = 0
-#            if i.house == newHouse:
-#                print 'Error: new house is the old house!'
-#                sys.exit()
                 
             oldHouse = i.house
-            
-#            if i not in oldHouse.occupants:
-#                print 'Error: person not in house.'
-#                print i.house.id
-#                print oldHouse.id
-#                sys.exit()
                 
             oldHouse.occupants.remove(i)
             
@@ -9889,55 +9529,11 @@ class Sim:
             i.house = newHouse
             i.movedThisYear = True
 
-        ## This next is sloppy and will lead to loads of duplicates in the
-        ## occupiedHouses list, but we don't want to miss any -- that's
-        ## much worse -- and the problem will be solved by a conversion
-        ## to set and back to list int he stats method in a moment
         if case == 1:
             self.map.occupiedHouses.append(newHouse)
-        
-#        if len(self.map.occupiedHouses) != len(set(self.map.occupiedHouses)):
-#            print 'Error: house appears twice in occupied houses!'
-#            houses = []
-#            for x in self.map.occupiedHouses:
-#                if x in houses:
-#                    print x.id
-#                else:
-#                    houses.append(x)
-#            sys.exit()
-        
-        emptyOccupiedHouses = [x for x in self.map.occupiedHouses if len(x.occupants) == 0]
-        
-#        if len(emptyOccupiedHouses) > 0:
-#            print 'Error: empty houses among occupied ones!'
-#            for m in emptyOccupiedHouses:
-#                print m.id
-#            sys.exit()
-        
-        if (self.p['interactiveGraphics']):
-            self.canvas.itemconfig(newHouse.icon, state='normal')
 
             
-            
-        ## Check whether we've moved into the display house
-        if newHouse == self.displayHouse:
-            messageString = str(self.year) + ": New people are moving into " + newHouse.name
-            self.textUpdateList.append(messageString)
-            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                writer.writerow([self.year, messageString])
-            
-            messageString = ""
-            for k in personList:
-                messageString += "#" + str(k.id) + " "
-            self.textUpdateList.append(messageString)
-            with open(os.path.join(policyFolder, "Log.csv"), "a") as file:
-                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                writer.writerow([self.year, messageString])
-            
-        ## or out of it...
-        if departureHouse == self.displayHouse and len(departureHouse.occupants) < 1:
-            self.nextDisplayHouse = newHouse
+    
                 
 
     def doStats(self, day, policyFolder, dataMapFolder, dataHouseholdFolder):
@@ -10369,23 +9965,7 @@ class Sim:
                          isolationFactors[19], individualIsolations[19], neighborIsolations[19]]
         
         
-        outputs = [day, currentPop, everLivedPop, numHouseholds, averageHouseholdSize, self.marriageTally, marriagePropNow, 
-                   self.divorceTally, shareSingleParents, shareFemaleSingleParent, taxPayers, taxBurden, familyCareRatio, shareInHouseSocialCare,
-                   shareEmployed, shareWorkHours, self.publicSocialCare, self.costPublicSocialCare, self.sharePublicSocialCare, 
-                   self.costTaxFreeSocialCare, self.publicChildCare, self.costPublicChildCare, self.sharePublicChildCare, 
-                   self.costTaxFreeChildCare, self.totalTaxRevenue, self.totalPensionRevenue, self.pensionExpenditure, 
-                   self.totalHospitalizationCost, totalInformalChildCare, formalChildCare, childcareIncomeShare, 
-                   shareInformalChildCare, shareCareGivers, ratioFemaleMaleCarers, shareMaleCarers, shareFemaleCarers, ratioWage, 
-                   ratioIncome, shareFamilyCarer, share_over20Hours_FamilyCarers, averageHoursOfCare, share_40to64_carers, 
-                   share_over65_carers, share_10PlusHours_over70, totalSocialCareNeed, totalInformalSocialCare, totalFormalSocialCare, 
-                   totalUnmetSocialCareNeed, totalSocialCare, share_InformalSocialCare, share_UnmetSocialCareNeed, 
-                   totalOWSC, shareOWSC, totalCostOWSC, self.inHouseCareSupplyRatio,
-                   q1_socialCareNeed, q1_informalSocialCare, q1_formalSocialCare, q1_unmetSocialCareNeed, q1_outOfWorkSocialCare,
-                   q2_socialCareNeed, q2_informalSocialCare, q2_formalSocialCare, q2_unmetSocialCareNeed, q2_outOfWorkSocialCare,
-                   q3_socialCareNeed, q3_informalSocialCare, q3_formalSocialCare, q3_unmetSocialCareNeed, q3_outOfWorkSocialCare,
-                   q4_socialCareNeed, q4_informalSocialCare, q4_formalSocialCare, q4_unmetSocialCareNeed, q4_outOfWorkSocialCare,
-                   q5_socialCareNeed, q5_informalSocialCare, q5_formalSocialCare, q5_unmetSocialCareNeed, q5_outOfWorkSocialCare,
-                   self.grossDomesticProduct, publicCareToGDP, self.susceptibles, self.exposed, self.infectious, self.recovered, 
+        outputs = [day, self.susceptibles, self.exposed, self.infectious, self.recovered, 
                    self.totalDeaths, self.hospitalized, self.intubated, self.deathsForCovid, self.asymptomatic, self.mildSymptomatic,
                    self.newCases, self.newExposed, self.over70Hospitalized, self.over70Intubated, self.lockdown, q1_infected, q1_hospitalized, q1_intubated,
                    q2_infected, q2_hospitalized, q2_intubated, q3_infected, q3_hospitalized, q3_intubated, q4_infected, q4_hospitalized, q4_intubated,
