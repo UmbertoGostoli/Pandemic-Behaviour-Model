@@ -115,7 +115,7 @@ class SimPop:
         
         if self.p['loadSim'] == False:
             self.initializePop()
-            self.updateWealth()
+            self.updateWealth_Ind()
      
         
         fromAgentsToIDs = False
@@ -759,7 +759,37 @@ class SimPop:
         yDist = abs(agentY - contactY)
         return xDist + yDist
                 
-    
+    def updateWealth_Ind(self):
+        # Only workers: retired are assigned a wealth at the end of their working life (which they consume thereafter)
+        earningPop = [x for x in self.pop.livingPeople if x.cumulativeIncome > 0]
+        
+        earningPop.sort(key=operator.attrgetter("cumulativeIncome"))
+        
+        peopleToAssign = list(earningPop)
+        wealthPercentiles = []
+        for i in range(100, 0, -1):
+            groupNum = int(float(len(peopleToAssign))/float(i))
+            peopleGroup = peopleToAssign[0:groupNum]
+            wealthPercentiles.append(peopleGroup)
+            peopleToAssign = peopleToAssign[groupNum:]
+            
+        for i in range(100):
+            wealth = float(self.wealthPercentiles[i])
+            for person in wealthPercentiles[i]:
+                dK = np.random.normal(0, self.p['wageVar'])
+                person.wealth = wealth*math.exp(dK)
+                
+        for person in self.pop.livingPeople:
+            # Update financial wealth
+            if person.wage > 0:
+                person.financialWealth = person.wealth*self.p['shareFinancialWealth']
+            else:
+                person.financialWealth -= person.wealthSpentOnCare
+            person.financialWealth = max(person.financialWealth, 0)
+        
+        notEarningPop = [x for x in self.pop.livingPeople if x.cumulativeIncome > 0 and x.wage == 0]
+        for person in notEarningPop:
+            person.financialWealth *= (1.0 + self.p['pensionReturnRate'])
         
 class SimCov:
     """Instantiates a single run of the simulation."""    
@@ -8805,37 +8835,7 @@ class SimCov:
 #                person.wage = wage*math.exp(dK)
 #                person.income = person.wage*self.p['weeklyHours'][int(person.careNeedLevel)]
         
-    def updateWealth_Ind(self):
-        # Only workers: retired are assigned a wealth at the end of their working life (which they consume thereafter)
-        earningPop = [x for x in self.pop.livingPeople if x.cumulativeIncome > 0]
-        
-        earningPop.sort(key=operator.attrgetter("cumulativeIncome"))
-        
-        peopleToAssign = list(earningPop)
-        wealthPercentiles = []
-        for i in range(100, 0, -1):
-            groupNum = int(float(len(peopleToAssign))/float(i))
-            peopleGroup = peopleToAssign[0:groupNum]
-            wealthPercentiles.append(peopleGroup)
-            peopleToAssign = peopleToAssign[groupNum:]
-            
-        for i in range(100):
-            wealth = float(self.wealthPercentiles[i])
-            for person in wealthPercentiles[i]:
-                dK = np.random.normal(0, self.p['wageVar'])
-                person.wealth = wealth*math.exp(dK)
-                
-        for person in self.pop.livingPeople:
-            # Update financial wealth
-            if person.wage > 0:
-                person.financialWealth = person.wealth*self.p['shareFinancialWealth']
-            else:
-                person.financialWealth -= person.wealthSpentOnCare
-            person.financialWealth = max(person.financialWealth, 0)
-        
-        notEarningPop = [x for x in self.pop.livingPeople if x.cumulativeIncome > 0 and x.wage == 0]
-        for person in notEarningPop:
-            person.financialWealth *= (1.0 + self.p['pensionReturnRate'])
+    
             
     def updateWealth(self):
         households = [x for x in self.map.occupiedHouses]
