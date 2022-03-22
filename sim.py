@@ -87,6 +87,7 @@ class SimPop:
         self.inHouseCareSupplyRatio = 0
         self.probsRelocation = []
         self.relocationCostFactors = []
+        self.classContactsMatrix = []
         self.incomeFactors = []
         self.stateTaxRevenue = []
         self.totalTaxRevenue = 0
@@ -1608,10 +1609,8 @@ class SimPop:
         for z in range(int(self.p['incomeClasses'])):
             denContacts += (1.0/float(self.p['incomeClasses']))*math.pow(self.p['classContactBias'], z)
         self.classesContacts = []
-        for i in range(int(self.p['interactionAgeClasses'])): # 
-            print 'Empirical contacts total: ' + str(sum(self.contacts[i]))
+        for i in range(int(self.p['interactionAgeClasses'])): 
             totalContacts = sum(self.contacts[i])*self.p['contactCompoundFactor']
-            print 'Total contacts: ' + str(totalContacts)
             # Given these total contacts for the class has a whole, find the contacts fro this age group for each income quintile class
             lowClassContacts = totalContacts/denContacts
             for j in range(int(self.p['incomeClasses'])):
@@ -1660,6 +1659,8 @@ class SimPop:
             
         agentsToLink = [x for x in self.pop.livingPeople if x.actualFriends < x.numFriends]
         agentsWithPotentialFriends = [x for x in agentsToLink if len([y for y in agentsToLink if y not in x.socialContacts.nodes()]) > 0]
+        
+        print 'Creating networks....'
         
         # Now, the social netwrok of each agent is computed
         while len(agentsWithPotentialFriends) > 1:
