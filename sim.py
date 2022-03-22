@@ -88,6 +88,10 @@ class SimPop:
         self.probsRelocation = []
         self.relocationCostFactors = []
         self.classContactsMatrix = []
+        self.classesContacts = []
+        self.totalInteractions = 0
+        self.householdIndexes = []
+        self.housesNotMoreOccupied = []
         self.incomeFactors = []
         self.stateTaxRevenue = []
         self.totalTaxRevenue = 0
