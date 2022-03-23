@@ -145,6 +145,8 @@ class SimPop:
                 pickle.dump(self.classesContacts, open('save.ct', 'wb'))
                 pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
                 pickle.dump(self.housesNotMoreOccupied, open('save.hno', 'wb'))
+                pickle.dump(self.contacts, open('save.ctcs', 'wb'))
+                
                 
         else:  # In this case, a saved simulation is uploaded
             print 'Loading base simulation.....'
@@ -154,6 +156,7 @@ class SimPop:
             self.classesContacts = pickle.load(open('save.ct', 'rb'))
             self.householdIndexes = pickle.load(open('save.hi', 'rb'))
             self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
+            self.contacts = pickle.load(open('save.ctcs', 'rb'))
             # self.totalAge1Age2Income1Contacts = pickle.load(open('save.tc', 'rb'))
             
         if fromAgentsToIDs == True or self.p['loadSim'] == True:
@@ -172,6 +175,7 @@ class SimPop:
                     pickle.dump(self.classesContacts, open('save.ct', 'wb'))
                     pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
                     pickle.dump(self.housesNotMoreOccupied, open('save.hno', 'wb'))
+                    pickle.dump(self.contacts, open('save.ctcs', 'wb'))
                     self.from_IDs_to_Agents()
             else:
                 self.pop = pickle.load(open('save.p', 'rb'))
@@ -180,6 +184,7 @@ class SimPop:
                 self.classesContacts = pickle.load(open('save.ct', 'rb'))
                 self.householdIndexes = pickle.load(open('save.hi', 'rb'))
                 self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
+                self.contacts = pickle.load(open('save.ctcs', 'rb'))
                 self.from_IDs_to_Agents()
                 
     def from_Agents_to_IDs(self):
@@ -2315,6 +2320,7 @@ class SimCov:
         self.classesContacts = pickle.load(open('save.ct', 'rb'))
         self.householdIndexes = pickle.load(open('save.hi', 'rb'))
         self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
+        self.contacts = pickle.load(open('save.ctcs', 'rb'))
         
         self.from_IDs_to_Agents()
 
