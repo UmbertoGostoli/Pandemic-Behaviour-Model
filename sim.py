@@ -2600,10 +2600,10 @@ class SimCov:
                 self.lockdown = False
                 print 'Lockdown ended in day: ' + str(self.pandemicDay)
                     
-            print 'Lockdown state: ' + str(self.lockdown)
-            print 'Care lockdown state: ' + str(self.p['careLockdown'])
-            print 'Max Cases: ' + str(self.maxNewCases)
-            print 'Cases at lockdown: ' + str(self.lockdownMaxCases)
+#            print 'Lockdown state: ' + str(self.lockdown)
+#            print 'Care lockdown state: ' + str(self.p['careLockdown'])
+#            print 'Max Cases: ' + str(self.maxNewCases)
+#            print 'Cases at lockdown: ' + str(self.lockdownMaxCases)
             self.doOneDay(self.pandemicDay, policyFolder, dataMapFolder, dataHouseholdFolder)
             
         endSim = time.time()
