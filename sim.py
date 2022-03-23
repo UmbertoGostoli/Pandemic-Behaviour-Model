@@ -87,7 +87,6 @@ class SimPop:
         self.inHouseCareSupplyRatio = 0
         self.probsRelocation = []
         self.relocationCostFactors = []
-        self.classContactsMatrix = []
         self.classesContacts = []
         self.totalInteractions = 0
         self.householdIndexes = []
@@ -142,7 +141,6 @@ class SimPop:
                 self.from_Agents_to_IDs()
                 pickle.dump(self.pop, open('save.p', 'wb'))
                 pickle.dump(self.map, open('save.m', 'wb'))
-                pickle.dump(self.classContactsMatrix, open('save.cm', 'wb'))
                 pickle.dump(self.totalInteractions, open('save.tin', 'wb'))
                 pickle.dump(self.classesContacts, open('save.ct', 'wb'))
                 pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
@@ -152,7 +150,6 @@ class SimPop:
             print 'Loading base simulation.....'
             self.pop = pickle.load(open('save.p', 'rb'))
             self.map = pickle.load(open('save.m', 'rb'))
-            self.classContactsMatrix = pickle.load(open('save.cm', 'rb'))
             self.totalInteractions = pickle.load(open('save.tin', 'rb'))
             self.classesContacts = pickle.load(open('save.ct', 'rb'))
             self.householdIndexes = pickle.load(open('save.hi', 'rb'))
@@ -171,7 +168,6 @@ class SimPop:
                     self.from_Agents_to_IDs()
                     pickle.dump(self.pop, open('save.p', 'wb'))
                     pickle.dump(self.map, open('save.m', 'wb'))
-                    pickle.dump(self.classContactsMatrix, open('save.cm', 'wb'))
                     pickle.dump(self.totalInteractions, open('save.tin', 'wb'))
                     pickle.dump(self.classesContacts, open('save.ct', 'wb'))
                     pickle.dump(self.householdIndexes, open('save.hi', 'wb'))
@@ -180,7 +176,6 @@ class SimPop:
             else:
                 self.pop = pickle.load(open('save.p', 'rb'))
                 self.map = pickle.load(open('save.m', 'rb'))
-                self.classContactsMatrix = pickle.load(open('save.cm', 'rb'))
                 self.totalInteractions = pickle.load(open('save.tin', 'rb'))
                 self.classesContacts = pickle.load(open('save.ct', 'rb'))
                 self.householdIndexes = pickle.load(open('save.hi', 'rb'))
@@ -2098,20 +2093,6 @@ class SimCov:
             csv.writer(f).writerow(c.keys())
             csv.writer(f).writerows(itertools.izip_longest(*c.values()))
         
-        ## Upload the simulation
-        print 'Uploading the simulation....'
-                
-        self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
-        self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
-        self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
-        self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
-        self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
-        self.classContactsMatrix = pickle.load(open(self.folder + '/Policy_0/save.cm', 'rb'))
-        self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
-        self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
-        self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
-        self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
-        
     
         self.probSymptomatic = []
         self.probsHospitalization = []
@@ -2318,6 +2299,18 @@ class SimCov:
 #                                width=self.p['screenWidth'],
 #                                height=self.p['screenHeight'],
 #                                background=self.p['bgColour'])
+        
+        ## Upload the simulation
+        print 'Uploading the population....'
+                
+        self.pop = pickle.load(open('save.p', 'rb'))
+        self.map = pickle.load(open('save.m', 'rb'))
+        self.totalInteractions = pickle.load(open('save.tin', 'rb'))
+        self.classesContacts = pickle.load(open('save.ct', 'rb'))
+        self.householdIndexes = pickle.load(open('save.hi', 'rb'))
+        self.housesNotMoreOccupied = pickle.load(open('save.hno', 'rb'))
+        
+        self.from_IDs_to_Agents()
 
 
     def run(self, policy, policyParams, seed):
@@ -2467,7 +2460,6 @@ class SimCov:
                     pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
                     pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
                     pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
-                    pickle.dump(self.classContactsMatrix, open(policyFolder + '/save.cm', 'wb'))
                     pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
                     pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
                     pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
@@ -2529,7 +2521,6 @@ class SimCov:
                 self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
                 self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
                 self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
-                self.classContactsMatrix = pickle.load(open(self.folder + '/Policy_0/save.cm', 'rb'))
                 self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
                 self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
                 self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
@@ -3592,251 +3583,6 @@ class SimCov:
                 attendancesDiscounted += venue.pastAttendants[index-i]*np.power(self.p['timeDiscountingFactor'], i)
                 den += np.power(self.p['timeDiscountingFactor'], i)
             venue.pastAttendance = float(attendancesDiscounted)/float(den)
-
-
-                
-#    def socialInteraction_SPE(self):
-#        
-#        # In this function, the agents are assigned to venues, in a way consistent with the empirical contact matrix.
-#        # First, the venues are emptied...
-#        
-#        # Then, agents are randomly allocated to venues.
-#        # np.random.shuffle(self.pop.livingPeople)
-#        
-#        if self.p['5yearAgeClasses'] == False:
-#            ageClasses = int(self.p['ageClasses'])
-#        else:
-#            ageClasses = int(self.p['interactionAgeClasses'])
-#      
-#
-#        remainingContacts = self.totalInteractions
-#        
-#                    # currentDistance += np.power(float(abs(self.totalAge1Age2Income1Contacts[i][j][z]-age1Age2Income1Contacts[i][j][z])), self.p['contactsDistanceExp'])
-#        totalFitness = 0
-#        
-#        for contactClass in self.classesContacts:
-#            contactClass.actualContactsByAge = [0]*int(self.p['interactionAgeClasses'])
-#
-#        effectiveContacts = []
-#        for i in range(int(self.p['interactionAgeClasses'])):
-#            incomeContacts = []
-#            for j in range(int(self.p['incomeClasses'])):
-#                incomeContacts.append(0)
-#            effectiveContacts.append(incomeContacts)
-#       
-#        self.newVenues = 0
-#        
-#        while remainingContacts > 0:
-#        
-#            # At each cicle, create a random venue with a certain prob.
-##            if np.random.random() < self.p['probNewVenue']:
-##                # Selecet randomly a town
-##                popTowns = [len(x.people) for x in self.map.towns]
-##                probs = [float(x)/sum(popTowns) for x in popTowns]
-##                town = np.random.choice(self.map.towns, p = probs)
-##                emptyVenues = [x for x in town.venues if len(x.occupants) == 0]
-##                if len(emptyVenues) == 0:
-##                    occupiedSpots = [[i.x, i.y] for i in town.houses]
-##                    occupiedSpots.extend([[i.x, i.y] for i in town.venues])
-##                    newVenue = Venue(town)
-##                    # Determine venue's location
-##                    randomX = random.randint(0, int(self.p['townGridDimension']))
-##                    randomY = random.randint(0, int(self.p['townGridDimension']))
-##                    while [randomX, randomY] in occupiedSpots:
-##                        'Print occupied spot.'
-##                        randomX = random.randint(0, int(self.p['townGridDimension']))
-##                        randomY = random.randint(0, int(self.p['townGridDimension']))
-##                        
-##                    newVenue.x = randomX
-##                    newVenue.y = randomY
-##                    town.venues.append(newVenue)
-##                    self.map.allVenues.append(newVenue)
-##                    self.newVenues += 1
-##                    print 'New venue created.'
-#            
-#            # 1 - A venue is randomly chosen
-#            venue = np.random.choice(self.map.allVenues)
-#            # 2 - All the agents in the venue's town (who did not commute to anotehr town) are selected
-#            agents = [x for x in self.pop.livingPeople if x.house.town == venue.town and x.commutingTown == None]
-#            # The agents commuting to the venue's town are added
-#            agents.extend([x for x in self.pop.livingPeople if x.commutingTown == venue.town]) # Add commuters
-#            emptyClasses = []
-#            for i in range(int(self.p['interactionAgeClasses'])):
-#                for j in range(int(self.p['incomeClasses'])):
-#                    # Select age/income interaction info
-#                    intClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-#                    # Select all the agents of that age/income class
-#                    potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
-#                    if len(potentialVisitors) == 0:
-#                        emptyClasses.append(intClass)
-#            while len(emptyClasses) == len(self.classesContacts):
-#                venue = np.random.choice(self.map.allVenues)
-#                agents = [x for x in self.pop.livingPeople if x.house.town == venue.town and x.commutingTown == None]
-#                agents.extend([x for x in self.pop.livingPeople if x.commutingTown == venue.town]) # Add commuters
-#                emptyClasses = []
-#                for i in range(int(self.p['interactionAgeClasses'])):
-#                    for j in range(int(self.p['incomeClasses'])):
-#                        intClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-#                        potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
-#                        if len(potentialVisitors) == 0:
-#                            emptyClasses.append(intClass)
-#                    
-#            # Select an age/income group based on number of residual contacts 
-#            if len(venue.occupants) == 0: 
-#               
-#                for i in range(int(self.p['interactionAgeClasses'])):
-#                    for j in range(int(self.p['incomeClasses'])):
-#                        ageIncomeClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-#                        # The probabliity of an age/income class being selected depends on the residual number of contacts for that class
-#                        weightsClass = ageIncomeClass.contacts-effectiveContacts[i][j]
-#                        ageIncomeClass.weight = float(np.exp(self.p['deltaContactsBeta']*weightsClass))
-#                weightsClasses = [x.weight for x in self.classesContacts]
-#                potentialVisitors = []
-#                visitedClasses = []
-#                while len(potentialVisitors) == 0:
-#                    remainingClasses = [x for x in self.classesContacts if x not in visitedClasses]
-#                    weightsClasses = [x.weight for x in remainingClasses]
-#                    probsClasses = [float(x)/sum(weightsClasses) for x in weightsClasses]
-#                    intClass = np.random.choice(remainingClasses, p = probsClasses)
-#                    if intClass not in visitedClasses:
-#                        visitedClasses.append(intClass)
-#                    potentialVisitors = [x for x in agents if x.interactionAgeClass == intClass.age and x.incomeQuintile == intClass.quintile]
-#                distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
-#                
-#                meanDist = np.mean(distances)
-#                if meanDist <= 0:
-#                    meanDist = 1.0
-#                newDist = []
-#                for x in distances:
-#                    if x == 0:
-#                        newDist.append(meanDist)
-#                    else:
-#                        newDist.append(x)
-#                distances = [x for x in newDist]
-#                
-#                weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
-#                probs = [x/sum(weights) for x in weights]
-##                if sum(probs) < 1.0:
-##                    print ''
-##                    print 'Error: probs do not add to !'
-##                    print weights
-##                    print probs
-##                    print len(potentialVisitors)
-##                    print 'Venue coordinates: ' + str(venue.x) + ' - ' + str(venue.y)
-##                    print ''
-#                agent = np.random.choice(potentialVisitors, p = probs)
-#                venue.occupants.append(agent)
-#                venue.numVirtualOccupants += 1
-#               
-#            else:
-#                # In this case, the probability of an age/income class being selected depends on the venue's attendants
-#                weightsAges = []
-#                for j in range(int(self.p['interactionAgeClasses'])):
-#                    deltaContacts = []
-#                    for agent in venue.occupants:
-#                        i = agent.interactionAgeClass
-#                        z = agent.incomeQuintile
-#                        intClass = [x for x in self.classesContacts if x.age == i and x.quintile == z][0]
-#                        deltaAgeContacts = float(intClass.totContactsByAge[j]-intClass.actualContactsByAge[j])
-#                        deltaContacts.append(deltaAgeContacts)
-#                    meanDeltaContacts = np.mean(deltaContacts)
-#                    weightsAges.append(float(np.exp(self.p['deltaContactsBeta']*meanDeltaContacts)))
-#                if sum(weightsAges) > 0:
-#                    probs = [float(x)/sum(weightsAges) for x in weightsAges]
-#                    ageClass = np.random.choice(range(int(self.p['interactionAgeClasses'])), p = probs)
-#                    potentialVisitors = [x for x in agents if x.interactionAgeClass == ageClass and x not in venue.occupants]
-#                elif sum(weightsAges) == 0 or len(potentialVisitors) == 0:
-#                    if sum(weightsAges) == 0:
-#                        print 'Weights age equal zero'
-#                    if len(potentialVisitors) == 0:
-#                        print 'Len visitors equal zero'
-#                    visitedAges = []
-#                    cond = False
-#                    while cond == False:
-#                        ageClass = np.random.choice(range(int(self.p['interactionAgeClasses'])))
-#                        if ageClass not in visitedAges:
-#                            visitedAges.append(ageClass)
-#                        potentialVisitors = [x for x in agents if x.interactionAgeClass == ageClass and x not in venue.occupants]
-#                        if len(potentialVisitors) > 0:
-#                            cond = True
-#                        if len(potentialVisitors) == 0 and len(visitedAges) == int(self.p['interactionAgeClasses']):
-#                            print 'Error: all the age classes have zero potential visitors!'
-#                            sys.exit()
-#                
-#                if len(potentialVisitors) > 0:
-#                    
-#                    distances = [self.manhattanDistance(x.house, venue) for x in potentialVisitors]
-#                    
-#                    meanDist = np.mean(distances)
-#                    if meanDist <= 0:
-#                        meanDist = 1.0
-#                    newDist = []
-#                    for x in distances:
-#                        if x == 0:
-#                            newDist.append(meanDist)
-#                        else:
-#                            newDist.append(x)
-#                    distances = [x for x in newDist]
-#                    
-#                    weights = [1.0/np.power(x, self.p['distanceBetaVenue']) for x in distances]
-#                    
-#                    probs = [x/sum(weights) for x in weights]
-#                    
-#                    agent = np.random.choice(potentialVisitors, p = probs)
-#                    lastRemCont = remainingContacts
-#                    remainingContacts -= 2*int(math.ceil(math.pow(venue.numVirtualOccupants, self.p['venueBetaExp'])))
-#                    
-#                    if remainingContacts == lastRemCont:
-#                        print 'Error: rem contacts do not diminish!'
-#                        print remainingContacts
-#                        print venue.numVirtualOccupants
-#                        print len(potentialVisitors)
-#                        sys.exit()
-#                    
-#                    venue.numVirtualOccupants += 1
-#                    if agent.hospitalized == False:
-#                        if self.p['behaviourModuleOn'] == True:
-#                            probAttendance = self.computeAttendanceProb(agent, venue)
-#                            if np.random.random() < probAttendance:
-#                                venue.occupants.append(agent)
-#                            else:
-#                                self.cumulatedAbsences += 1
-#                        else:
-#                            venue.occupants.append(agent)
-#                        
-#                    numContacts = int(math.ceil(math.pow(len(venue.occupants)-1, self.p['venueBetaExp'])))
-#                    otherAttendants = [x for x in venue.occupants if x != agent]
-#                    newContacts = np.random.choice(otherAttendants, numContacts, replace = False)
-#                    i = agent.interactionAgeClass
-#                    j = agent.incomeQuintile
-#                    agentClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-#                    effectiveContacts[i][j] += numContacts
-#                    for attendant in newContacts:
-#                        agentClass.actualContactsByAge[attendant.interactionAgeClass] += 1
-#                        i = attendant.interactionAgeClass
-#                        j = attendant.incomeQuintile
-#                        attendantClass = [x for x in self.classesContacts if x.age == i and x.quintile == j][0]
-#                        attendantClass.actualContactsByAge[agent.interactionAgeClass] += 1
-#                        effectiveContacts[i][j] += 1
-#    
-#        
-#        for venue in self.map.allVenues:
-##            actualVisitors = []
-##            for agent in venue.occupants:
-##                probAttendance = self.computeAttendanceProb(agent, len(venue.occupants))
-##                if np.random.random() < agent.contactReductionRate:
-##                    actualVisitors.append(agent)
-##            venue.occupants = [x for x in actualVisitors]
-#            venue.pastAttendants.append(len(venue.occupants))
-#            # Update past attendance
-#            
-#            attendancesDiscounted = 0
-#            den = 0
-#            for i in range(len(venue.pastAttendants)):
-#                index = len(venue.pastAttendants)-1
-#                attendancesDiscounted += venue.pastAttendants[index-i]*np.power(self.p['timeDiscountingFactor'], i)
-#                den += np.power(self.p['timeDiscountingFactor'], i)
-#            venue.pastAttendance = float(attendancesDiscounted)/float(den)
     
     def updateVenuesDistribution(self):
         
