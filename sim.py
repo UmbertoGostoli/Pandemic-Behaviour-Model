@@ -2163,6 +2163,12 @@ class SimCov:
         self.shareIntubated80Over_TS = []
         self.shareDeaths80Over_TS = []
         
+        self.probSymptomatic = []
+        self.probsHospitalization = []
+        self.probsIntensiveCare = []
+        self.intubatedFatalityRatio = []
+        self.infectionFatalityRatio = []
+        
         
         self.jamIndex = 0
         self.recovered = 0
@@ -5189,6 +5195,8 @@ class SimCov:
                     
         # print 'Did doStats'
     def setPandemicWeights(self):
+        
+        print 'Setting condition probabilities...'
         
 #        for house in self.map.occupiedHouses:
 #            incomeQuintile = max([x.incomeQuintile for x in house.occupants])
