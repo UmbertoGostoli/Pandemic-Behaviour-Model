@@ -49,7 +49,6 @@ class SimPop:
         self.sesPops = []
         self.sesPopsShares = []
         ## Statistical tallies
-        self.times = []
         self.pops = []
         self.avgHouseholdSize = []
         self.marriageTally = 0
@@ -2068,12 +2067,7 @@ class SimCov:
                         'symptomaticByAge_5', 'symptomaticByAge_6', 'symptomaticByAge_7', 'symptomaticByAge_8',
                         'deathsByClass_0', 'deathsByClass_1', 'deathsByClass_2', 'deathsByClass_3', 'deathsByClass_4',
                         'deathsQuintilesRatio', 'deathsByAge_0', 'deathsByAge_1', 'deathsByAge_2', 'deathsByAge_3', 'deathsByAge_4',
-                        'deathsByAge_5', 'deathsByAge_6', 'deathsByAge_7', 'deathsByAge_8',
-                        'unmetSocialCareNeed_Q1', 'unmetSocialCareNeed_Q2', 'unmetSocialCareNeed_Q3', 'unmetSocialCareNeed_Q4', 
-                        'unmetSocialCareNeed_Q5', 'mostLeastDeprivedRatio', 'totalInformalSocialCare_Q1', 'totalInformalSocialCare_Q2', 
-                        'totalInformalSocialCare_Q3', 'totalInformalSocialCare_Q4', 'totalInformalSocialCare_Q5', 'totalSocialCareNeed_Q1', 
-                        'totalSocialCareNeed_Q2', 'totalSocialCareNeed_Q3', 'totalSocialCareNeed_Q4', 'totalSocialCareNeed_Q5', 
-                        'informalCareRatio', 'careNeedRatio', 'medianIsolationRate', 'meanIsolationRate',
+                        'deathsByAge_5', 'deathsByAge_6', 'deathsByAge_7', 'deathsByAge_8', 'medianIsolationRate', 'meanIsolationRate',
                         'mobilityReduction_Q1', 'mobilityReduction_Q2', 'mobilityReduction_Q3', 'mobilityReduction_Q4', 'mobilityReduction_Q5',
                         'mobilityReduction_A1', 'mobilityReduction_A2', 'mobilityReduction_A3', 'mobilityReduction_A4', 'mobilityReduction_A5',
                         'mobilityReduction_A6', 'mobilityReduction_A7', 'mobilityReduction_A8', 'mobilityReduction_A9', 
@@ -9222,224 +9216,14 @@ class SimCov:
                     for m in independentMembers:
                         m.wealth = h.wealth/float(len(independentMembers))
             
-        
-        
-    
-
-            
-    
-                
-
     def doStats(self, day, policyFolder, dataMapFolder, dataHouseholdFolder):
         """Calculate annual stats and store them appropriately."""
-        
-        self.times.append(day)
-
-        currentPop = len(self.pop.livingPeople)
-        everLivedPop = len(self.pop.allPeople)
-        self.pops.append(currentPop)
-         
-        
-        potentialWorkers = [x for x in self.pop.livingPeople if x.age >= self.p['ageOfAdulthood'] and x.age < self.p['ageOfRetirement']]
-        employed = [x for x in potentialWorkers if x.status == 'worker' and x.residualWorkingHours > 0]
-        potentialHours = sum([self.p['dailyHours'][x.careNeedLevel] for x in employed])
-        actualHours = sum([x.residualWorkingHours for x in employed])
-        
-        shareEmployed = 0
-        if len(potentialWorkers) > 0:
-            shareEmployed = float(len(employed))/float(len(potentialWorkers))
-        shareWorkHours = 0
-        if potentialHours > 0:
-            shareWorkHours = float(actualHours)/float(potentialHours)
-        self.employmentRate.append(shareEmployed)
-        self.shareWorkingHours.append(shareWorkHours)
-
-        ## Check for double-included houses by converting to a set and back again
-        self.map.occupiedHouses = list(set(self.map.occupiedHouses))
-
-        parents = []
-        for person in self.pop.livingPeople:
-            for child in person.children:
-                if person.house == child.house and person.partner != None and (child.age <= 15 or (child.age <= 18 and child.status == 'student')): # self.p['maxWtWChildAge']:
-                    parents.append(person)
-                    break
-        numberCouples = float(len(parents))/2
-        loneParents = []
-        loneFemaleParents = []
-        for person in self.pop.livingPeople:
-            for child in person.children:
-                if person.house == child.house and person.partner == None and (child.age <= 15 or (child.age <= 18 and child.status == 'student')): # self.p['maxWtWChildAge']:
-                    loneParents.append(person)
-                    if person.sex == 'female':
-                        loneFemaleParents.append(person)
-                    break
-        numberLoneParents = float(len(loneParents))
-        if (numberCouples+numberLoneParents) > 0:
-            shareSingleParents = numberLoneParents/(numberCouples+numberLoneParents)
-        shareFemaleSingleParent = 0
-        if numberLoneParents > 0:
-            shareFemaleSingleParent = float(len(loneFemaleParents))/numberLoneParents
-        self.shareLoneParents.append(shareSingleParents)
-        self.shareFemaleLoneParents.append(shareFemaleSingleParent)
-        
-        over64 = [x for x in self.pop.livingPeople if x.age >= 65]
-        indipendentOver65 = [x for x in over64 if x.careNeedLevel == 0]
-        lowDependencyOver65 = [x for x in over64 if x.careNeedLevel == 1]
-        mediumDependencyOver65 = [x for x in over64 if x.careNeedLevel == 2 or x.careNeedLevel == 3]
-        highDependencyOver65 = [x for x in over64 if x.careNeedLevel == 4]
-        
-#        if len(over64) > 0:
-#            print 'independent Over 64: ' + str(float(len(indipendentOver65))/float(len(over64)))
-#            print 'low dependency Over 64: ' + str(float(len(lowDependencyOver65))/float(len(over64)))
-#            print 'medium dependency Over 64: ' + str(float(len(mediumDependencyOver65))/float(len(over64)))
-#            print 'high dependency Over 64: ' + str(float(len(highDependencyOver65))/float(len(over64)))
-#        
-        if self.year == 2017:
-            self.sesPops = []
-            for i in range(int(self.p['numberClasses'])):
-                self.sesPops.append(len([x for x in self.pop.livingPeople if x.age > 23 and x.classRank == i]))
-            self.sesPopsShares = [float(x)/float(sum(self.sesPops)) for x in self.sesPops]
-            lenFrequency = len(self.incomeDistribution)
-            self.incomeFrequencies = [0]*lenFrequency
-            households = [y.occupants for y in self.map.occupiedHouses]
-            
-            self.individualIncomes = [x.income*52 for x in self.pop.livingPeople if x.income > 0]
-            
-        
-            self.householdIncomes = [sum([x.income*52 for x in y]) for y in households]
-            
-            for i in self.householdIncomes:
-                ind = int(i/1000)
-                if ind > -1 and ind < lenFrequency:
-                    self.incomeFrequencies[ind] += 1
-
-        ## Check for overlooked empty houses
-        emptyHouses = [x for x in self.map.occupiedHouses if len(x.occupants) == 0]
-        for h in emptyHouses:
-            self.map.occupiedHouses.remove(h)
-            if (self.p['interactiveGraphics']):
-                self.canvas.itemconfig(h.icon, state='hidden')
-
-        ## Avg household size (easily calculated by pop / occupied houses)
-        numHouseholds = len(self.map.occupiedHouses)
-        averageHouseholdSize = 0
-        if float(numHouseholds) > 0:
-            averageHouseholdSize = float(currentPop)/float(numHouseholds)
-        self.avgHouseholdSize.append(averageHouseholdSize)
-
-        self.numMarriages.append(self.marriageTally)
-        self.numDivorces.append(self.divorceTally)            
-        
-        
-        totalSocialCareNeed = sum([x.hoursSocialCareDemand for x in self.pop.livingPeople])
-        totalInformalSocialCare = sum([x.informalSocialCareReceived for x in self.pop.livingPeople])
-        totalFormalSocialCare = sum([x.formalSocialCareReceived for x in self.pop.livingPeople])
-        totalSocialCare = totalInformalSocialCare + totalFormalSocialCare
-        totalUnmetSocialCareNeed = sum([x.unmetSocialCareNeed for x in self.pop.livingPeople])
-        shareInHouseSocialCare = 0
-        if totalInformalSocialCare > 0:
-            shareInHouseSocialCare = self.inHouseInformalCare/totalInformalSocialCare
-        
-        print 'Share of in-house informal care: ' + str(shareInHouseSocialCare)
-        
-        share_InformalSocialCare = 0
-        if totalSocialCare > 0:
-            share_InformalSocialCare = totalInformalSocialCare/totalSocialCare
-        
-        print share_InformalSocialCare
-        
-        share_UnmetSocialCareNeed = 0
-        if totalSocialCareNeed > 0:
-            share_UnmetSocialCareNeed = totalUnmetSocialCareNeed/totalSocialCareNeed
-        
-        
-        for house in self.map.occupiedHouses:
-            house.totalUnmetSocialCareNeed = sum([x.unmetSocialCareNeed for x in house.occupants])
-#        print totalSocialCareNeed
-#        if totalInformalSocialCare > 0:
-#            print 'Share of in-house informal care: ' + str(float(self.inHouseInformalCare)/totalInformalSocialCare)
-#        print share_UnmetSocialCareNeed
-#        print ''
-        
-        outOfWorkSocialCare = [x.outOfWorkSocialCare for x in self.pop.livingPeople]
-        totalOWSC = sum(outOfWorkSocialCare)
-        shareOWSC = 0
-        if totalInformalSocialCare > 0:
-            shareOWSC = totalOWSC/totalInformalSocialCare
-        totalCostOWSC = sum([x.outOfWorkSocialCare*x.wage for x in self.pop.livingPeople if x.outOfWorkSocialCare > 0])
-        
-        # By income quintiles
-        households = [x for x in self.map.occupiedHouses]
-        q1_households = [x for x in households if x.incomeQuintile == 0]
-        q1_socialCareNeed = sum([x.totalSocialCareNeed for x in q1_households])
-        q2_households = [x for x in households if x.incomeQuintile == 1]
-        q2_socialCareNeed = sum([x.totalSocialCareNeed for x in q2_households])
-        q3_households = [x for x in households if x.incomeQuintile == 2]
-        q3_socialCareNeed = sum([x.totalSocialCareNeed for x in q3_households])
-        q4_households = [x for x in households if x.incomeQuintile == 3]
-        q4_socialCareNeed = sum([x.totalSocialCareNeed for x in q4_households])
-        q5_households = [x for x in households if x.incomeQuintile == 4]
-        q5_socialCareNeed = sum([x.totalSocialCareNeed for x in q5_households])
-        
-        q1_informalSocialCare = sum([x.informalSocialCareReceived for x in q1_households])
-        q2_informalSocialCare = sum([x.informalSocialCareReceived for x in q2_households])
-        q3_informalSocialCare = sum([x.informalSocialCareReceived for x in q3_households])
-        q4_informalSocialCare = sum([x.informalSocialCareReceived for x in q4_households])
-        q5_informalSocialCare = sum([x.informalSocialCareReceived for x in q5_households])
-        
-        q1_outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in q1_households])
-        q2_outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in q2_households])
-        q3_outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in q3_households])
-        q4_outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in q4_households])
-        q5_outOfWorkSocialCare = sum([x.outOfWorkSocialCare for x in q5_households])
-        
-        q1_formalSocialCare = sum([x.formalSocialCareReceived for x in q1_households])
-        q2_formalSocialCare = sum([x.formalSocialCareReceived for x in q2_households])
-        q3_formalSocialCare = sum([x.formalSocialCareReceived for x in q3_households])
-        q4_formalSocialCare = sum([x.formalSocialCareReceived for x in q4_households])
-        q5_formalSocialCare = sum([x.formalSocialCareReceived for x in q5_households])
-        
-        q1_unmetSocialCareNeed = sum([x.totalUnmetSocialCareNeed for x in q1_households])
-        q2_unmetSocialCareNeed = sum([x.totalUnmetSocialCareNeed for x in q2_households])
-        q3_unmetSocialCareNeed = sum([x.totalUnmetSocialCareNeed for x in q3_households])
-        q4_unmetSocialCareNeed = sum([x.totalUnmetSocialCareNeed for x in q4_households])
-        q5_unmetSocialCareNeed = sum([x.totalUnmetSocialCareNeed for x in q5_households])
         
         q1_agents = [x for x in self.pop.livingPeople if x.incomeQuintile == 0]
         q2_agents = [x for x in self.pop.livingPeople if x.incomeQuintile == 1]
         q3_agents = [x for x in self.pop.livingPeople if x.incomeQuintile == 2]
         q4_agents = [x for x in self.pop.livingPeople if x.incomeQuintile == 3]
         q5_agents = [x for x in self.pop.livingPeople if x.incomeQuintile == 4]
-        
-        unmetSocialCareNeed_Q1 = sum([x.unmetSocialCareNeed for x in q1_agents])
-        unmetSocialCareNeed_Q2 = sum([x.unmetSocialCareNeed for x in q2_agents])
-        unmetSocialCareNeed_Q3 = sum([x.unmetSocialCareNeed for x in q3_agents])
-        unmetSocialCareNeed_Q4 = sum([x.unmetSocialCareNeed for x in q4_agents])
-        unmetSocialCareNeed_Q5 = sum([x.unmetSocialCareNeed for x in q5_agents])
-        
-        mostLeastDeprivedRatio = 0
-        if unmetSocialCareNeed_Q5 > 0:
-            mostLeastDeprivedRatio = unmetSocialCareNeed_Q1/unmetSocialCareNeed_Q5
-            
-        totalInformalSocialCare_Q1 = sum([x.informalSocialCareReceived for x in q1_agents])
-        totalInformalSocialCare_Q2 = sum([x.informalSocialCareReceived for x in q2_agents])
-        totalInformalSocialCare_Q3 = sum([x.informalSocialCareReceived for x in q3_agents])
-        totalInformalSocialCare_Q4 = sum([x.informalSocialCareReceived for x in q4_agents])
-        totalInformalSocialCare_Q5 = sum([x.informalSocialCareReceived for x in q5_agents])
-        
-        informalCareRatio = 0
-        if totalInformalSocialCare_Q5 > 0:
-            informalCareRatio = totalInformalSocialCare_Q1/totalInformalSocialCare_Q5
-        
-        totalSocialCareNeed_Q1 = sum([x.hoursSocialCareDemand for x in q1_agents])
-        totalSocialCareNeed_Q2 = sum([x.hoursSocialCareDemand for x in q2_agents])
-        totalSocialCareNeed_Q3 = sum([x.hoursSocialCareDemand for x in q3_agents])
-        totalSocialCareNeed_Q4 = sum([x.hoursSocialCareDemand for x in q4_agents])
-        totalSocialCareNeed_Q5 = sum([x.hoursSocialCareDemand for x in q5_agents])
-        
-        careNeedRatio = 0
-        if totalSocialCareNeed_Q5 > 0:
-            careNeedRatio = totalSocialCareNeed_Q1/totalSocialCareNeed_Q5
             
         hospitalizedQuintilesRatio = 0
         if self.totalHospitalizedByClass[4] > 0:
@@ -9471,133 +9255,10 @@ class SimCov:
         q4_intubated = len([x for x in q4_agents if x.hospitalized == True and (x.symptomsLevel == 'critical' or x.symptomsLevel == 'dead')])
         q5_intubated = len([x for x in q5_agents if x.hospitalized == True and (x.symptomsLevel == 'critical' or x.symptomsLevel == 'dead')])
         
-       
-        taxPayers = len([x for x in self.pop.livingPeople if x.status == 'student' or x.status == 'worker'])
-        self.numTaxpayers.append(taxPayers)
-        
-        if totalSocialCareNeed == 0:
-            familyCareRatio = 0.0
-        else:
-            familyCareRatio = (totalSocialCareNeed - totalUnmetSocialCareNeed)/totalSocialCareNeed
-
-        ##familyCareRatio = ( totalCareDemandHours - unmetNeed ) / (1.0 * (totalCareDemandHours+0.01))
-        self.totalFamilyCare.append(familyCareRatio)
-        taxBurden = 0
-        if taxPayers > 0:
-            taxBurden = ( totalUnmetSocialCareNeed * self.p['hourlyCostOfCare'] * 52.18 ) / ( taxPayers * 1.0 )
-        self.totalTaxBurden.append(taxBurden)
-        
-        ## Count the proportion of adult women who are married
-        totalAdultWomen = 0
-        totalMarriedAdultWomen = 0
-
-        for person in self.pop.livingPeople:
-            age = self.year - person.birthdate
-            if person.sex == 'female' and age >= 18:
-                totalAdultWomen += 1
-                if person.partner != None:
-                    totalMarriedAdultWomen += 1
-        marriagePropNow = 0
-        if float(totalAdultWomen) > 0:
-            marriagePropNow = float(totalMarriedAdultWomen)/float(totalAdultWomen)
-        self.marriageProp.append(marriagePropNow)
-       
-        formalChildCare = sum([x.formalChildCareReceived for x in self.pop.livingPeople])
-        formalChildCareCost = formalChildCare*self.p['priceChildCare']
-        householdsIncome = sum([x.householdIncome for x in self.map.occupiedHouses])
-        childcareIncomeShare = 0
-        if householdsIncome > 0:
-            childcareIncomeShare = formalChildCareCost/householdsIncome
-      
-        children = [x for x in self.pop.livingPeople if x.age < self.p['ageTeenagers']]
-        totalChildCareNeed = sum([x.netChildCareDemand for x in children])
-        unmetChildCareNeed = sum([x.unmetChildCareNeed for x in children])
-        
-#        print 'Total child care need: ' + str(totalChildCareNeed)
-#        print 'Unmet child care need: ' + str(unmetChildCareNeed)
-        
-        totalInformalChildCare = sum([x.informalChildCareReceived for x in children])
-        shareInformalChildCare = 0
-        if totalChildCareNeed > 0:
-            shareInformalChildCare = totalInformalChildCare/totalChildCareNeed
-       
-        # Social care stats
-        over16Pop = [x for x in self.pop.livingPeople if x.age > 16]
-        totalSuppliers = [x for x in over16Pop if x.socialWork > 0]
-        shareCareGivers = 0
-        if float(len(over16Pop)) > 0:
-            shareCareGivers = float(len(totalSuppliers))/float(len(over16Pop))
-        familyCarers = [x for x in over16Pop if x.careForFamily == True]
-        
-        malesOver16 = [x for x in over16Pop if x.sex == 'male']
-        femalesOver16 = [x for x in over16Pop if x.sex == 'female']
-        maleSuppliers = [x for x in malesOver16 if x.socialWork > 0]
-        femaleSuppliers = [x for x in femalesOver16 if x.socialWork > 0]
-        ratioFemaleMaleCarers = 0
-        if len(totalSuppliers) > 0:
-            ratioFemaleMaleCarers = float(len(femaleSuppliers))/float(len(totalSuppliers))
-        shareMaleCarers = 0
-        if len(malesOver16) > 0:
-            shareMaleCarers = float(len(maleSuppliers))/float(len(malesOver16))
-        shareFemaleCarers = 0
-        if len(femalesOver16) > 0:
-            shareFemaleCarers = float(len(femaleSuppliers))/float(len(femalesOver16))
-        
-        workers = [x for x in self.pop.livingPeople if x.status == 'worker' and x.careNeedLevel < 3]
-        employedMales = [x for x in workers if x.sex == 'male']
-        employedFemales = [x for x in workers if x.sex == 'female']
-        
-        meanMaleWage = np.mean([x.wage for x in employedMales])
-        meanFemaleWage = np.mean([x.wage for x in employedFemales])
-        ratioWage = 0
-        if meanMaleWage > 0:
-            ratioWage = meanFemaleWage/meanMaleWage
-        
-        meanMaleIncome = np.mean([x.income for x in employedMales])
-        meanFemaleIncome = np.mean([x.income for x in employedFemales])
-        ratioIncome = 0
-        if meanMaleIncome > 0:
-            ratioIncome = meanFemaleIncome/meanMaleIncome
-        
-        informalSocialCarers = [x for x in self.pop.livingPeople if x.socialWork > 0]
-        informalSocialReceivers = [x for x in self.pop.livingPeople if x.informalSocialCareReceived > 0]
-        informalCaresSupplied = [x.socialWork for x in informalSocialCarers]
-        shareFamilyCarer = 0
-        if len(informalSocialCarers) > 0:
-            shareFamilyCarer = float(len(familyCarers))/float(len(informalSocialCarers))
-        
-        over20Hours_FamilyCarers = [x for x in familyCarers if x.socialWork > 20]
-        share_over20Hours_FamilyCarers = 0
-        if len(familyCarers) > 0:
-            share_over20Hours_FamilyCarers = float(len(over20Hours_FamilyCarers))/float(len(familyCarers))
-        averageHoursOfCare = np.mean(informalCaresSupplied)
-        carers_40to64 = [x for x in informalSocialCarers if x.age >= 40 and x.age <= 64]
-        over65_carers = [x for x in informalSocialCarers if x.age >= 65]
-        share_40to64_carers = 0
-        if len(informalSocialCarers) > 0:
-            share_40to64_carers = float(len(carers_40to64))/float(len(informalSocialCarers))
-        share_over65_carers = 0
-        if len(informalSocialCarers) > 0:
-            share_over65_carers = float(len(over65_carers))/float(len(informalSocialCarers))
-            
-        over70_carers = [x for x in informalSocialCarers if x.age >= 70]  
-        TenPlusHours_over70 = [x for x in over70_carers if x.age >= 70 if x.socialWork > 10]
-        share_10PlusHours_over70 = 0
-        if len(over70_carers) > 0:
-            share_10PlusHours_over70 = float(len(TenPlusHours_over70))/float(len(over70_carers))
-            
-        
-        self.costTaxFreeSocialCare = totalFormalSocialCare*self.p['priceSocialCare']*self.p['socialCareTaxFreeRate']
-        
-        publicCareToGDP = 0
-        if self.grossDomesticProduct > 0:
-            publicCareToGDP = self.costPublicSocialCare/self.grossDomesticProduct
-        
         isolationRates = [x.isolationRate for x in self.pop.livingPeople]
         self.medianIsolationRate = np.median(isolationRates)
         self.meanIsolationRate = np.mean(isolationRates)
-        
-        
+    
         self.susceptibles = len([x for x in self.pop.livingPeople if x.healthStatus == 'susceptible'])
         print self.susceptibles
         self.exposed = len([x for x in self.pop.livingPeople if x.healthStatus == 'exposed'])
@@ -9679,11 +9340,7 @@ class SimCov:
                    self.symptomaticByAge[5], self.symptomaticByAge[6], self.symptomaticByAge[7], self.symptomaticByAge[8],
                    self.deathsByClass[0], self.deathsByClass[1], self.deathsByClass[2], self.deathsByClass[3], self.deathsByClass[4], deathsQuintilesRatio,
                    self.deathsByAge[0], self.deathsByAge[1], self.deathsByAge[2], self.deathsByAge[3], self.deathsByAge[4],
-                   self.deathsByAge[5], self.deathsByAge[6], self.deathsByAge[7], self.deathsByAge[8], 
-                   unmetSocialCareNeed_Q1, unmetSocialCareNeed_Q2, unmetSocialCareNeed_Q3, unmetSocialCareNeed_Q4, unmetSocialCareNeed_Q5, mostLeastDeprivedRatio,
-                   totalInformalSocialCare_Q1, totalInformalSocialCare_Q2, totalInformalSocialCare_Q3, totalInformalSocialCare_Q4, totalInformalSocialCare_Q5,
-                   totalSocialCareNeed_Q1, totalSocialCareNeed_Q2, totalSocialCareNeed_Q3, totalSocialCareNeed_Q4, totalSocialCareNeed_Q5,
-                   informalCareRatio, careNeedRatio, self.medianIsolationRate, self.meanIsolationRate, self.mobilityReduction_Q1,
+                   self.deathsByAge[5], self.deathsByAge[6], self.deathsByAge[7], self.deathsByAge[8], self.medianIsolationRate, self.meanIsolationRate, self.mobilityReduction_Q1,
                    self.mobilityReduction_Q2, self.mobilityReduction_Q3, self.mobilityReduction_Q4, self.mobilityReduction_Q5, self.mobilityReduction_A1,
                    self.mobilityReduction_A2, self.mobilityReduction_A3, self.mobilityReduction_A4, self.mobilityReduction_A5, self.mobilityReduction_A6,
                    self.mobilityReduction_A7, self.mobilityReduction_A8, self.mobilityReduction_A9, self.totalAttendants, self.cumulatedAbsences, self.periodTests]
@@ -10068,140 +9725,6 @@ class SimCov:
                                 anchor='nw',
                                 tags='redraw')
 
-
-    def doGraphs(self):
-        """Plot the graphs needed at the end of one run."""
-        
-        
-
-        p1, = pylab.plot(self.times,self.pops,color="red")
-        p2, = pylab.plot(self.times,self.numTaxpayers,color="blue")
-        pylab.legend([p1, p2], ['Total population', 'Taxpayers'],loc='lower right')
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Number of people')
-        pylab.xlabel('Year')
-        pylab.savefig('popGrowth.pdf')
-        pylab.show()
-        pylab.close()
-
-        pylab.plot(self.times,self.avgHouseholdSize,color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Average household size')
-        pylab.xlabel('Year')
-        pylab.savefig('avgHousehold.pdf')
-        pylab.show()
-        pylab.close()
-
-        p1, = pylab.plot(self.times,self.totalCareDemand,color="red")
-        p2, = pylab.plot(self.times,self.totalCareSupply,color="blue")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.legend([p1, p2], ['Care demand', 'Total theoretical supply'],loc='lower right')
-        pylab.ylabel('Total hours per week')
-        pylab.xlabel('Year')
-        pylab.savefig('totalCareSituation.pdf')
-        pylab.show()
-
-        pylab.plot(self.times,self.totalFamilyCare,color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Proportion of informal social care')
-        pylab.xlabel('Year')
-        pylab.savefig('informalCare.pdf')
-        pylab.show()
-
-        pylab.plot(self.times,self.totalTaxBurden,color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Care costs in pounds per taxpayer per year')
-        pylab.xlabel('Year')
-        pylab.savefig('taxBurden.pdf')
-        pylab.show()
-
-        pylab.plot(self.times,self.marriageProp,color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Proportion of married adult women')
-        pylab.xlabel('Year')
-        pylab.savefig('marriageProp.pdf')
-        pylab.savefig('marriageProp.png')
-        pylab.show()
-        
-        pylab.plot(self.times,self.shareLoneParents,color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Share of Lone Parents')
-        pylab.xlabel('Year')
-        pylab.savefig('shareLoneParents.pdf')
-        pylab.savefig('shareLoneParents.png')
-        pylab.show()
-        
-        pylab.plot(self.times, self.shareUnmetNeed, color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Share of Unmet Care Need')
-        pylab.xlabel('Year')
-        pylab.savefig('shareUnmetCareNeed.pdf')
-        pylab.savefig('shareUnmetCareNeed.png')
-        pylab.show()
-        
-        pylab.plot(self.times, self.hospitalizationCost, color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Hospitalisation Cost')
-        pylab.xlabel('Year')
-        pylab.savefig('hospitalisationCost.pdf')
-        pylab.savefig('hospitalisationCost.png')
-        pylab.show()
-        
-        pylab.plot(self.times, self.employmentRate, color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Employment Rate')
-        pylab.xlabel('Year')
-        pylab.savefig('employmentRate.pdf')
-        pylab.savefig('employmentRate.png')
-        pylab.show()
-        
-        pylab.plot(self.times, self.publicCareProvision, color="red")
-        pylab.xlim(xmin=self.p['statsCollectFrom'])
-        pylab.ylabel('Public Care Provision')
-        pylab.xlabel('Year')
-        pylab.savefig('publicCareProvision.pdf')
-        pylab.savefig('publicCareProvision.png')
-        pylab.show()
-        
-        y_pos = np.arange(len(self.sesPopsShares))
-        plt.bar(y_pos, self.sesPopsShares)
-        plt.ylabel('SES Populations')
-        plt.show()
-        
-        lenFrequency = len(self.incomeDistribution)
-        individualIncomeFrequencies = [0]*lenFrequency
-
-        dK = np.random.normal(0, self.p['wageVar'])
-        indDist = np.random.choice(self.incomesPercentiles, len(self.individualIncomes))*math.exp(dK)
-        for i in indDist:
-            ind = int(i/1000)
-            if ind > -1 and ind < lenFrequency:
-                individualIncomeFrequencies[ind] += 1
-                
-        y_pos = np.arange(lenFrequency)
-        plt.bar(y_pos, individualIncomeFrequencies)
-        plt.ylabel('individual frequency (empirical)')
-        plt.show()
-        
-        lenFrequency = len(self.incomeDistribution)
-        individualIncomeFrequencies = [0]*lenFrequency
-        for i in self.individualIncomes:
-            ind = int(i/1000)
-            if ind > -1 and ind < lenFrequency:
-                individualIncomeFrequencies[ind] += 1
-                
-        y_pos = np.arange(lenFrequency)
-        plt.bar(y_pos, individualIncomeFrequencies)
-        plt.ylabel('individual frequency (simulated)')
-        plt.show()
-        
-        df = pd.DataFrame()
-        df[0] = self.individualIncomes
-        df[1] = indDist
-        fig, ax = plt.subplots(1,1)
-        for s in df.columns:
-            df[s].plot(kind='density')
-        fig.show()
     
 
 class PopPyramid:
