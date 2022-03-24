@@ -94,6 +94,8 @@ class SimPop:
         self.incomeFactors = []
         self.stateTaxRevenue = []
         self.totalTaxRevenue = 0
+        self.workingShare = 1.0
+        self.gdpRatio = 0
         self.statePensionRevenue = []
         self.totalPensionRevenue = 0
         self.statePensionExpenditure = []
@@ -2253,13 +2255,12 @@ class SimCov:
         self.totalHospitalizedByClass = [0]*int(self.p['incomeClasses'])
         self.totalIntubatedByClass = [0]*int(self.p['incomeClasses'])
         self.totDeathsByClass = [0]*int(self.p['incomeClasses'])
-        
+        self.newCasesRatios = []
         self.exposedPeriod = 0
         self.infectedNotHospitalizedPeriod = 0
         self.recoveredNotHospitalizedPeriod = 0
         self.periodProbInfected = 0
-        self.workingShare = 1.0
-        self.gdpRatio = 0
+        
         # Age stats
         # self.infectedByAge = [0 for i in range(9)]
         self.totalSymptomaticByAge = [0 for i in range(9)]
