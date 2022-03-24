@@ -3325,6 +3325,12 @@ class SimCov:
 #            totContacts.append(agent.numContacts)
 #        
 #        print 'Average num of contacts: ' + str(np.mean(totContacts))
+                        
+    def manhattanDistance(self,t1,t2):
+        """Calculates the distance between two towns"""
+        xDist = abs(t1.x - t2.x)
+        yDist = abs(t1.y - t2.y)
+        return xDist + yDist
     
     def commutingProcess(self):
         commutingAgents = [x for x in self.pop.livingPeople if x.age > 17 and x.age < 65]
