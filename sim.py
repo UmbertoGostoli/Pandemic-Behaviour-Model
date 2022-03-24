@@ -1900,9 +1900,9 @@ class SimPop:
             sizeTown = len(town.people)
             numVenues = int(math.ceil(float(sizeTown)/float(self.p['agentsPerLocation'])))
             
-            print 'Town id: ' + str(town.id)
-            print 'Town size: ' + str(sizeTown)
-            print 'Town venues: ' + str(numVenues)
+#            print 'Town id: ' + str(town.id)
+#            print 'Town size: ' + str(sizeTown)
+#            print 'Town venues: ' + str(numVenues)
             
             occupiedSpots = [[i.x, i.y] for i in town.houses]
             for i in range(numVenues):
@@ -2330,10 +2330,6 @@ class SimCov:
         random.seed(self.randSeed)
         np.random.seed(self.randSeed)
         
-    
-        if self.p['interactiveGraphics']:
-            self.initializeCanvas()     
-            
         # Save policy parameters in Policy folder
         policyFolder = self.folder + '/Policy_' + str(policy)
         if not os.path.exists(policyFolder):
@@ -4586,9 +4582,6 @@ class SimCov:
                             self.map.occupiedHouses.remove(agent.house)
                     if agent.partner != None:
                         agent.partner.partner = None
-                    if agent.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(agent.id) + " died aged " + str(agent.age) + "." 
-                        self.textUpdateList.append(messageString)
                 else:
                     if agent.symptomsLevel == 'severe' or agent.symptomsLevel == 'critical' or agent.placeOfDeath == 'Hospital' or agent.placeOfDeath == 'ICU':
                         agent.house.occupants.append(agent)
@@ -9132,12 +9125,6 @@ class SimCov:
                 
                 peopleToMove = [x for x in house.occupants]
                 person = peopleToMove[0]
-                
-                if person.house == self.displayHouse:
-                    messageString = str(self.year) + ": #" + str(person.id) + " and #" + str(person.partner.id) + " move house"
-                    if len(peopleToMove) > 2:
-                        messageString += " with kids"
-                    messageString += "."
 
                 self.findNewHouseInNewTown(peopleToMove, newTown)
         
@@ -9362,57 +9349,57 @@ class SimCov:
                 writer.writerow(data)
         
                 
-        householdFile = 'DataHousehold_' + str(self.year) + '.csv'
-        if not os.path.exists(dataHouseholdFolder):
-            os.makedirs(dataHouseholdFolder)
-        with open(os.path.join(dataHouseholdFolder, householdFile), "w") as file:
-            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-            writer.writerow((self.householdData))
-            for member in self.displayHouse.occupants:
-                data = [member.id, member.sex, member.age, member.careNeedLevel]
-                writer.writerow(data)    
-        
-        houseData = [self.year, self.displayHouse.name, len(self.displayHouse.occupants)]
-        with open(os.path.join(policyFolder, "HouseData.csv"), "a") as file:
-            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-            writer.writerow(houseData)
-        
-        malesByNeed = []
-        for i in range(int(self.p['numCareLevels'])):
-            malesByAge = []
-            for j in range(25):
-                subgroup = [x for x in self.pop.livingPeople if x.sex == 'male' and int(x.age/5) == j and x.careNeedLevel == i]
-                malesByAge.append(len(subgroup))
-            malesByNeed.append(malesByAge)
+#        householdFile = 'DataHousehold_' + str(self.year) + '.csv'
+#        if not os.path.exists(dataHouseholdFolder):
+#            os.makedirs(dataHouseholdFolder)
+#        with open(os.path.join(dataHouseholdFolder, householdFile), "w") as file:
+#            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
+#            writer.writerow((self.householdData))
+#            for member in self.displayHouse.occupants:
+#                data = [member.id, member.sex, member.age, member.careNeedLevel]
+#                writer.writerow(data)    
+#        
+#        houseData = [self.year, self.displayHouse.name, len(self.displayHouse.occupants)]
+#        with open(os.path.join(policyFolder, "HouseData.csv"), "a") as file:
+#            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
+#            writer.writerow(houseData)
+#        
+#        malesByNeed = []
+#        for i in range(int(self.p['numCareLevels'])):
+#            malesByAge = []
+#            for j in range(25):
+#                subgroup = [x for x in self.pop.livingPeople if x.sex == 'male' and int(x.age/5) == j and x.careNeedLevel == i]
+#                malesByAge.append(len(subgroup))
+#            malesByNeed.append(malesByAge)
+#            
+#        femalesByNeed = []
+#        for i in range(int(self.p['numCareLevels'])):
+#            femalesByAge = []
+#            for j in range(25):
+#                subgroup = [x for x in self.pop.livingPeople if x.sex == 'female' and int(x.age/5) == j and x.careNeedLevel == i]
+#                femalesByAge.append(len(subgroup))
+#            femalesByNeed.append(femalesByAge)
+#        
+#        for i in range(int(self.p['numCareLevels'])):
+#            pyramidData = [self.year]
+#            pyramidData.extend(malesByNeed[i])
+#            fileName = 'Pyramid_Male_' + str(i) + '.csv'
+#            with open(os.path.join(policyFolder, fileName), "a") as file:
+#                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
+#                writer.writerow(pyramidData)
+#            
+#        for i in range(int(self.p['numCareLevels'])):
+#            pyramidData = [self.year]
+#            pyramidData.extend(femalesByNeed[i])
+#            fileName = 'Pyramid_Female_' + str(i) + '.csv'
+#            with open(os.path.join(policyFolder, fileName), "a") as file:
+#                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
+#                writer.writerow(pyramidData)
             
-        femalesByNeed = []
-        for i in range(int(self.p['numCareLevels'])):
-            femalesByAge = []
-            for j in range(25):
-                subgroup = [x for x in self.pop.livingPeople if x.sex == 'female' and int(x.age/5) == j and x.careNeedLevel == i]
-                femalesByAge.append(len(subgroup))
-            femalesByNeed.append(femalesByAge)
-        
-        for i in range(int(self.p['numCareLevels'])):
-            pyramidData = [self.year]
-            pyramidData.extend(malesByNeed[i])
-            fileName = 'Pyramid_Male_' + str(i) + '.csv'
-            with open(os.path.join(policyFolder, fileName), "a") as file:
-                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                writer.writerow(pyramidData)
-            
-        for i in range(int(self.p['numCareLevels'])):
-            pyramidData = [self.year]
-            pyramidData.extend(femalesByNeed[i])
-            fileName = 'Pyramid_Female_' + str(i) + '.csv'
-            with open(os.path.join(policyFolder, fileName), "a") as file:
-                writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-                writer.writerow(pyramidData)
-            
-        houseData = [self.year, self.displayHouse.name, len(self.displayHouse.occupants)]
-        with open(os.path.join(policyFolder, "HouseData.csv"), "a") as file:
-            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
-            writer.writerow(houseData)
+#        houseData = [self.year, self.displayHouse.name, len(self.displayHouse.occupants)]
+#        with open(os.path.join(policyFolder, "HouseData.csv"), "a") as file:
+#            writer = csv.writer(file, delimiter = ",", lineterminator='\r')
+#            writer.writerow(houseData)
             
         if day == 0:
             if not os.path.exists(policyFolder):
@@ -9479,253 +9466,6 @@ class SimCov:
 #            averageHospitalization = self.p['hospitalizationParam']*needLevelFactor*unmetSocialCareFactor
 #            self.totalHospitalizationCost += averageHospitalization*self.p['costHospitalizationPerDay']
         self.hospitalizationCost.append(self.totalHospitalizationCost)
-        
-    def initializeCanvas(self):
-        """Put up a TKInter canvas window to animate the simulation."""
-        self.canvas.pack()
-
-        ## Draw some numbers for the population pyramid that won't be redrawn each time
-        for a in range(0,int(self.p['num5YearAgeClasses'])):
-            self.canvas.create_text(170, 385 - (10 * a),
-                                    text=str(5*a) + '-' + str(5*a+4),
-                                    font='Helvetica 6',
-                                    fill='white')
-
-        ## Draw the overall map, including towns and houses (occupied houses only)
-        for t in self.map.towns:
-            xBasic = 580 + (t.x * self.p['pixelsPerTown'])
-            yBasic = 15 + (t.y * self.p['pixelsPerTown'])
-            self.canvas.create_rectangle(xBasic, yBasic,
-                                         xBasic+self.p['pixelsPerTown'],
-                                         yBasic+self.p['pixelsPerTown'],
-                                         outline='grey',
-                                         state = 'hidden' )
-
-        for h in self.map.allHouses:
-            t = h.town
-            xBasic = 580 + (t.x * self.p['pixelsPerTown'])
-            yBasic = 15 + (t.y * self.p['pixelsPerTown'])
-            xOffset = xBasic + 2 + (h.x * 2)
-            yOffset = yBasic + 2 + (h.y * 2)
-
-            outlineColour = fillColour = self.p['houseSizeColour'][h.size]
-            width = 1
-
-            h.icon = self.canvas.create_rectangle(xOffset,yOffset,
-                                                  xOffset + width, yOffset + width,
-                                                  outline=outlineColour,
-                                                  fill=fillColour,
-                                                  state = 'normal' )
-
-        self.canvas.update()
-        time.sleep(0.5)
-        self.canvas.update()
-
-        for h in self.map.allHouses:
-            self.canvas.itemconfig(h.icon, state='hidden')
-
-        for h in self.map.occupiedHouses:
-            self.canvas.itemconfig(h.icon, state='normal')
-
-        self.canvas.update()
-        self.updateCanvas()
-
-    def updateCanvas(self):
-        """Update the appearance of the graphics canvas."""
-
-        ## First we clean the canvas off; some items are redrawn every time and others are not
-        self.canvas.delete('redraw')
-
-        ## Now post the current year and the current population size
-        self.canvas.create_text(self.p['dateX'],
-                                self.p['dateY'],
-                                text='Year: ' + str(self.year),
-                                font = self.p['mainFont'],
-                                fill = self.p['fontColour'],
-                                tags = 'redraw')
-        self.canvas.create_text(self.p['popX'],
-                                self.p['popY'],
-                                text='Pop: ' + str(len(self.pop.livingPeople)),
-                                font = self.p['mainFont'],
-                                fill = self.p['fontColour'],
-                                tags = 'redraw')
-
-        self.canvas.create_text(self.p['popX'],
-                                self.p['popY'] + 30,
-                                text='Ever: ' + str(len(self.pop.allPeople)),
-                                font = self.p['mainFont'],
-                                fill = self.p['fontColour'],
-                                tags = 'redraw')
-
-        ## Also some other stats, but not on the first display
-        if self.year > self.p['startYear']:
-            self.canvas.create_text(350,20,
-                                    text='Avg household: ' + str ( round ( self.avgHouseholdSize[-1] , 2 ) ),
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,40,
-                                    text='Marriages: ' + str(self.numMarriages[-1]),
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,60,
-                                    text='Divorces: ' + str(self.numDivorces[-1]),
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,100,
-                                    text='Total care demand: ' + str(round(self.totalCareDemand[-1], 0 ) ),
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,120,
-                                    text='Num taxpayers: ' + str(round(self.numTaxpayers[-1], 0 ) ),
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,140,
-                                    text='Family care ratio: ' + str(round(100.0 * self.totalFamilyCare[-1], 0 ) ) + "%",
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,160,
-                                    text='Tax burden: ' + str(round(self.totalTaxBurden[-1], 0 ) ),
-                                    font = 'Helvetica 11',
-                                    fill = 'white',
-                                    tags = 'redraw')
-            self.canvas.create_text(350,180,
-                                    text='Marriage prop: ' + str(round(100.0 * self.marriageProp[-1], 0 ) ) + "%",
-                                    font = 'Helvetica 11',
-                                    fill = self.p['fontColour'],
-                                    tags = 'redraw')
-
-        
-
-        ## Draw the population pyramid split by care categories
-        for a in range(0,int(self.p['num5YearAgeClasses'])):
-            malePixel = 153
-            femalePixel = 187
-            for c in range(0,int(self.p['numCareLevels'])):
-                mWidth = self.pyramid.maleData[a,c]
-                fWidth = self.pyramid.femaleData[a,c]
-
-                if mWidth > 0:
-                    self.canvas.create_rectangle(malePixel, 380 - (10*a),
-                                                 malePixel - mWidth, 380 - (10*a) + 9,
-                                                 outline=self.p['careLevelColour'][c],
-                                                 fill=self.p['careLevelColour'][c],
-                                                 tags = 'redraw')
-                malePixel -= mWidth
-                
-                if fWidth > 0:
-                    self.canvas.create_rectangle(femalePixel, 380 - (10*a),
-                                                 femalePixel + fWidth, 380 - (10*a) + 9,
-                                                 outline=self.p['careLevelColour'][c],
-                                                 fill=self.p['careLevelColour'][c],
-                                                 tags = 'redraw')
-                femalePixel += fWidth
-
-        ## Draw in the display house and the people who live in it
-        if len(self.displayHouse.occupants) < 1:
-            ## Nobody lives in the display house any more, choose another
-            if self.nextDisplayHouse != None:
-                self.displayHouse = self.nextDisplayHouse
-                self.nextDisplayHouse = None
-            else:
-                self.displayHouse = random.choice(self.pop.livingPeople).house
-                self.textUpdateList.append(str(self.year) + ": Display house empty, going to " + self.displayHouse.name + ".")
-                messageString = "Residents: "
-                for k in self.displayHouse.occupants:
-                    messageString += "#" + str(k.id) + " "
-                self.textUpdateList.append(messageString)
-            
-
-        outlineColour = self.p['houseSizeColour'][self.displayHouse.size]
-        self.canvas.create_rectangle( 50, 450, 300, 650,
-                                      outline = outlineColour,
-                                      tags = 'redraw' )
-        self.canvas.create_text ( 60, 660,
-                                  text="Display house " + self.displayHouse.name,
-                                  font='Helvetica 10',
-                                  fill='white',
-                                  anchor='nw',
-                                  tags='redraw')
-                                  
-
-        ageBracketCounter = [ 0, 0, 0, 0, 0 ]
-
-        for i in self.displayHouse.occupants:
-            age = self.year - i.birthdate
-            ageBracket = age / 20
-            if ageBracket > 4:
-                ageBracket = 4
-            careClass = i.careNeedLevel
-            sex = i.sex
-            idNumber = i.id
-            self.drawPerson(age,ageBracket,ageBracketCounter[ageBracket],careClass,sex,idNumber)
-            ageBracketCounter[ageBracket] += 1
-
-
-        ## Draw in some text status updates on the right side of the map
-        ## These need to scroll up the screen as time passes
-
-        if len(self.textUpdateList) > self.p['maxTextUpdateList']:
-            excess = len(self.textUpdateList) - self.p['maxTextUpdateList']
-            self.textUpdateList = self.textUpdateList[excess:excess+self.p['maxTextUpdateList']]
-
-        baseX = 1035
-        baseY = 30
-        for i in self.textUpdateList:
-            self.canvas.create_text(baseX,baseY,
-                                    text=i,
-                                    anchor='nw',
-                                    font='Helvetica 9',
-                                    fill = 'white',
-                                    width = 265,
-                                    tags = 'redraw')
-            baseY += 30
-
-        ## Finish by updating the canvas and sleeping briefly in order to allow people to see it
-        self.canvas.update()
-        if self.p['delayTime'] > 0.0:
-            time.sleep(self.p['delayTime'])
-
-
-    def drawPerson(self, age, ageBracket, counter, careClass, sex, idNumber):
-        baseX = 70 + ( counter * 30 )
-        baseY = 620 - ( ageBracket * 30 )
-
-        fillColour = self.p['careLevelColour'][careClass]
-
-        self.canvas.create_oval(baseX,baseY,baseX+6,baseY+6,
-                                fill=fillColour,
-                                outline=fillColour,tags='redraw')
-        if sex == 'male':
-            self.canvas.create_rectangle(baseX-2,baseY+6,baseX+8,baseY+12,
-                                fill=fillColour,outline=fillColour,tags='redraw')
-        else:
-            self.canvas.create_polygon(baseX+2,baseY+6,baseX-2,baseY+12,baseX+8,baseY+12,baseX+4,baseY+6,
-                                fill=fillColour,outline=fillColour,tags='redraw')
-        self.canvas.create_rectangle(baseX+1,baseY+13,baseX+5,baseY+20,
-                                     fill=fillColour,outline=fillColour,tags='redraw')
-            
-            
-            
-        self.canvas.create_text(baseX+11,baseY,
-                                text=str(age),
-                                font='Helvetica 6',
-                                fill='white',
-                                anchor='nw',
-                                tags='redraw')
-        self.canvas.create_text(baseX+11,baseY+8,
-                                text=str(idNumber),
-                                font='Helvetica 6',
-                                fill='grey',
-                                anchor='nw',
-                                tags='redraw')
-
-    
 
 class PopPyramid:
     """Builds a data object for storing population pyramid data in."""
