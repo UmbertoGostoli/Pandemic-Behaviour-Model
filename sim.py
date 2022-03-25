@@ -2324,7 +2324,6 @@ class SimCov:
         """Run the simulation from year start to year end."""
         
         
-        #pprint.pprint(self.p)
         #raw_input("Happy with these parameters?  Press enter to run.")
         self.randSeed = seed
         random.seed(self.randSeed)
@@ -2436,160 +2435,166 @@ class SimCov:
             startDay = self.lockdownDay
             
         for self.pandemicDay in range(int(startDay), int(self.p['pandemicPeriod']+1)):
-           
-            if self.pandemicDay == self.lockdownDay:
-                print 'Lockdown started in day: ' + str(self.pandemicDay)
             
+           
+#            if self.pandemicDay == self.lockdownDay:
+#                print 'Lockdown started in day: ' + str(self.pandemicDay)
+#            
             if policyParams and self.pandemicDay == self.lockdownDay:
                 
-                keys = policyParams.keys()
-                for k in keys[1:]:
-                    self.p[k] = policyParams[k]
+                print 'Policy params: ' + str(policyParams)
                 
-                if policy == 0:
-                    
-                    
-                    print 'Saving the simulation....'
-                    
-                    self.from_Agents_to_IDs()
-                    # self.policyStartDeaths = self.totalDeaths
-                    # self.lockdownMaxCases = self.maxNewCases
-                    # Save outputs
-                    self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
-                    self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
-                    # Save simulation
-                    pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
-                    pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
-                    pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
-                    pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
-                    pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
-                    pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
-                    pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
-                    pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
-                    pickle.dump(self.housesNotMoreOccupied, open(policyFolder + '/save.hno', 'wb'))
-                    # pickle.dump(self.totalAge1Age2Income1Contacts, open(policyFolder + '/save.tc', 'wb'))
-                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.d', 'wb'))
-                    pickle.dump(self.lockdownDay, open(policyFolder + '/save.l', 'wb'))
-                    
-                    pickle.dump(self.probsDeathIntubated, open(policyFolder + '/save.di', 'wb'))
-                    pickle.dump(self.probSymptomatic, open(policyFolder + '/save.sy', 'wb'))
-                    pickle.dump(self.probsHospitalization, open(policyFolder + '/save.ho', 'wb'))
-                    pickle.dump(self.probsIntensiveCare, open(policyFolder + '/save.ic', 'wb'))
-                    pickle.dump(self.intubatedFatalityRatio, open(policyFolder + '/save.vf', 'wb'))
-                    pickle.dump(self.recoveryPeriods, open(policyFolder + '/save.rp', 'wb'))
-                    
-                    # Save the data
-                    pickle.dump(self.cumulatedHospitalizations, open(policyFolder + '/save.ch', 'wb'))
-                    pickle.dump(self.cumulatedICUs, open(policyFolder + '/save.cv', 'wb'))
-                    pickle.dump(self.hospitalPopulation, open(policyFolder + '/save.hp', 'wb'))
-                    pickle.dump(self.icuPopulation, open(policyFolder + '/save.vp', 'wb'))
-                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.td', 'wb'))
-                    pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
-                    pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
-                    pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
-                    pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
-                    
-                    
-                    pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
-                    pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
-                    pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
-                    pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
-                    pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
-                    
-                    pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
-                    pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
-                    pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
-                    pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
-                    pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
+                pdb.set_trace()
                 
-                    pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
-                    pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
-                    pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
-                    pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
-                    pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
-                    
-                    pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
-                    pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
-                    pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
-                    pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
-                    pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
-                    
-                    pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
-                
-                # Upload simulation
-                print 'Uploading the simulation....'
-                
-                self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
-                self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
-                self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
-                self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
-                self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
-                self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
-                self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
-                self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
-                self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
-                
-                
-                # self.totalAge1Age2Income1Contacts = pickle.load(open(self.folder + '/Policy_0/save.tc', 'rb'))
-                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.d', 'rb'))
-                # self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
-                
-                self.probsDeathIntubated = pickle.load(open(self.folder + '/Policy_0/save.di', 'rb'))
-                self.probSymptomatic = pickle.load(open(self.folder + '/Policy_0/save.sy', 'rb'))
-                self.probsHospitalization = pickle.load(open(self.folder + '/Policy_0/save.ho', 'rb'))
-                self.probsIntensiveCare = pickle.load(open(self.folder + '/Policy_0/save.ic', 'rb'))
-                self.intubatedFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.vf', 'rb'))
-                self.recoveryPeriods = pickle.load(open(self.folder + '/Policy_0/save.rp', 'rb'))
-                
-                self.cumulatedHospitalizations = pickle.load(open(self.folder + '/Policy_0/save.ch', 'rb'))
-                self.cumulatedICUs = pickle.load(open(self.folder + '/Policy_0/save.cv', 'rb'))
-                self.hospitalPopulation = pickle.load(open(self.folder + '/Policy_0/save.hp', 'rb'))
-                self.icuPopulation = pickle.load(open(self.folder + '/Policy_0/save.vp', 'rb'))
-                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.td', 'rb'))
-                self.totalInfected = pickle.load(open(self.folder + '/Policy_0/save.ti', 'rb'))
-                self.totalHospitalizedByClass = pickle.load(open(self.folder + '/Policy_0/save.hc', 'rb'))
-                self.totalIntubatedByClass = pickle.load(open(self.folder + '/Policy_0/save.vc', 'rb'))
-                self.totDeathsByClass = pickle.load(open(self.folder + '/Policy_0/save.dc', 'rb'))
-                
-                self.infected1To18 = pickle.load(open(self.folder + '/Policy_0/save.fa1', 'rb'))
-                self.infected19To39 = pickle.load(open(self.folder + '/Policy_0/save.fa2', 'rb'))
-                self.infected40To59 = pickle.load(open(self.folder + '/Policy_0/save.fa3', 'rb'))
-                self.infected60To79 = pickle.load(open(self.folder + '/Policy_0/save.fa4', 'rb'))
-                self.infected80Over = pickle.load(open(self.folder + '/Policy_0/save.fa5', 'rb'))
-                
-                self.hospitalized1To18 = pickle.load(open(self.folder + '/Policy_0/save.ha1', 'rb'))
-                self.hospitalized19To39 = pickle.load(open(self.folder + '/Policy_0/save.ha2', 'rb'))
-                self.hospitalized40To59 = pickle.load(open(self.folder + '/Policy_0/save.ha3', 'rb'))
-                self.hospitalized60To79 = pickle.load(open(self.folder + '/Policy_0/save.ha4', 'rb'))
-                self.hospitalized80Over = pickle.load(open(self.folder + '/Policy_0/save.ha5', 'rb'))
-            
-                self.icu1To18 = pickle.load(open(self.folder + '/Policy_0/save.ia1', 'rb'))
-                self.icu19To39 = pickle.load(open(self.folder + '/Policy_0/save.ia2', 'rb'))
-                self.icu40To59 = pickle.load(open(self.folder + '/Policy_0/save.ia3', 'rb'))
-                self.icu60To79 = pickle.load(open(self.folder + '/Policy_0/save.ia4', 'rb'))
-                self.icu80Over = pickle.load(open(self.folder + '/Policy_0/save.ia5', 'rb'))
-                
-                self.dead1To18 = pickle.load(open(self.folder + '/Policy_0/save.da1', 'rb'))
-                self.dead19To39 = pickle.load(open(self.folder + '/Policy_0/save.da2', 'rb'))
-                self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
-                self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
-                self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
-            
-                self.infectionsNetwork = pickle.load(open(self.folder + '/Policy_0/save.if_nw', 'rb'))
-                
-                print 'Performing from ID to agents 3'
-                
-                self.from_IDs_to_Agents()
-                
-                # Upload outputs
-                if policy != 0:
-                    self.lockdown = self.p['lockdown']
-                    self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
-                    self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
-                    
-            if policy != 0 and self.lockdown == True and self.pandemicDay == startDay + self.p['lockdownDuration']:# self.pandemicDay == self.lockdownEnd:
-                self.lockdown = False
-                print 'Lockdown ended in day: ' + str(self.pandemicDay)
+#                
+#                keys = policyParams.keys()
+#                for k in keys[1:]:
+#                    self.p[k] = policyParams[k]
+#                
+#                if policy == 0:
+#                    
+#                    
+#                    print 'Saving the simulation....'
+#                    
+#                    self.from_Agents_to_IDs()
+#                    # self.policyStartDeaths = self.totalDeaths
+#                    # self.lockdownMaxCases = self.maxNewCases
+#                    # Save outputs
+#                    self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
+#                    self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
+#                    # Save simulation
+#                    pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
+#                    pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
+#                    pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
+#                    pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
+#                    pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
+#                    pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
+#                    pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
+#                    pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
+#                    pickle.dump(self.housesNotMoreOccupied, open(policyFolder + '/save.hno', 'wb'))
+#                    # pickle.dump(self.totalAge1Age2Income1Contacts, open(policyFolder + '/save.tc', 'wb'))
+#                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.d', 'wb'))
+#                    pickle.dump(self.lockdownDay, open(policyFolder + '/save.l', 'wb'))
+#                    
+#                    pickle.dump(self.probsDeathIntubated, open(policyFolder + '/save.di', 'wb'))
+#                    pickle.dump(self.probSymptomatic, open(policyFolder + '/save.sy', 'wb'))
+#                    pickle.dump(self.probsHospitalization, open(policyFolder + '/save.ho', 'wb'))
+#                    pickle.dump(self.probsIntensiveCare, open(policyFolder + '/save.ic', 'wb'))
+#                    pickle.dump(self.intubatedFatalityRatio, open(policyFolder + '/save.vf', 'wb'))
+#                    pickle.dump(self.recoveryPeriods, open(policyFolder + '/save.rp', 'wb'))
+#                    
+#                    # Save the data
+#                    pickle.dump(self.cumulatedHospitalizations, open(policyFolder + '/save.ch', 'wb'))
+#                    pickle.dump(self.cumulatedICUs, open(policyFolder + '/save.cv', 'wb'))
+#                    pickle.dump(self.hospitalPopulation, open(policyFolder + '/save.hp', 'wb'))
+#                    pickle.dump(self.icuPopulation, open(policyFolder + '/save.vp', 'wb'))
+#                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.td', 'wb'))
+#                    pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
+#                    pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
+#                    pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
+#                    pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
+#                    
+#                    
+#                    pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
+#                    pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
+#                    pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
+#                    pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
+#                    pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
+#                    
+#                    pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
+#                    pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
+#                    pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
+#                    pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
+#                    pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
+#                
+#                    pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
+#                    pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
+#                    pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
+#                    pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
+#                    pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
+#                    
+#                    pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
+#                    pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
+#                    pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
+#                    pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
+#                    pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
+#                    
+#                    pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
+#                
+#                # Upload simulation
+#                print 'Uploading the simulation....'
+#                
+#                self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
+#                self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
+#                self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
+#                self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
+#                self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
+#                self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
+#                self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
+#                self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
+#                self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
+#                
+#                
+#                # self.totalAge1Age2Income1Contacts = pickle.load(open(self.folder + '/Policy_0/save.tc', 'rb'))
+#                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.d', 'rb'))
+#                # self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
+#                
+#                self.probsDeathIntubated = pickle.load(open(self.folder + '/Policy_0/save.di', 'rb'))
+#                self.probSymptomatic = pickle.load(open(self.folder + '/Policy_0/save.sy', 'rb'))
+#                self.probsHospitalization = pickle.load(open(self.folder + '/Policy_0/save.ho', 'rb'))
+#                self.probsIntensiveCare = pickle.load(open(self.folder + '/Policy_0/save.ic', 'rb'))
+#                self.intubatedFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.vf', 'rb'))
+#                self.recoveryPeriods = pickle.load(open(self.folder + '/Policy_0/save.rp', 'rb'))
+#                
+#                self.cumulatedHospitalizations = pickle.load(open(self.folder + '/Policy_0/save.ch', 'rb'))
+#                self.cumulatedICUs = pickle.load(open(self.folder + '/Policy_0/save.cv', 'rb'))
+#                self.hospitalPopulation = pickle.load(open(self.folder + '/Policy_0/save.hp', 'rb'))
+#                self.icuPopulation = pickle.load(open(self.folder + '/Policy_0/save.vp', 'rb'))
+#                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.td', 'rb'))
+#                self.totalInfected = pickle.load(open(self.folder + '/Policy_0/save.ti', 'rb'))
+#                self.totalHospitalizedByClass = pickle.load(open(self.folder + '/Policy_0/save.hc', 'rb'))
+#                self.totalIntubatedByClass = pickle.load(open(self.folder + '/Policy_0/save.vc', 'rb'))
+#                self.totDeathsByClass = pickle.load(open(self.folder + '/Policy_0/save.dc', 'rb'))
+#                
+#                self.infected1To18 = pickle.load(open(self.folder + '/Policy_0/save.fa1', 'rb'))
+#                self.infected19To39 = pickle.load(open(self.folder + '/Policy_0/save.fa2', 'rb'))
+#                self.infected40To59 = pickle.load(open(self.folder + '/Policy_0/save.fa3', 'rb'))
+#                self.infected60To79 = pickle.load(open(self.folder + '/Policy_0/save.fa4', 'rb'))
+#                self.infected80Over = pickle.load(open(self.folder + '/Policy_0/save.fa5', 'rb'))
+#                
+#                self.hospitalized1To18 = pickle.load(open(self.folder + '/Policy_0/save.ha1', 'rb'))
+#                self.hospitalized19To39 = pickle.load(open(self.folder + '/Policy_0/save.ha2', 'rb'))
+#                self.hospitalized40To59 = pickle.load(open(self.folder + '/Policy_0/save.ha3', 'rb'))
+#                self.hospitalized60To79 = pickle.load(open(self.folder + '/Policy_0/save.ha4', 'rb'))
+#                self.hospitalized80Over = pickle.load(open(self.folder + '/Policy_0/save.ha5', 'rb'))
+#            
+#                self.icu1To18 = pickle.load(open(self.folder + '/Policy_0/save.ia1', 'rb'))
+#                self.icu19To39 = pickle.load(open(self.folder + '/Policy_0/save.ia2', 'rb'))
+#                self.icu40To59 = pickle.load(open(self.folder + '/Policy_0/save.ia3', 'rb'))
+#                self.icu60To79 = pickle.load(open(self.folder + '/Policy_0/save.ia4', 'rb'))
+#                self.icu80Over = pickle.load(open(self.folder + '/Policy_0/save.ia5', 'rb'))
+#                
+#                self.dead1To18 = pickle.load(open(self.folder + '/Policy_0/save.da1', 'rb'))
+#                self.dead19To39 = pickle.load(open(self.folder + '/Policy_0/save.da2', 'rb'))
+#                self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
+#                self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
+#                self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
+#            
+#                self.infectionsNetwork = pickle.load(open(self.folder + '/Policy_0/save.if_nw', 'rb'))
+#                
+#                print 'Performing from ID to agents 3'
+#                
+#                self.from_IDs_to_Agents()
+#                
+#                # Upload outputs
+#                if policy != 0:
+#                    self.lockdown = self.p['lockdown']
+#                    self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
+#                    self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
+#                    
+#            if policy != 0 and self.lockdown == True and self.pandemicDay == startDay + self.p['lockdownDuration']:# self.pandemicDay == self.lockdownEnd:
+#                self.lockdown = False
+#                print 'Lockdown ended in day: ' + str(self.pandemicDay)
                     
 #            print 'Lockdown state: ' + str(self.lockdown)
 #            print 'Care lockdown state: ' + str(self.p['careLockdown'])
@@ -2605,10 +2610,10 @@ class SimCov:
         
         print ''
         print 'Simulation time: ' + str(simulationTime)
-        
-        if self.p['interactiveGraphics']:
-            print "Entering main loop to hold graphics up there."
-            self.window.mainloop()
+#        
+#        if self.p['interactiveGraphics']:
+#            print "Entering main loop to hold graphics up there."
+#            self.window.mainloop()
 
     def from_Agents_to_IDs(self):
         
@@ -2924,10 +2929,10 @@ class SimCov:
         for i in range(5):
             
             reductionRatesInQuintile = [x.contactReductionRate for x in self.pop.livingPeople if x.incomeQuintile == i]
-            print 'Quintile ' + str(i) + ' mean reduction rate:' + str(np.mean(reductionRatesInQuintile))
-            print 'Quintile ' + str(i) + ' max reduction rate:' + str(max(reductionRatesInQuintile))
-            print 'Quintile ' + str(i) + ' min reduction rate:' + str(min(reductionRatesInQuintile))
-            print ''
+#            print 'Quintile ' + str(i) + ' mean reduction rate:' + str(np.mean(reductionRatesInQuintile))
+#            print 'Quintile ' + str(i) + ' max reduction rate:' + str(max(reductionRatesInQuintile))
+#            print 'Quintile ' + str(i) + ' min reduction rate:' + str(min(reductionRatesInQuintile))
+#            print ''
             if i == 0:
                 self.mobilityReduction_Q1 = np.mean(reductionRatesInQuintile)
             if i == 1:
@@ -3687,29 +3692,29 @@ class SimCov:
 #                member.isolationRates.append(member.isolationRate)
         
         # Debugging code
-        zeroIsolationRatesShare = 0
-        if totAgents > 0:
-            zeroIsolationRatesShare = float(zeroIsolationAgents)/float(totAgents)
-        print 'Share of agents who do not isolate: ' + str(zeroIsolationRatesShare)
-        
-        print 'Mean isolation rate: ' + str(np.mean(isolationRates))
-        print 'Median isolation rate: ' + str(np.median(isolationRates))
-        
-        print 'Mean max isolation rate: ' + str(np.mean(isolationRates))
-        print 'Median max isolation rate: ' + str(np.median(isolationRates))
-        
-        print 'Mean cost: ' + str(np.mean(maxIsolationRates))
-        print 'Median cost: ' + str(np.median(maxIsolationRates))
-        
-        if len(ipFactors) > 0:
-            print 'Mean ip: ' + str(np.mean(ipFactors))
-            print 'Median ip: ' + str(np.median(ipFactors))
-            
-        
-        
-        if len(allExpectedCosts) > 0:
-            print 'Max expected cost (isolation rate): ' + str(max(allExpectedCosts))
-            print 'Median expected cost (isolation rate): ' + str(np.median(allExpectedCosts))
+#        zeroIsolationRatesShare = 0
+#        if totAgents > 0:
+#            zeroIsolationRatesShare = float(zeroIsolationAgents)/float(totAgents)
+#        print 'Share of agents who do not isolate: ' + str(zeroIsolationRatesShare)
+#        
+#        print 'Mean isolation rate: ' + str(np.mean(isolationRates))
+#        print 'Median isolation rate: ' + str(np.median(isolationRates))
+#        
+#        print 'Mean max isolation rate: ' + str(np.mean(isolationRates))
+#        print 'Median max isolation rate: ' + str(np.median(isolationRates))
+#        
+#        print 'Mean cost: ' + str(np.mean(maxIsolationRates))
+#        print 'Median cost: ' + str(np.median(maxIsolationRates))
+#        
+#        if len(ipFactors) > 0:
+#            print 'Mean ip: ' + str(np.mean(ipFactors))
+#            print 'Median ip: ' + str(np.median(ipFactors))
+#            
+#        
+#        
+#        if len(allExpectedCosts) > 0:
+#            print 'Max expected cost (isolation rate): ' + str(max(allExpectedCosts))
+#            print 'Median expected cost (isolation rate): ' + str(np.median(allExpectedCosts))
             # pdb.set_trace()
       
         
@@ -3729,9 +3734,9 @@ class SimCov:
                 deltaRate = weightedIR-agent.tempIR
                 agent.tempIR += deltaRate*(1.0-np.exp(-1*self.p['socialNormSensitivity']))
             
-        print 'Max weights: ' + str(max(weights))
-        print 'Mean weights: ' + str(np.mean(weights))
-        print 'Median weights: ' + str(np.median(weights))
+#        print 'Max weights: ' + str(max(weights))
+#        print 'Mean weights: ' + str(np.mean(weights))
+#        print 'Median weights: ' + str(np.median(weights))
          
         for agent in adults:
             agent.isolationRate = agent.tempIR
@@ -3759,19 +3764,19 @@ class SimCov:
             for child in children:
                 child.isolationRate = house.isolationRate
         
-        print 'Max vulnerability indexes: ' + str(max(vulnerabilityIndexes))
-        print 'Median vulnerability indexes: ' + str(np.median(vulnerabilityIndexes))
-        print 'Mean vulnerability indexes: ' + str(np.mean(vulnerabilityIndexes))
-        print 'Min vulnerability indexes: ' + str(min(vulnerabilityIndexes))
+#        print 'Max vulnerability indexes: ' + str(max(vulnerabilityIndexes))
+#        print 'Median vulnerability indexes: ' + str(np.median(vulnerabilityIndexes))
+#        print 'Mean vulnerability indexes: ' + str(np.mean(vulnerabilityIndexes))
+#        print 'Min vulnerability indexes: ' + str(min(vulnerabilityIndexes))
         
         
         for i in range(5):
             
             reductionRatesInQuintile = [x.isolationRate for x in self.pop.livingPeople if x.incomeQuintile == i]
-            print 'Quintile ' + str(i) + ' mean reduction rate:' + str(np.mean(reductionRatesInQuintile))
-            print 'Quintile ' + str(i) + ' max reduction rate:' + str(max(reductionRatesInQuintile))
-            print 'Quintile ' + str(i) + ' min reduction rate:' + str(min(reductionRatesInQuintile))
-            print ''
+#            print 'Quintile ' + str(i) + ' mean reduction rate:' + str(np.mean(reductionRatesInQuintile))
+#            print 'Quintile ' + str(i) + ' max reduction rate:' + str(max(reductionRatesInQuintile))
+#            print 'Quintile ' + str(i) + ' min reduction rate:' + str(min(reductionRatesInQuintile))
+#            print ''
             if i == 0:
                 self.mobilityReduction_Q1 = np.mean(reductionRatesInQuintile)
             if i == 1:
@@ -4009,8 +4014,7 @@ class SimCov:
         return xDist + yDist
     
     def exposureProcess(self, day):
-        
-        print 'Probs deaths if intubated: ' + str(self.probsDeathIntubated)
+
         self.newExposed = 0
         self.infectedByClass = [0]*int(self.p['incomeClasses'])
         self.infectedByAge = [0]*int(self.p['ageClasses'])
@@ -4045,18 +4049,6 @@ class SimCov:
         ### For every susceptible agent, the probability to be infected through communal or domestic contacts is computed
         internalSusceptible = [x for x in self.pop.livingPeople if x not in internationalExposed]
         susceptible = [x for x in internalSusceptible if x.healthStatus == 'susceptible']
-      
-        num1to18 = 0
-        numberContacts1to18 = 0
-        averageContagiousness1to18 = 0
-        careRiskFactor1to18 = 0
-        homeRiskFactor1to18 = 0
-        
-        numOver65 = 0
-        numberContactsOver65 = 0
-        averageContagiousnessOver65 = 0
-        careRiskFactorOver65 = 0
-        homeRiskFactorOver65 = 0
         
         for person in susceptible:
             
@@ -4171,18 +4163,6 @@ class SimCov:
                         person.severityLevel = 4
                         person.symptomsLevel = self.p['symptomsLevels'][person.severityLevel-1]
                         person.recoveryPeriod = np.random.choice(self.recoveryPeriods[person.severityLevel-1])
-        
-        if num1to18 > 0:
-            print 'Average contacts 1/18-year-old: ' + str(float(numberContacts1to18)/float(num1to18))
-            print 'Average contagiousness 1/18-year-old: ' + str(float(averageContagiousness1to18)/float(num1to18))
-            print 'Average care risk 1/18-year-old: ' + str(float(careRiskFactor1to18)/float(num1to18))
-            print 'Average home risk 1/18-year-old: ' + str(float(homeRiskFactor1to18)/float(num1to18))
-        
-        if numOver65 > 0:
-            print 'Average contacts over65-year-old: ' + str(float(numberContactsOver65)/float(numOver65))
-            print 'Average contagiousness over65-year-old: ' + str(float(averageContagiousnessOver65)/float(numOver65))
-            print 'Average care risk over65-year-old: ' + str(float(careRiskFactorOver65)/float(numOver65))
-            print 'Average home risk over65-year-old: ' + str(float(homeRiskFactorOver65)/float(numOver65))
         
         # Some agents die with a certain infection-fatality ratio.
         
@@ -4720,7 +4700,7 @@ class SimCov:
             den += np.power(self.p['timeDiscountingFactor'], i)
         self.newCasesIndex = float(newCasesDiscounted)/float(den)
         
-        print 'New case index: ' + str(self.newCasesIndex)
+        # print 'New case index: ' + str(self.newCasesIndex)
         # print 'Share susceptible: ' + str(shareSusceptible)
         
         self.shareHospitalized1To18 = 0 
@@ -4957,30 +4937,30 @@ class SimCov:
                 
                 agent.costInfection = costH+costV+costD
                 
-        print ''
-        
-        print 'Mean prob hospitalization (pre): ' + str(np.mean(probsHospitalPreNet))
-        print 'Median prob hospitalization (pre): ' + str(np.median(probsHospitalPreNet))
-        print 'Mean prob hospitalization (post): ' + str(np.mean(probsHospitalPostNet))
-        print 'Median prob hospitalization (post): ' + str(np.median(probsHospitalPostNet))
-        print 'Mean hp factors: ' + str(np.mean(hpFactors))
-        print 'Median hp factors: ' + str(np.median(hpFactors))
-        
-        print 'Mean prob ventilation (pre): ' + str(np.mean(probsICUPreNet))
-        print 'Median prob ventilation (pre): ' + str(np.median(probsICUPreNet))
-        print 'Mean prob ventilation (post): ' + str(np.mean(probsICUPostNet))
-        print 'Median prob ventilation (post): ' + str(np.median(probsICUPostNet))
-        print 'Mean vp factors: ' + str(np.mean(vpFactors))
-        print 'Median vp factors: ' + str(np.median(vpFactors))
-        
-        print 'Mean prob death (pre): ' + str(np.mean(probsDeathPreNet))
-        print 'Median prob death (pre): ' + str(np.median(probsDeathPreNet))
-        print 'Mean prob death (post): ' + str(np.mean(probsDeathPostNet))
-        print 'Median prob death (post): ' + str(np.median(probsDeathPostNet))
-        print 'Mean dp factors: ' + str(np.mean(dpFactors))
-        print 'Median dp factors: ' + str(np.median(dpFactors))
-        
-        print ''
+#        print ''
+#        
+#        print 'Mean prob hospitalization (pre): ' + str(np.mean(probsHospitalPreNet))
+#        print 'Median prob hospitalization (pre): ' + str(np.median(probsHospitalPreNet))
+#        print 'Mean prob hospitalization (post): ' + str(np.mean(probsHospitalPostNet))
+#        print 'Median prob hospitalization (post): ' + str(np.median(probsHospitalPostNet))
+#        print 'Mean hp factors: ' + str(np.mean(hpFactors))
+#        print 'Median hp factors: ' + str(np.median(hpFactors))
+#        
+#        print 'Mean prob ventilation (pre): ' + str(np.mean(probsICUPreNet))
+#        print 'Median prob ventilation (pre): ' + str(np.median(probsICUPreNet))
+#        print 'Mean prob ventilation (post): ' + str(np.mean(probsICUPostNet))
+#        print 'Median prob ventilation (post): ' + str(np.median(probsICUPostNet))
+#        print 'Mean vp factors: ' + str(np.mean(vpFactors))
+#        print 'Median vp factors: ' + str(np.median(vpFactors))
+#        
+#        print 'Mean prob death (pre): ' + str(np.mean(probsDeathPreNet))
+#        print 'Median prob death (pre): ' + str(np.median(probsDeathPreNet))
+#        print 'Mean prob death (post): ' + str(np.mean(probsDeathPostNet))
+#        print 'Median prob death (post): ' + str(np.median(probsDeathPostNet))
+#        print 'Mean dp factors: ' + str(np.mean(dpFactors))
+#        print 'Median dp factors: ' + str(np.median(dpFactors))
+#        
+#        print ''
     
     
     def performTest(self):
@@ -5083,29 +5063,29 @@ class SimCov:
             shareTested = float(self.periodTests)/float(len(testAgents))
         print 'Share testes: ' + str(shareTested)
         
-        if len(riskProbs) > 0:
-            print 'Max risk probs: ' + str(max(riskProbs))
-            print 'Mean risk probs: ' + str(np.mean(riskProbs))
-            print 'Median risk probs: ' + str(np.median(riskProbs))
-        
-        if len(riskIndexes) > 0:
-            print 'Max risk index: ' + str(max(riskIndexes))
-            print 'Mean risk index: ' + str(np.mean(riskIndexes))
-            print 'Median risk index: ' + str(np.median(riskIndexes))
-        
-        if len(allInfectedIndexes) > 0:
-            print 'Max infected index: ' + str(max(allInfectedIndexes))
-            print 'Mean infected index: ' + str(np.mean(allInfectedIndexes))
-            print 'Median infected index: ' + str(np.median(allInfectedIndexes))
-        
-        if len(allSensitivityToRisks) > 0:
-            print 'Max sensitivity to risk: ' + str(max(allSensitivityToRisks))
-            print 'Mean sensitivity to risk: ' + str(np.mean(allSensitivityToRisks))
-            print 'Median sensitivity to risk: ' + str(np.median(allSensitivityToRisks))
-        
-        if len(allExpectedCosts) > 0:
-            print 'Max expected cost (test): ' + str(max(allExpectedCosts))   
-            print 'Median expected cost (test): ' + str(np.median(allExpectedCosts))
+#        if len(riskProbs) > 0:
+#            print 'Max risk probs: ' + str(max(riskProbs))
+#            print 'Mean risk probs: ' + str(np.mean(riskProbs))
+#            print 'Median risk probs: ' + str(np.median(riskProbs))
+#        
+#        if len(riskIndexes) > 0:
+#            print 'Max risk index: ' + str(max(riskIndexes))
+#            print 'Mean risk index: ' + str(np.mean(riskIndexes))
+#            print 'Median risk index: ' + str(np.median(riskIndexes))
+#        
+#        if len(allInfectedIndexes) > 0:
+#            print 'Max infected index: ' + str(max(allInfectedIndexes))
+#            print 'Mean infected index: ' + str(np.mean(allInfectedIndexes))
+#            print 'Median infected index: ' + str(np.median(allInfectedIndexes))
+#        
+#        if len(allSensitivityToRisks) > 0:
+#            print 'Max sensitivity to risk: ' + str(max(allSensitivityToRisks))
+#            print 'Mean sensitivity to risk: ' + str(np.mean(allSensitivityToRisks))
+#            print 'Median sensitivity to risk: ' + str(np.median(allSensitivityToRisks))
+#        
+#        if len(allExpectedCosts) > 0:
+#            print 'Max expected cost (test): ' + str(max(allExpectedCosts))   
+#            print 'Median expected cost (test): ' + str(np.median(allExpectedCosts))
             
     def updateInfectionRisk(self):
         # Here, the probability fo infection is updated, for each agent
@@ -5173,14 +5153,14 @@ class SimCov:
                 
                 person.probInfections.append(person.probInfection)
                 
-        print 'Mean prob infection (pre): ' + str(np.mean(probInfectionPre))
-        print 'Median prob infection (pre): ' + str(np.median(probInfectionPre))
-        
-        print 'Mean cases ratio: ' + str(np.mean(newCasesRatios))
-        print 'Median cases ratio: ' + str(np.median(newCasesRatios))
-        
-        print 'Mean prob infection (post): ' + str(np.mean(probInfectionPost))
-        print 'Median prob infection (post): ' + str(np.median(probInfectionPost))
+#        print 'Mean prob infection (pre): ' + str(np.mean(probInfectionPre))
+#        print 'Median prob infection (pre): ' + str(np.median(probInfectionPre))
+#        
+#        print 'Mean cases ratio: ' + str(np.mean(newCasesRatios))
+#        print 'Median cases ratio: ' + str(np.median(newCasesRatios))
+#        
+#        print 'Mean prob infection (post): ' + str(np.mean(probInfectionPost))
+#        print 'Median prob infection (post): ' + str(np.median(probInfectionPost))
         
     
     def showProbs(self):
@@ -5374,97 +5354,97 @@ class SimCov:
             self.contactsMatrix.append(newMatrix[-1])
         
 
-    def checkHouseholds(self, n):
-        
-#        for member in self.pop.livingPeople:
-#            if member.partner != None and member.house != member.partner.house:
-#                print 'Step: ' + str(n)
-#                print 'Couple not living together'
-#                print member.id
-#                print member.dead
-#                print member.independentStatus
-#                print member.yearMarried
-#                print member.partner.id
-#                print member.partner.partner.id
-#                print member.partner.dead
-#                print member.partner.independentStatus
-#                print member.partner.yearMarried
-#                sys.exit()
-    
-        for house in self.map.occupiedHouses:
-            
-            household = house.occupants
-            
-#            if len(household) != len(set(household)):
-#                print 'Step: ' + str(n)
-#                print 'Error: person counted twice'
-#                sys.exit()
-                
-#            if len(household) == 0:
-#                print 'Step: ' + str(n)
-#                print 'Error: occupied house is empty!'
-#                sys.exit()
-                
-            married = [x for x in household if x.partner != None]
-            
-#            if len(married) > 2:
-#                print 'Step: ' + str(n)
-#                print 'Error: more than a couple in a house'
-#                for member in married:
-#                    print member.id
-#                    print member.age
-#                    print member.status
-#                    print member.independentStatus
-#                    print member.classRank
-#                    print member.sex
-#                    print member.income
-#                    print member.careNeedLevel
-#                    print 'Person partner id: ' + str(member.partner.id)
-#                sys.exit()
-                
-#            if len(married) == 1:
-#                print 'Step: ' + str(n)
-#                print 'Error: married person not living with partner'
-#                sys.exit()
-           
-            independentPeople = [x for x in household if x.independentStatus == True]
-            
-#            if len(independentPeople) == 0:
-#                print 'Error: no independent people in the house'
-#                print 'Step: ' + str(n)
-#                for member in household:
-#                    print member.id
-#                    print member.age
-#                    print member.status
-#                    print member.classRank
-#                    print member.sex
-#                    print member.income
-#                    print member.careNeedLevel
-#                    print 'Father: ' + str(member.father.id)
-#                    print member.father.dead
-#                    print member.father.deadYear
-#                    print member.father.yearMarried
-#                    print member.father.yearDivorced
-#                    print 'Mother: ' + str(member.mother.id)
-#                    print member.mother.dead
-#                    print member.mother.deadYear
-#                    print member.mother.yearMarried
-#                    print member.mother.yearDivorced
-#                    
-#                    if member.partner != None:
-#                        print 'Person partner id: ' + str(member.partner.id)
-#                    if member.mother.partner != None:
-#                        print 'Person mother partner id: ' + str(member.mother.partner.id)
-#                        print 'Person mother partner children: ' + str([x.id for x in member.mother.partner.children])
-#                        if member.mother.partner.partner != None:
-#                            print 'Person father partner id: ' + str(member.mother.partner.partner.id)
-#                    if member.father.partner != None:
-#                        print 'Person father partner id: ' + str(member.father.partner.id)
-#                        print 'Person father partner children: ' + str([x.id for x in member.father.partner.children])
-#                        if member.father.partner.partner != None:
-#                            print 'Person father partner partner id: ' + str(member.father.partner.partner.id)
-#                sys.exit()
-                
+#    def checkHouseholds(self, n):
+#        
+##        for member in self.pop.livingPeople:
+##            if member.partner != None and member.house != member.partner.house:
+##                print 'Step: ' + str(n)
+##                print 'Couple not living together'
+##                print member.id
+##                print member.dead
+##                print member.independentStatus
+##                print member.yearMarried
+##                print member.partner.id
+##                print member.partner.partner.id
+##                print member.partner.dead
+##                print member.partner.independentStatus
+##                print member.partner.yearMarried
+##                sys.exit()
+#    
+#        for house in self.map.occupiedHouses:
+#            
+#            household = house.occupants
+#            
+##            if len(household) != len(set(household)):
+##                print 'Step: ' + str(n)
+##                print 'Error: person counted twice'
+##                sys.exit()
+#                
+##            if len(household) == 0:
+##                print 'Step: ' + str(n)
+##                print 'Error: occupied house is empty!'
+##                sys.exit()
+#                
+#            married = [x for x in household if x.partner != None]
+#            
+##            if len(married) > 2:
+##                print 'Step: ' + str(n)
+##                print 'Error: more than a couple in a house'
+##                for member in married:
+##                    print member.id
+##                    print member.age
+##                    print member.status
+##                    print member.independentStatus
+##                    print member.classRank
+##                    print member.sex
+##                    print member.income
+##                    print member.careNeedLevel
+##                    print 'Person partner id: ' + str(member.partner.id)
+##                sys.exit()
+#                
+##            if len(married) == 1:
+##                print 'Step: ' + str(n)
+##                print 'Error: married person not living with partner'
+##                sys.exit()
+#           
+#            independentPeople = [x for x in household if x.independentStatus == True]
+#            
+##            if len(independentPeople) == 0:
+##                print 'Error: no independent people in the house'
+##                print 'Step: ' + str(n)
+##                for member in household:
+##                    print member.id
+##                    print member.age
+##                    print member.status
+##                    print member.classRank
+##                    print member.sex
+##                    print member.income
+##                    print member.careNeedLevel
+##                    print 'Father: ' + str(member.father.id)
+##                    print member.father.dead
+##                    print member.father.deadYear
+##                    print member.father.yearMarried
+##                    print member.father.yearDivorced
+##                    print 'Mother: ' + str(member.mother.id)
+##                    print member.mother.dead
+##                    print member.mother.deadYear
+##                    print member.mother.yearMarried
+##                    print member.mother.yearDivorced
+##                    
+##                    if member.partner != None:
+##                        print 'Person partner id: ' + str(member.partner.id)
+##                    if member.mother.partner != None:
+##                        print 'Person mother partner id: ' + str(member.mother.partner.id)
+##                        print 'Person mother partner children: ' + str([x.id for x in member.mother.partner.children])
+##                        if member.mother.partner.partner != None:
+##                            print 'Person father partner id: ' + str(member.mother.partner.partner.id)
+##                    if member.father.partner != None:
+##                        print 'Person father partner id: ' + str(member.father.partner.id)
+##                        print 'Person father partner children: ' + str([x.id for x in member.father.partner.children])
+##                        if member.father.partner.partner != None:
+##                            print 'Person father partner partner id: ' + str(member.father.partner.partner.id)
+##                sys.exit()
+#                
             
 ####################   doDeath - SES version    ################################################
     
@@ -9267,7 +9247,7 @@ class SimCov:
         individualIsolations = [x.individualIsolation for x in self.map.allHouses if x.id in self.householdIndexes]
         neighborIsolations = [x.neighborIsolation for x in self.map.allHouses if x.id in self.householdIndexes]  
         
-        print 'No more occupied houses: ' + str(self.housesNotMoreOccupied)
+        # print 'No more occupied houses: ' + str(self.housesNotMoreOccupied)
         
         # self.gdpRatio = float(sum([x.workingShare for x in self.pop.livingPeople]))/float(len(self.pop.livingPeople))
         housesOutputs = [experiencedEvents[0], kindOfEvents[0], infectionEvents[0], betas[0], contactReductionRates[0], 
