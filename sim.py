@@ -2250,6 +2250,7 @@ class SimCov:
         self.totalIntubatedByClass = [0]*int(self.p['incomeClasses'])
         self.totDeathsByClass = [0]*int(self.p['incomeClasses'])
         self.newCasesRatios = []
+        self.maxNewCases = 0
         self.exposedPeriod = 0
         self.infectedNotHospitalizedPeriod = 0
         self.recoveredNotHospitalizedPeriod = 0
@@ -2440,161 +2441,159 @@ class SimCov:
 #            if self.pandemicDay == self.lockdownDay:
 #                print 'Lockdown started in day: ' + str(self.pandemicDay)
 #            
-            if policyParams and self.pandemicDay == self.lockdownDay:
+            if policyParams['policyIndex'] != 0 and self.pandemicDay == self.lockdownDay:
                 
-                print 'Policy params: ' + str(policyParams)
+                print 'Policy index: ' + str(policyParams['policyIndex'])
                 
-                pdb.set_trace()
                 
-#                
-#                keys = policyParams.keys()
-#                for k in keys[1:]:
-#                    self.p[k] = policyParams[k]
-#                
-#                if policy == 0:
-#                    
-#                    
-#                    print 'Saving the simulation....'
-#                    
-#                    self.from_Agents_to_IDs()
-#                    # self.policyStartDeaths = self.totalDeaths
-#                    # self.lockdownMaxCases = self.maxNewCases
-#                    # Save outputs
-#                    self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
-#                    self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
-#                    # Save simulation
-#                    pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
-#                    pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
-#                    pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
-#                    pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
-#                    pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
-#                    pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
-#                    pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
-#                    pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
-#                    pickle.dump(self.housesNotMoreOccupied, open(policyFolder + '/save.hno', 'wb'))
-#                    # pickle.dump(self.totalAge1Age2Income1Contacts, open(policyFolder + '/save.tc', 'wb'))
-#                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.d', 'wb'))
-#                    pickle.dump(self.lockdownDay, open(policyFolder + '/save.l', 'wb'))
-#                    
-#                    pickle.dump(self.probsDeathIntubated, open(policyFolder + '/save.di', 'wb'))
-#                    pickle.dump(self.probSymptomatic, open(policyFolder + '/save.sy', 'wb'))
-#                    pickle.dump(self.probsHospitalization, open(policyFolder + '/save.ho', 'wb'))
-#                    pickle.dump(self.probsIntensiveCare, open(policyFolder + '/save.ic', 'wb'))
-#                    pickle.dump(self.intubatedFatalityRatio, open(policyFolder + '/save.vf', 'wb'))
-#                    pickle.dump(self.recoveryPeriods, open(policyFolder + '/save.rp', 'wb'))
-#                    
-#                    # Save the data
-#                    pickle.dump(self.cumulatedHospitalizations, open(policyFolder + '/save.ch', 'wb'))
-#                    pickle.dump(self.cumulatedICUs, open(policyFolder + '/save.cv', 'wb'))
-#                    pickle.dump(self.hospitalPopulation, open(policyFolder + '/save.hp', 'wb'))
-#                    pickle.dump(self.icuPopulation, open(policyFolder + '/save.vp', 'wb'))
-#                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.td', 'wb'))
-#                    pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
-#                    pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
-#                    pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
-#                    pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
-#                    
-#                    
-#                    pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
-#                    pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
-#                    pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
-#                    pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
-#                    pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
-#                    
-#                    pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
-#                    pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
-#                    pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
-#                    pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
-#                    pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
-#                
-#                    pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
-#                    pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
-#                    pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
-#                    pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
-#                    pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
-#                    
-#                    pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
-#                    pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
-#                    pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
-#                    pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
-#                    pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
-#                    
-#                    pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
-#                
-#                # Upload simulation
-#                print 'Uploading the simulation....'
-#                
-#                self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
-#                self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
-#                self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
-#                self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
-#                self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
-#                self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
-#                self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
-#                self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
-#                self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
-#                
-#                
-#                # self.totalAge1Age2Income1Contacts = pickle.load(open(self.folder + '/Policy_0/save.tc', 'rb'))
-#                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.d', 'rb'))
-#                # self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
-#                
-#                self.probsDeathIntubated = pickle.load(open(self.folder + '/Policy_0/save.di', 'rb'))
-#                self.probSymptomatic = pickle.load(open(self.folder + '/Policy_0/save.sy', 'rb'))
-#                self.probsHospitalization = pickle.load(open(self.folder + '/Policy_0/save.ho', 'rb'))
-#                self.probsIntensiveCare = pickle.load(open(self.folder + '/Policy_0/save.ic', 'rb'))
-#                self.intubatedFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.vf', 'rb'))
-#                self.recoveryPeriods = pickle.load(open(self.folder + '/Policy_0/save.rp', 'rb'))
-#                
-#                self.cumulatedHospitalizations = pickle.load(open(self.folder + '/Policy_0/save.ch', 'rb'))
-#                self.cumulatedICUs = pickle.load(open(self.folder + '/Policy_0/save.cv', 'rb'))
-#                self.hospitalPopulation = pickle.load(open(self.folder + '/Policy_0/save.hp', 'rb'))
-#                self.icuPopulation = pickle.load(open(self.folder + '/Policy_0/save.vp', 'rb'))
-#                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.td', 'rb'))
-#                self.totalInfected = pickle.load(open(self.folder + '/Policy_0/save.ti', 'rb'))
-#                self.totalHospitalizedByClass = pickle.load(open(self.folder + '/Policy_0/save.hc', 'rb'))
-#                self.totalIntubatedByClass = pickle.load(open(self.folder + '/Policy_0/save.vc', 'rb'))
-#                self.totDeathsByClass = pickle.load(open(self.folder + '/Policy_0/save.dc', 'rb'))
-#                
-#                self.infected1To18 = pickle.load(open(self.folder + '/Policy_0/save.fa1', 'rb'))
-#                self.infected19To39 = pickle.load(open(self.folder + '/Policy_0/save.fa2', 'rb'))
-#                self.infected40To59 = pickle.load(open(self.folder + '/Policy_0/save.fa3', 'rb'))
-#                self.infected60To79 = pickle.load(open(self.folder + '/Policy_0/save.fa4', 'rb'))
-#                self.infected80Over = pickle.load(open(self.folder + '/Policy_0/save.fa5', 'rb'))
-#                
-#                self.hospitalized1To18 = pickle.load(open(self.folder + '/Policy_0/save.ha1', 'rb'))
-#                self.hospitalized19To39 = pickle.load(open(self.folder + '/Policy_0/save.ha2', 'rb'))
-#                self.hospitalized40To59 = pickle.load(open(self.folder + '/Policy_0/save.ha3', 'rb'))
-#                self.hospitalized60To79 = pickle.load(open(self.folder + '/Policy_0/save.ha4', 'rb'))
-#                self.hospitalized80Over = pickle.load(open(self.folder + '/Policy_0/save.ha5', 'rb'))
-#            
-#                self.icu1To18 = pickle.load(open(self.folder + '/Policy_0/save.ia1', 'rb'))
-#                self.icu19To39 = pickle.load(open(self.folder + '/Policy_0/save.ia2', 'rb'))
-#                self.icu40To59 = pickle.load(open(self.folder + '/Policy_0/save.ia3', 'rb'))
-#                self.icu60To79 = pickle.load(open(self.folder + '/Policy_0/save.ia4', 'rb'))
-#                self.icu80Over = pickle.load(open(self.folder + '/Policy_0/save.ia5', 'rb'))
-#                
-#                self.dead1To18 = pickle.load(open(self.folder + '/Policy_0/save.da1', 'rb'))
-#                self.dead19To39 = pickle.load(open(self.folder + '/Policy_0/save.da2', 'rb'))
-#                self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
-#                self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
-#                self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
-#            
-#                self.infectionsNetwork = pickle.load(open(self.folder + '/Policy_0/save.if_nw', 'rb'))
-#                
-#                print 'Performing from ID to agents 3'
-#                
-#                self.from_IDs_to_Agents()
-#                
-#                # Upload outputs
-#                if policy != 0:
-#                    self.lockdown = self.p['lockdown']
-#                    self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
-#                    self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
-#                    
-#            if policy != 0 and self.lockdown == True and self.pandemicDay == startDay + self.p['lockdownDuration']:# self.pandemicDay == self.lockdownEnd:
-#                self.lockdown = False
-#                print 'Lockdown ended in day: ' + str(self.pandemicDay)
+                keys = policyParams.keys()
+                for k in keys[1:]:
+                    self.p[k] = policyParams[k]
+                
+                if policy == 0:
+                    
+                    
+                    print 'Saving the simulation....'
+                    
+                    self.from_Agents_to_IDs()
+                    # self.policyStartDeaths = self.totalDeaths
+                    # self.lockdownMaxCases = self.maxNewCases
+                    # Save outputs
+                    self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
+                    self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
+                    # Save simulation
+                    pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
+                    pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
+                    pickle.dump(self.infectionFatalityRatio, open(policyFolder + '/save.if', 'wb'))
+                    pickle.dump(self.newCasesRatios, open(policyFolder + '/save.nr', 'wb'))
+                    pickle.dump(self.maxNewCases, open(policyFolder + '/save.n', 'wb'))
+                    pickle.dump(self.totalInteractions, open(policyFolder + '/save.tin', 'wb'))
+                    pickle.dump(self.classesContacts, open(policyFolder + '/save.ct', 'wb'))
+                    pickle.dump(self.householdIndexes, open(policyFolder + '/save.hi', 'wb'))
+                    pickle.dump(self.housesNotMoreOccupied, open(policyFolder + '/save.hno', 'wb'))
+                    # pickle.dump(self.totalAge1Age2Income1Contacts, open(policyFolder + '/save.tc', 'wb'))
+                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.d', 'wb'))
+                    pickle.dump(self.lockdownDay, open(policyFolder + '/save.l', 'wb'))
+                    
+                    pickle.dump(self.probsDeathIntubated, open(policyFolder + '/save.di', 'wb'))
+                    pickle.dump(self.probSymptomatic, open(policyFolder + '/save.sy', 'wb'))
+                    pickle.dump(self.probsHospitalization, open(policyFolder + '/save.ho', 'wb'))
+                    pickle.dump(self.probsIntensiveCare, open(policyFolder + '/save.ic', 'wb'))
+                    pickle.dump(self.intubatedFatalityRatio, open(policyFolder + '/save.vf', 'wb'))
+                    pickle.dump(self.recoveryPeriods, open(policyFolder + '/save.rp', 'wb'))
+                    
+                    # Save the data
+                    pickle.dump(self.cumulatedHospitalizations, open(policyFolder + '/save.ch', 'wb'))
+                    pickle.dump(self.cumulatedICUs, open(policyFolder + '/save.cv', 'wb'))
+                    pickle.dump(self.hospitalPopulation, open(policyFolder + '/save.hp', 'wb'))
+                    pickle.dump(self.icuPopulation, open(policyFolder + '/save.vp', 'wb'))
+                    pickle.dump(self.totalDeaths, open(policyFolder + '/save.td', 'wb'))
+                    pickle.dump(self.totalInfected, open(policyFolder + '/save.ti', 'wb'))
+                    pickle.dump(self.totalHospitalizedByClass, open(policyFolder + '/save.hc', 'wb'))
+                    pickle.dump(self.totalIntubatedByClass, open(policyFolder + '/save.vc', 'wb'))
+                    pickle.dump(self.totDeathsByClass, open(policyFolder + '/save.dc', 'wb'))
+                    
+                    
+                    pickle.dump(self.infected1To18, open(policyFolder + '/save.fa1', 'wb'))
+                    pickle.dump(self.infected19To39, open(policyFolder + '/save.fa2', 'wb'))
+                    pickle.dump(self.infected40To59, open(policyFolder + '/save.fa3', 'wb'))
+                    pickle.dump(self.infected60To79, open(policyFolder + '/save.fa4', 'wb'))
+                    pickle.dump(self.infected80Over, open(policyFolder + '/save.fa5', 'wb'))
+                    
+                    pickle.dump(self.hospitalized1To18, open(policyFolder + '/save.ha1', 'wb'))
+                    pickle.dump(self.hospitalized19To39, open(policyFolder + '/save.ha2', 'wb'))
+                    pickle.dump(self.hospitalized40To59, open(policyFolder + '/save.ha3', 'wb'))
+                    pickle.dump(self.hospitalized60To79, open(policyFolder + '/save.ha4', 'wb'))
+                    pickle.dump(self.hospitalized80Over, open(policyFolder + '/save.ha5', 'wb'))
+                
+                    pickle.dump(self.icu1To18, open(policyFolder + '/save.ia1', 'wb'))
+                    pickle.dump(self.icu19To39, open(policyFolder + '/save.ia2', 'wb'))
+                    pickle.dump(self.icu40To59, open(policyFolder + '/save.ia3', 'wb'))
+                    pickle.dump(self.icu60To79, open(policyFolder + '/save.ia4', 'wb'))
+                    pickle.dump(self.icu80Over, open(policyFolder + '/save.ia5', 'wb'))
+                    
+                    pickle.dump(self.dead1To18, open(policyFolder + '/save.da1', 'wb'))
+                    pickle.dump(self.dead19To39, open(policyFolder + '/save.da2', 'wb'))
+                    pickle.dump(self.dead40To59, open(policyFolder + '/save.da3', 'wb'))
+                    pickle.dump(self.dead60To79, open(policyFolder + '/save.da4', 'wb'))
+                    pickle.dump(self.dead80Over, open(policyFolder + '/save.da5', 'wb'))
+                    
+                    pickle.dump(self.infectionsNetwork, open(policyFolder + '/save.if_nw', 'wb'))
+                
+                # Upload simulation
+                print 'Uploading the simulation....'
+                
+                self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
+                self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
+                self.infectionFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.if', 'rb'))
+                self.newCasesRatios = pickle.load(open(self.folder + '/Policy_0/save.nr', 'rb'))
+                self.maxNewCases = pickle.load(open(self.folder + '/Policy_0/save.n', 'rb'))
+                self.totalInteractions = pickle.load(open(self.folder + '/Policy_0/save.tin', 'rb'))
+                self.classesContacts = pickle.load(open(self.folder + '/Policy_0/save.ct', 'rb'))
+                self.householdIndexes = pickle.load(open(self.folder + '/Policy_0/save.hi', 'rb'))
+                self.housesNotMoreOccupied = pickle.load(open(self.folder + '/Policy_0/save.hno', 'rb'))
+                
+                
+                # self.totalAge1Age2Income1Contacts = pickle.load(open(self.folder + '/Policy_0/save.tc', 'rb'))
+                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.d', 'rb'))
+                # self.lockdownDay = pickle.load(open(self.folder + '/Policy_0/save.l', 'rb'))
+                
+                self.probsDeathIntubated = pickle.load(open(self.folder + '/Policy_0/save.di', 'rb'))
+                self.probSymptomatic = pickle.load(open(self.folder + '/Policy_0/save.sy', 'rb'))
+                self.probsHospitalization = pickle.load(open(self.folder + '/Policy_0/save.ho', 'rb'))
+                self.probsIntensiveCare = pickle.load(open(self.folder + '/Policy_0/save.ic', 'rb'))
+                self.intubatedFatalityRatio = pickle.load(open(self.folder + '/Policy_0/save.vf', 'rb'))
+                self.recoveryPeriods = pickle.load(open(self.folder + '/Policy_0/save.rp', 'rb'))
+                
+                self.cumulatedHospitalizations = pickle.load(open(self.folder + '/Policy_0/save.ch', 'rb'))
+                self.cumulatedICUs = pickle.load(open(self.folder + '/Policy_0/save.cv', 'rb'))
+                self.hospitalPopulation = pickle.load(open(self.folder + '/Policy_0/save.hp', 'rb'))
+                self.icuPopulation = pickle.load(open(self.folder + '/Policy_0/save.vp', 'rb'))
+                self.totalDeaths = pickle.load(open(self.folder + '/Policy_0/save.td', 'rb'))
+                self.totalInfected = pickle.load(open(self.folder + '/Policy_0/save.ti', 'rb'))
+                self.totalHospitalizedByClass = pickle.load(open(self.folder + '/Policy_0/save.hc', 'rb'))
+                self.totalIntubatedByClass = pickle.load(open(self.folder + '/Policy_0/save.vc', 'rb'))
+                self.totDeathsByClass = pickle.load(open(self.folder + '/Policy_0/save.dc', 'rb'))
+                
+                self.infected1To18 = pickle.load(open(self.folder + '/Policy_0/save.fa1', 'rb'))
+                self.infected19To39 = pickle.load(open(self.folder + '/Policy_0/save.fa2', 'rb'))
+                self.infected40To59 = pickle.load(open(self.folder + '/Policy_0/save.fa3', 'rb'))
+                self.infected60To79 = pickle.load(open(self.folder + '/Policy_0/save.fa4', 'rb'))
+                self.infected80Over = pickle.load(open(self.folder + '/Policy_0/save.fa5', 'rb'))
+                
+                self.hospitalized1To18 = pickle.load(open(self.folder + '/Policy_0/save.ha1', 'rb'))
+                self.hospitalized19To39 = pickle.load(open(self.folder + '/Policy_0/save.ha2', 'rb'))
+                self.hospitalized40To59 = pickle.load(open(self.folder + '/Policy_0/save.ha3', 'rb'))
+                self.hospitalized60To79 = pickle.load(open(self.folder + '/Policy_0/save.ha4', 'rb'))
+                self.hospitalized80Over = pickle.load(open(self.folder + '/Policy_0/save.ha5', 'rb'))
+            
+                self.icu1To18 = pickle.load(open(self.folder + '/Policy_0/save.ia1', 'rb'))
+                self.icu19To39 = pickle.load(open(self.folder + '/Policy_0/save.ia2', 'rb'))
+                self.icu40To59 = pickle.load(open(self.folder + '/Policy_0/save.ia3', 'rb'))
+                self.icu60To79 = pickle.load(open(self.folder + '/Policy_0/save.ia4', 'rb'))
+                self.icu80Over = pickle.load(open(self.folder + '/Policy_0/save.ia5', 'rb'))
+                
+                self.dead1To18 = pickle.load(open(self.folder + '/Policy_0/save.da1', 'rb'))
+                self.dead19To39 = pickle.load(open(self.folder + '/Policy_0/save.da2', 'rb'))
+                self.dead40To59 = pickle.load(open(self.folder + '/Policy_0/save.da3', 'rb'))
+                self.dead60To79 = pickle.load(open(self.folder + '/Policy_0/save.da4', 'rb'))
+                self.dead80Over = pickle.load(open(self.folder + '/Policy_0/save.da5', 'rb'))
+            
+                self.infectionsNetwork = pickle.load(open(self.folder + '/Policy_0/save.if_nw', 'rb'))
+                
+                print 'Performing from ID to agents 3'
+                
+                self.from_IDs_to_Agents()
+                
+                # Upload outputs
+                if policy != 0:
+                    self.lockdown = self.p['lockdown']
+                    self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
+                    self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
+                    
+            if policy != 0 and self.lockdown == True and self.pandemicDay == startDay + self.p['lockdownDuration']:# self.pandemicDay == self.lockdownEnd:
+                self.lockdown = False
+                print 'Lockdown ended in day: ' + str(self.pandemicDay)
                     
 #            print 'Lockdown state: ' + str(self.lockdown)
 #            print 'Care lockdown state: ' + str(self.p['careLockdown'])
