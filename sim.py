@@ -3731,7 +3731,10 @@ class SimCov:
                 num = sum([x*y for x, y in zip(irs, expWeights)])
                 weightedIR = float(num)/float(den)
                 deltaRate = weightedIR-agent.tempIR
-                agent.tempIR += deltaRate*(1.0-np.exp(-1*self.p['socialNormSensitivity']))
+                # agent.tempIR += deltaRate*(1.0-np.exp(-1*self.p['socialNormSensitivity']))
+                
+                # Alternative formulation
+                agent.tempIR += deltaRate*self.p['socialNormSensitivity']
             
 #        print 'Max weights: ' + str(max(weights))
 #        print 'Mean weights: ' + str(np.mean(weights))
